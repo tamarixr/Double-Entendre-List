@@ -1188,6 +1188,7 @@ function renderDemonDetail(d, index){
       <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Placement</div></div>
       <div class="stat"><div class="val">${d.points}</div><div class="lbl">Points</div></div>
       <div class="stat"><div class="val">${d.requirement||100}%</div><div class="lbl">Requirement</div></div>
+      ${d.requirement2 ? `<div class="stat"><div class="val">${d.requirement2}%+</div><div class="lbl">Reduced (${d.points2||0}pt)</div></div>` : ''}
       ${index >= (APP.settings.mainListSize||50) ? `<div class="stat"><div class="val" style="color:var(--text-muted);">Legacy</div><div class="lbl">List Status</div></div>` : ''}
     </div>
     <div class="video-wrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
@@ -1219,6 +1220,17 @@ function openDemonModal(id){
           <input id="dm-requirement" type="number" min="1" max="100" value="${editing&&editing.requirement?editing.requirement:100}">
           <div class="hint">Minimum percent a submission must reach to be accepted for this demon.</div>
         </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Reduced Requirement (%) — optional</label>
+            <input id="dm-req2" type="number" min="1" max="100" value="${editing&&editing.requirement2?editing.requirement2:''}" placeholder="e.g. 60">
+          </div>
+          <div class="field">
+            <label>Reduced Points</label>
+            <input id="dm-points2" type="number" min="0" value="${editing&&editing.points2?editing.points2:0}">
+          </div>
+        </div>
+        <div class="field hint" style="margin-top:-6px;">Records at or above the reduced requirement (but below the main one) award reduced points instead of full points. Leave the reduced requirement blank to disable.</div>
         <div class="field">
           <label>Tags</label>
           <input id="dm-tags" value="${escapeHtml(currentTagsString)}" placeholder="e.g. Memory, Timing, XL, Wave, Challenge">
@@ -1246,6 +1258,11 @@ async function saveDemonForm(id){
   if(isNaN(requirement)) requirement = 100;
   requirement = Math.min(100, Math.max(1, requirement));
 
+  let requirement2 = parseInt(document.getElementById('dm-req2').value);
+  requirement2 = isNaN(requirement2) ? null : Math.min(100, Math.max(1, requirement2));
+  if(requirement2 !== null && requirement2 >= requirement) requirement2 = null; // must be strictly lower
+  const points2 = parseInt(document.getElementById('dm-points2').value) || 0;
+
   const data = {
     name,
     creator: document.getElementById('dm-creator').value.trim(),
@@ -1254,7 +1271,9 @@ async function saveDemonForm(id){
     video: document.getElementById('dm-video').value.trim(),
     description: document.getElementById('dm-desc').value.trim(),
     tags: processedTags,
-    requirement
+    requirement,
+    requirement2,
+    points2
   };
   if(id){
     const d = APP.demons.find(x=>x.id===id);
@@ -1794,7 +1813,11 @@ function updateSubRequirementHint(){
   if(!sel || !hint) return;
   const demon = APP.demons.find(d=>d.id===sel.value);
   const req = demon && demon.requirement ? demon.requirement : 100;
-  hint.textContent = req < 100 ? `This demon accepts records of ${req}% or higher.` : `This demon requires a 100% completion.`;
+  let text = req < 100 ? `This demon accepts records of ${req}% or higher.` : `This demon requires a 100% completion.`;
+  if(demon && demon.requirement2){
+    text += ` Records from ${demon.requirement2}% up to ${req-1}% are accepted for ${demon.points2||0} reduced points instead of the full ${demon.points}.`;
+  }
+  hint.textContent = text;
 }
 async function submitPlay(){
   const player = document.getElementById('sb-player').value.trim();
@@ -1810,8 +1833,9 @@ async function submitPlay(){
   }
   const demon = APP.demons.find(d=>d.id===demonId);
   const req = demon && demon.requirement ? demon.requirement : 100;
-  if(percent < req){
-    msgEl.innerHTML = `<div class="msg error">This demon requires at least ${req}% to be submitted.</div>`;
+  const floor = (demon && demon.requirement2) ? demon.requirement2 : req;
+  if(percent < floor){
+    msgEl.innerHTML = `<div class="msg error">This demon requires at least ${floor}% to be submitted.</div>`;
     return;
   }
   APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, status:'pending', submittedAt: Date.now() });
@@ -1831,7 +1855,13 @@ async function reviewSubmission(id, status){
       player = { id: uid(), name: s.player, country: s.country||'OTHER', points: 0 };
       APP.players.push(player);
     }
-    if(demon) player.points += demon.points;
+    if(demon){
+      let awarded = demon.points;
+      if(demon.requirement2 && s.percent < (demon.requirement||100) && s.percent >= demon.requirement2){
+        awarded = demon.points2 || 0;
+      }
+      player.points += awarded;
+    }
     await savePlayers();
   }
   await saveSubmissions();
