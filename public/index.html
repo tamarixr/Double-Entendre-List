@@ -512,8 +512,29 @@ async function registerAccount(username, password){
   APP.currentUser = { username: newUser.username, role: 'user' };
   return APP.currentUser;
 }
-
-function logout(){ APP.currentUser = null; renderAccountArea(); renderAll(); }
+  APP.currentUser = { username: normalizedUser === 'tamari' ? 'tamari' : 'hakku', role: 'admin' };
+saveSession();
+  
+function saveSession(){
+  try{ localStorage.setItem('demonlist_session', JSON.stringify(APP.currentUser)); }catch(e){}
+}
+  APP.currentUser = { username: matchedUser.username, role: 'user' };
+saveSession();   // <-- add this
+  
+function restoreSession(){
+  try{
+    const raw = localStorage.getItem('demonlist_session');
+    if(raw) APP.currentUser = JSON.parse(raw);
+  }catch(e){}
+}
+  APP.currentUser = { username: newUser.username, role: 'user' };
+saveSession();   // <-- add this
+  
+function logout(){
+  APP.currentUser = null;
+  localStorage.removeItem('demonlist_session');
+  renderAccountArea(); renderAll();
+}
 function isMod(){ return APP.currentUser !== null && APP.currentUser.role === 'admin'; }
 function isAdmin(){ return APP.currentUser !== null && APP.currentUser.role === 'admin'; }
 
@@ -1115,6 +1136,7 @@ async function reviewSubmission(id, status){
 
 /* ============================= INIT ============================= */
 async function init(){
+  restoreSession();      // <-- add this line
   await loadAll();
   renderAccountArea();
   renderAll();
