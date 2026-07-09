@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Double Entendre Demon List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-void:#08090c;
+  --bg-panel:#11131a;
+  --bg-raised:#171a24;
+  --bg-raised-2:#1f2330;
+  --line:#242836;
+  --line-soft:#1a1d28;
+  --text:#e4e6eb;
+  --text-muted:#82879c;
+  --text-dim:#4e5266;
+  --spike:#ff3b6b;
+  --spike-dim:#7a2138;
+  --spike-hover:#ff5580;
+  --spike-shadow:rgba(255,59,107,0.4);
+  --gold:#ffb845;
+  --cyan:#4fd8ff;
+  --green:#4ade80;
+  --red:#ff5470;
+  --radius:3px;
+}
+
+body.light-theme {
+  --bg-void:#f3f4f6;
+  --bg-panel:#ffffff;
+  --bg-raised:#f9fafb;
+  --bg-raised-2:#f3f4f6;
+  --line:#e5e7eb;
+  --line-soft:#f3f4f6;
+  --text:#111827;
+  --text-muted:#4b5563;
+  --text-dim:#9ca3af;
+  --spike-dim:#fce7f3;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:var(--bg-void);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--spike);color:#fff;}
+::-webkit-scrollbar{width:7px;height:7px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:var(--text-dim);}
+
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+
+h1,h2,h3,.display{font-family:'Inter',sans-serif;}
+.mono{font-family:'JetBrains Mono',monospace;}
+
+/* ---------- top nav ---------- */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:rgba(8,9,12,0.95);
+  border-bottom:1px solid var(--line);
+}
+body.light-theme .topbar {
+  background:rgba(255,255,255,0.95);
+}
+.topbar-inner{
+  max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;gap:20px;
+  padding:10px 15px;
+}
+.logo{
+  font-family:'Inter',sans-serif;
+  font-weight:700;font-size:16px;letter-spacing:-0.01em;
+  display:flex;align-items:center;gap:8px;
+  color:var(--text);white-space:nowrap;
+}
+.logo .mark{
+  width:14px;height:14px;
+  background:var(--spike);
+  display:inline-block;
+}
+nav.tabs{display:flex;gap:2px;flex:1;}
+nav.tabs button{
+  background:none;border:none;color:var(--text-muted);
+  font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+  padding:6px 12px;border-radius:var(--radius);transition:all .1s;
+}
+nav.tabs button:hover{color:var(--text);background:var(--bg-raised);}
+nav.tabs button.active{color:var(--text);background:var(--bg-raised-2);border:1px solid var(--line);}
+
+.account-area-wrapper {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.account-chip{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--text-muted);
+}
+.account-chip .name{color:var(--text);font-weight:600;}
+.role-tag{
+  font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;
+  padding:1px 5px;border-radius:2px;background:var(--bg-raised-2);color:var(--text-muted);
+  border:1px solid var(--line);
+}
+.role-tag.admin{color:var(--spike);border-color:var(--spike-dim);background:var(--spike-dim);}
+body.light-theme .role-tag.admin { background: var(--spike-dim); color: var(--spike); }
+
+.btn{
+  border:1px solid var(--line);background:var(--bg-raised);color:var(--text);
+  padding:6px 12px;border-radius:var(--radius);font-size:12.5px;font-weight:600;
+  transition:all .1s;
+}
+.btn:hover{border-color:var(--text-dim);background:var(--bg-raised-2);}
+.btn.primary{background:var(--spike);border-color:var(--spike);color:#fff;}
+.btn.primary:hover{background:var(--spike-hover);}
+.btn.ghost{background:none;}
+.btn.small{padding:4px 8px;font-size:11.5px;}
+.btn.danger{border-color:var(--red);color:var(--red);background:none;}
+.btn.danger:hover{background:rgba(255,84,112,0.08);}
+.btn:disabled{opacity:0.3;cursor:not-allowed;}
+
+/* ---------- layout ---------- */
+main{max-width:1200px;margin:0 auto;padding:20px 15px 60px;}
+.page-head{margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:15px;}
+.page-title{font-size:26px;font-weight:700;margin-bottom:4px;}
+.page-desc{color:var(--text-muted);font-size:13px;max-width:720px;line-height:1.4;}
+
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ---------- list layout ---------- */
+.list-layout{display:grid;grid-template-columns:360px 1fr;gap:15px;align-items:start;}
+@media(max-width:820px){.list-layout{grid-template-columns:1fr;}}
+
+.panel{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--bg-raised);border-bottom:1px solid var(--line);
+}
+.panel-head h3{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);}
+
+.demon-rows{max-height:75vh;overflow-y:auto;}
+.demon-row{
+  display:flex;align-items:center;gap:10px;padding:8px 12px;
+  border-bottom:1px solid var(--line-soft);cursor:pointer;transition:background .1s;
+}
+.demon-row:last-child{border-bottom:none;}
+.demon-row:hover{background:var(--bg-raised);}
+.demon-row.selected{background:var(--bg-raised-2);border-left:3px solid var(--spike);padding-left:9px;}
+
+.rank-badge{
+  width:26px;height:22px;flex:none;
+  background:var(--bg-raised-2);
+  border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;color:var(--text-muted);
+  border-radius:2px;
+}
+.rank-badge.top{background:var(--spike-dim);color:var(--text);border-color:var(--spike);}
+body.light-theme .rank-badge.top { color: var(--spike); }
+
+.demon-row .info{flex:1;min-width:0;}
+.demon-row .name{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.demon-row .creator{font-size:11px;color:var(--text-dim);margin-top:1px;}
+.demon-row .pts{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gold);flex:none;}
+
+.tag-container {
+  display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;
+}
+.tag-pill {
+  font-size:9px;font-weight:600;padding:1px 5px;background:var(--bg-void);
+  border:1px solid var(--line);color:var(--text-muted);text-transform:uppercase;border-radius:2px;
+}
+
+.reorder{display:flex;flex-direction:column;gap:1px;flex:none;}
+.reorder button{
+  width:16px;height:12px;background:var(--bg-raised);border:1px solid var(--line);
+  color:var(--text-dim);font-size:8px;border-radius:1px;display:flex;align-items:center;justify-content:center;
+}
+.reorder button:hover{color:var(--text);border-color:var(--text-dim);}
+
+.empty-state{padding:30px 15px;text-align:center;color:var(--text-dim);font-size:12.5px;}
+.empty-state .big{font-family:'Inter',sans-serif;font-size:14px;color:var(--text-muted);margin-bottom:4px;font-weight:600;}
+
+/* detail panel */
+.detail{padding:16px;}
+.detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.detail-title{font-size:20px;font-weight:700;font-family:'Inter',sans-serif;}
+.detail-sub{color:var(--text-muted);font-size:13px;margin-top:2px;}
+.stat-row{display:flex;gap:16px;margin:12px 0;flex-wrap:wrap;}
+.stat{background:var(--bg-raised);border:1px solid var(--line);padding:6px 12px;border-radius:var(--radius);min-width:80px;}
+.stat .val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--gold);}
+.stat.rankstat .val{color:var(--spike);}
+.stat .lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-top:1px;}
+.video-wrap{
+  position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:var(--radius);
+  overflow:hidden;border:1px solid var(--line);margin-top:10px;
+}
+.video-wrap iframe{width:100%;height:100%;border:none;}
+.video-wrap .noVideo{
+  height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:12.5px;
+}
+.detail-desc{margin-top:12px;color:var(--text-muted);font-size:13px;line-height:1.5;padding:10px;background:var(--bg-raised);border:1px solid var(--line);border-radius:var(--radius);}
+.detail-meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-dim);margin-top:10px;display:flex;gap:15px;}
+.detail-actions{display:flex;gap:6px;margin-top:14px;}
+
+/* forms */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid.full{grid-template-columns:1fr;}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.field label{font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-dim);font-weight:600;}
+.field input,.field select,.field textarea{
+  background:var(--bg-raised);border:1px solid var(--line);color:var(--text);
+  padding:7px 10px;border-radius:var(--radius);font-size:13px;outline:none;transition:border-color .1s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--spike);}
+.field textarea{resize:vertical;min-height:60px;}
+.field .hint{font-size:10.5px;color:var(--text-dim);line-height:1.3;}
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(4,5,7,0.8);
+  display:flex;align-items:center;justify-content:center;z-index:100;padding:15px;
+}
+.modal{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);
+  width:100%;max-width:460px;max-height:90vh;overflow-y:auto;
+}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg-raised);}
+.modal-head h3{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--text);}
+.modal-close{background:none;border:none;color:var(--text-dim);font-size:18px;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:16px;}
+.modal-foot{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:6px;background:var(--bg-raised);}
+.msg{font-size:12px;padding:8px 10px;border-radius:var(--radius);margin-bottom:10px;}
+.msg.error{background:rgba(255,84,112,0.08);color:var(--red);border:1px solid rgba(255,84,112,0.2);}
+.msg.ok{background:rgba(74,222,128,0.08);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
+
+/* leaderboard */
+.lb-table{width:100%;border-collapse:collapse;}
+.lb-table th{
+  text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);
+  padding:8px 12px;border-bottom:1px solid var(--line);font-weight:600;background:var(--bg-raised);
+}
+.lb-table td{padding:8px 12px;border-bottom:1px solid var(--line-soft);font-size:13px;vertical-align:middle;}
+.lb-table tr:last-child td{border-bottom:none;}
+.lb-table tr:hover td{background:var(--bg-raised);}
+.flag{font-size:16px;margin-right:6px;}
+.lb-rank{font-family:'JetBrains Mono',monospace;color:var(--text-dim);width:36px;}
+.lb-rank.r1{color:var(--gold);font-weight:700;}
+.lb-rank.r2{color:#c9cbe0;font-weight:700;}
+body.light-theme .lb-rank.r2 { color: #6b7280; }
+.lb-rank.r3{color:#d8935a;font-weight:700;}
+.lb-points{font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;}
+.lb-actions{display:flex;gap:4px;}
+
+/* roulette */
+.roulette-wrap{display:flex;flex-direction:column;align-items:center;gap:15px;padding:5px 0 20px;}
+.roulette-card{
+  width:100%;max-width:440px;background:var(--bg-panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:20px;text-align:center;position:relative;
+}
+.roulette-req{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);margin-bottom:10px;text-transform:uppercase;}
+.roulette-demon{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;margin-bottom:2px;}
+.roulette-creator{color:var(--text-muted);font-size:12.5px;margin-bottom:15px;}
+.roulette-target{font-size:40px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--spike);margin-bottom:15px;}
+.roulette-input-row{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}
+.roulette-input-row input{
+  width:90px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:15px;
+  background:var(--bg-raised);border:1px solid var(--line);color:var(--text);border-radius:var(--radius);padding:6px;
+}
+.roulette-input-row input:focus{outline:none;border-color:var(--spike);}
+.roulette-feedback{font-size:12.5px;min-height:18px;margin-bottom:4px;font-weight:600;}
+.roulette-feedback.pass{color:var(--green);}
+.roulette-feedback.fail{color:var(--red);}
+.roulette-history{width:100%;max-width:440px;}
+.rh-item{
+  display:flex;align-items:center;justify-content:space-between;padding:7px 12px;
+  border-bottom:1px solid var(--line-soft);font-size:12px;
+}
+.rh-item .rh-name{color:var(--text-muted);}
+.rh-item .rh-result{font-family:'JetBrains Mono',monospace;font-weight:600;}
+.rh-item .rh-result.pass{color:var(--green);}
+.rh-item .rh-result.fail{color:var(--red);}
+
+/* submissions */
+.sub-item{padding:10px 12px;border-bottom:1px solid var(--line-soft);}
+.sub-item:last-child{border-bottom:none;}
+.sub-item-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;}
+.sub-item .who{font-weight:600;font-size:13px;}
+.sub-item .what{color:var(--text-muted);font-size:12px;}
+.status-pill{font-size:9px;text-transform:uppercase;padding:2px 6px;border-radius:2px;font-weight:700;}
+.status-pill.pending{background:rgba(255,184,69,0.08);color:var(--gold);border:1px solid rgba(255,184,69,0.2);}
+.status-pill.approved{background:rgba(74,222,128,0.08);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
+.status-pill.rejected{background:rgba(255,84,112,0.08);color:var(--red);border:1px solid rgba(255,84,112,0.2);}
+.sub-actions{display:flex;gap:4px;margin-top:6px;}
+.sub-link{font-size:11.5px;color:var(--cyan);display:inline-block;margin-top:2px;}
+
+.footer-note{max-width:1200px;margin:0 auto;padding:20px 15px;color:var(--text-dim);font-size:11px;text-align:center;border-top:1px solid var(--line-soft);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="logo"><span class="mark"></span><span class="site-name-text">Double Entendre</span></div>
+    <nav class="tabs" id="tabs">
+      <button data-tab="list" class="active">Demon List</button>
+      <button data-tab="roulette">Roulette</button>
+      <button data-tab="leaderboard">Leaderboard</button>
+      <button data-tab="submit">Submit Play</button>
+    </nav>
+    <div class="account-area-wrapper">
+      <button class="btn ghost small" onclick="toggleThemeMode()" style="padding: 4px 6px; font-size: 13px;" title="Toggle Light/Dark Theme">🌓</button>
+      <div id="accountArea"></div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="tab-panel active" id="panel-list"></div>
+  <div class="tab-panel" id="panel-roulette"></div>
+  <div class="tab-panel" id="panel-leaderboard"></div>
+  <div class="tab-panel" id="panel-submit"></div>
+</main>
+
+<div class="footer-note">Lightweight client-side data architecture. Verified ecosystem engine. Admin access strictly curated.</div>
+
+<div id="modalRoot"></div>
+
+<script>
+/* ============================= PRESETS & PALETTES ============================= */
+const ACCENT_PALETTES = {
+  pink: { main: '#ff3b6b', dim: '#541424', hover: '#ff5580', shadow: 'rgba(255,59,107,0.25)' },
+  red: { main: '#ff4a4a', dim: '#541414', hover: '#ff6161', shadow: 'rgba(255,74,74,0.25)' },
+  blue: { main: '#3b82f6', dim: '#13284a', hover: '#5091f7', shadow: 'rgba(59,130,246,0.25)' },
+  purple: { main: '#a855f7', dim: '#351654', hover: '#b56ff8', shadow: 'rgba(168,85,247,0.25)' },
+  green: { main: '#22c55e', dim: '#0d421f', hover: '#39d372', shadow: 'rgba(34,197,94,0.25)' },
+  orange: { main: '#f97316', dim: '#542403', hover: '#fa8432', shadow: 'rgba(249,115,22,0.25)' },
+  cyan: { main: '#06b6d4', dim: '#053942', hover: '#1cd1f0', shadow: 'rgba(6,182,212,0.25)' }
+};
+
+/* ============================= STATE ============================= */
+const APP = {
+  demons: [],
+  players: [],
+  submissions: [],
+  registeredUsers: [], // Normal public registered users storage
+  currentUser: null,
+  activeTab: 'list',
+  selectedDemonId: null,
+  roulette: { required: 1, current: null, usedIds: [], history: [], done:false },
+  settings: {
+    siteName: "Double Entendre",
+    siteTagline: "The hardest levels, ranked by difficulty.",
+    accentColor: "pink",
+    themeMode: "dark" // "dark" or "light"
+  }
+};
+
+/* ============================= OBFUSCATED CREDENTIALS ============================= */
+const DIRECT_AUTH = {
+  "tamari": "NjU0OTg3bmF3ZQ==",
+  "hakku": "NjU0OTg3dWttYWg="
+};
+
+/* ============================= COUNTRIES ============================= */
+const COUNTRIES = [
+["US","United States"],["GB","United Kingdom"],["CA","Canada"],["AU","Australia"],["DE","Germany"],
+["FR","France"],["NL","Netherlands"],["BE","Belgium"],["SE","Sweden"],["NO","Norway"],["DK","Denmark"],
+["FI","Finland"],["PL","Poland"],["RU","Russia"],["UA","Ukraine"],["ES","Spain"],["PT","Portugal"],
+["IT","Italy"],["CH","Switzerland"],["AT","Austria"],["CZ","Czechia"],["SK","Slovakia"],["HU","Hungary"],
+["RO","Romania"],["BG","Bulgaria"],["GR","Greece"],["TR","Turkey"],["IE","Ireland"],["IS","Iceland"],
+["EE","Estonia"],["LV","Latvia"],["LT","Lithuania"],["HR","Croatia"],["SI","Slovenia"],["RS","Serbia"],
+["BR","Brazil"],["AR","Argentina"],["MX","Mexico"],["CL","Chile"],["CO","Colombia"],["PE","Peru"],
+["UY","Uruguay"],["EC","Ecuador"],["VE","Venezuela"],["JP","Japan"],["KR","South Korea"],["CN","China"],
+["TW","Taiwan"],["HK","Hong Kong"],["IN","India"],["ID","Indonesia"],["MY","Malaysia"],["SG","Singapore"],
+["TH","Thailand"],["VN","Vietnam"],["PH","Philippines"],["PK","Pakistan"],["BD","Bangladesh"],
+["SA","Saudi Arabia"],["AE","United Arab Emirates"],["IL","Israel"],["EG","Egypt"],["ZA","South Africa"],
+["NG","Nigeria"],["KE","Kenya"],["MA","Morocco"],["NZ","New Zealand"],["OTHER","Other / Unspecified"]
+];
+function flagEmoji(code){
+  if(!code || code==="OTHER") return "🏳️";
+  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt(0)));
+}
+function countryName(code){ const f=COUNTRIES.find(c=>c[0]===code); return f?f[1]:"Unspecified"; }
+function countryOptions(selected){
+  return COUNTRIES.map(([code,name]) =>
+    `<option value="${code}" ${code===selected?'selected':''}>${flagEmoji(code)} ${name}</option>`
+  ).join('');
+}
+
+/* ============================= STORAGE ============================= */
+async function storageGet(key){
+  try{
+    const r = await fetch('/api/storage?key=' + encodeURIComponent(key));
+    if(!r.ok) return null;
+    const data = await r.json();
+    return data.value ?? null;
+  }catch(e){ console.error('Storage read fault', e); return null; }
+}
+async function storageSet(key, value){
+  try{
+    await fetch('/api/storage', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ key, value })
+    });
+  }catch(e){ console.error('Storage write fault', e); }
+}
+async function loadAll(){
+  APP.demons = (await storageGet('demons')) || [];
+  APP.players = (await storageGet('players')) || [];
+  APP.submissions = (await storageGet('submissions')) || [];
+  APP.registeredUsers = (await storageGet('registered_users')) || [];
+  const savedSettings = await storageGet('site_settings');
+  if(savedSettings) {
+    APP.settings = Object.assign(APP.settings, savedSettings);
+  }
+  applySystemTheme();
+}
+function saveDemons(){ return storageSet('demons', APP.demons); }
+function savePlayers(){ return storageSet('players', APP.players); }
+function saveSubmissions(){ return storageSet('submissions', APP.submissions); }
+function saveUsers(){ return storageSet('registered_users', APP.registeredUsers); }
+function saveSettings(){ return storageSet('site_settings', APP.settings); }
+
+function applySystemTheme(){
+  if(APP.settings.themeMode === 'light') {
+    document.body.classList.add('light-theme');
+  } else {
+    document.body.classList.remove('light-theme');
+  }
+
+  const theme = ACCENT_PALETTES[APP.settings.accentColor] || ACCENT_PALETTES.pink;
+  const root = document.documentElement.style;
+  root.setProperty('--spike', theme.main);
+  root.setProperty('--spike-dim', theme.dim);
+  root.setProperty('--spike-hover', theme.hover);
+  root.setProperty('--spike-shadow', theme.shadow);
+  
+  document.querySelectorAll('.site-name-text').forEach(el => el.textContent = APP.settings.siteName);
+  document.querySelectorAll('.site-tagline-text').forEach(el => el.textContent = APP.settings.siteTagline);
+}
+
+function toggleThemeMode(){
+  APP.settings.themeMode = APP.settings.themeMode === 'light' ? 'dark' : 'light';
+  saveSettings();
+  applySystemTheme();
+}
+
+/* ============================= AUTH ============================= */
+async function loginAccount(username, password){
+  const normalizedUser = username.trim().toLowerCase();
+  
+  if(DIRECT_AUTH[normalizedUser]){
+    const obscuredInput = btoa(password.split('').reverse().join(''));
+    if(obscuredInput === DIRECT_AUTH[normalizedUser]){
+      APP.currentUser = { username: normalizedUser === 'tamari' ? 'tamari' : 'hakku', role: 'admin' };
+      saveSession();
+      return APP.currentUser;
+    } else {
+      throw new Error('Incorrect password.');
+    }
+  }
+  
+  const matchedUser = APP.registeredUsers.find(u => u.username.toLowerCase() === normalizedUser);
+  if(matchedUser && matchedUser.password === btoa(password)) {
+    APP.currentUser = { username: matchedUser.username, role: 'user' };
+    saveSession();
+    return APP.currentUser;
+  }
+  
+  throw new Error('No account with that username.');
+}
+
+async function registerAccount(username, password){
+  const cleanUser = username.trim();
+  const normalizedUser = cleanUser.toLowerCase();
+  if(!cleanUser || !password) {
+    throw new Error('Username and password cannot be blank.');
+  }
+  if(DIRECT_AUTH[normalizedUser] || APP.registeredUsers.some(u => u.username.toLowerCase() === normalizedUser)) {
+    throw new Error('That username is already taken.');
+  }
+
+  const newUser = {
+    username: cleanUser,
+    password: btoa(password), 
+    role: 'user'
+  };
+
+  APP.registeredUsers.push(newUser);
+  await saveUsers();
+  
+  APP.currentUser = { username: newUser.username, role: 'user' };
+  saveSession();
+  return APP.currentUser;
+}
+  
+function saveSession(){
+  try{ localStorage.setItem('demonlist_session', JSON.stringify(APP.currentUser)); }catch(e){}
+}
+  
+function restoreSession(){
+  try{
+    const raw = localStorage.getItem('demonlist_session');
+    if(raw) APP.currentUser = JSON.parse(raw);
+  }catch(e){}
+}
+  
+function logout(){
+  APP.currentUser = null;
+  localStorage.removeItem('demonlist_session');
+  renderAccountArea(); renderAll();
+}
+function isMod(){ return APP.currentUser !== null && APP.currentUser.role === 'admin'; }
+function isAdmin(){ return APP.currentUser !== null && APP.currentUser.role === 'admin'; }
+
+/* ============================= HELPERS ============================= */
+function uid(){ return 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2, 10); }
+function escapeHtml(str){
+  return (str||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function getEmbedUrl(url){
+  if(!url) return null;
+  try{
+    const u = new URL(url);
+    if(u.hostname.includes('youtu.be')) return 'https://www.youtube.com/embed/'+u.pathname.slice(1);
+    if(u.hostname.includes('youtube.com')){
+      const id = u.searchParams.get('v');
+      if(id) return 'https://www.youtube.com/embed/'+id;
+      if(u.pathname.startsWith('/embed/')) return url;
+      if(u.pathname.startsWith('/live/')) return 'https://www.youtube.com/embed/'+u.pathname.split('/')[2];
+    }
+    if(u.hostname.includes('streamable.com')) return 'https://streamable.com/e/'+u.pathname.slice(1);
+    return null;
+  }catch(e){ return null; }
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
+function openModal(html){ document.getElementById('modalRoot').innerHTML = html; }
+
+/* ============================= RENDER: ACCOUNT AREA ============================= */
+function renderAccountArea(){
+  const el = document.getElementById('accountArea');
+  if(!APP.currentUser){
+    el.innerHTML = `<button class="btn" style="padding:4px 10px; font-size:12px;" onclick="openLoginModal()">Login</button>`;
+    return;
+  }
+  const u = APP.currentUser;
+  const roleLabel = u.role === 'admin' ? 'admin' : 'member';
+  const roleClass = u.role === 'admin' ? 'admin' : '';
+  
+  el.innerHTML = `
+    <div class="account-chip">
+      ${u.role === 'admin' ? `<button class="btn small ghost" onclick="openAdminSettingsModal()">Settings</button>` : ''}
+      <span class="name">${escapeHtml(u.username)}</span>
+      <span class="role-tag ${roleClass}">${roleLabel}</span>
+      <button class="btn small" onclick="logout()">Log Out</button>
+    </div>`;
+}
+
+function openLoginModal(){
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3 id="authModalTitle">Sign In</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div id="authMsg"></div>
+        <div id="loginForm">
+          <div class="field"><label>Username</label><input id="li-user" autocomplete="username" placeholder="Username"></div>
+          <div class="field"><label>Password</label><input id="li-pass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+          
+          <div style="margin-top: 15px; display:flex; flex-direction:column; gap:10px;">
+            <button id="authSubmitBtn" class="btn primary" style="width:100%;" onclick="handleLoginSubmit()">Sign In</button>
+            <div id="authSwitchLink" style="font-size:12px; text-align:center; color:var(--text-muted);">
+              Don't have an account? <a href="#" onclick="event.preventDefault(); toggleAuthModalMode('register')" style="color:var(--spike); font-weight:600;">Register here</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`);
+  document.getElementById('loginForm').dataset.mode = 'login';
+}
+
+function toggleAuthModalMode(targetMode) {
+  const form = document.getElementById('loginForm');
+  const title = document.getElementById('authModalTitle');
+  const btn = document.getElementById('authSubmitBtn');
+  const link = document.getElementById('authSwitchLink');
+  document.getElementById('authMsg').innerHTML = '';
+
+  if (targetMode === 'register') {
+    form.dataset.mode = 'register';
+    title.textContent = 'Create Account';
+    btn.textContent = 'Register';
+    btn.setAttribute('onclick', 'handleRegisterSubmit()');
+    link.innerHTML = `Already have an account? <a href="#" onclick="event.preventDefault(); toggleAuthModalMode('login')" style="color:var(--spike); font-weight:600;">Sign in here</a>`;
+  } else {
+    form.dataset.mode = 'login';
+    title.textContent = 'Sign In';
+    btn.textContent = 'Sign In';
+    btn.setAttribute('onclick', 'handleLoginSubmit()');
+    link.innerHTML = `Don't have an account? <a href="#" onclick="event.preventDefault(); toggleAuthModalMode('register')" style="color:var(--spike); font-weight:600;">Register here</a>`;
+  }
+}
+
+function authMsg(text, type='error'){ document.getElementById('authMsg').innerHTML = `<div class="msg ${type}">${escapeHtml(text)}</div>`; }
+
+async function handleLoginSubmit(){
+  const u = document.getElementById('li-user').value;
+  const p = document.getElementById('li-pass').value;
+  try{
+    await loginAccount(u,p);
+    closeModal(); renderAccountArea(); renderAll();
+  }catch(e){ authMsg(e.message); }
+}
+
+async function handleRegisterSubmit(){
+  const u = document.getElementById('li-user').value;
+  const p = document.getElementById('li-pass').value;
+  try{
+    await registerAccount(u,p);
+    closeModal(); renderAccountArea(); renderAll();
+  }catch(e){ authMsg(e.message); }
+}
+
+/* ============================= GLOBAL SETTINGS MODAL ============================= */
+function openAdminSettingsModal() {
+  if(!isAdmin()) return;
+  const colorOptions = Object.keys(ACCENT_PALETTES).map(c => 
+    `<option value="${c}" ${APP.settings.accentColor === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`
+  ).join('');
+
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>Site Settings</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Site Name</label><input id="st-name" value="${escapeHtml(APP.settings.siteName)}"></div>
+        <div class="field"><label>Tagline</label><textarea id="st-tagline">${escapeHtml(APP.settings.siteTagline)}</textarea></div>
+        <div class="field">
+          <label>Accent Color</label>
+          <select id="st-color">${colorOptions}</select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="handleSaveSettings()">Save</button>
+      </div>
+    </div>
+  </div>`);
+}
+
+async function handleSaveSettings(){
+  const name = document.getElementById('st-name').value.trim();
+  const tagline = document.getElementById('st-tagline').value.trim();
+  const accent = document.getElementById('st-color').value;
+
+  if(!name) return;
+  APP.settings.siteName = name;
+  APP.settings.siteTagline = tagline;
+  APP.settings.accentColor = accent;
+
+  await saveSettings();
+  applySystemTheme();
+  closeModal();
+  renderAll();
+}
+
+/* ============================= TABS ============================= */
+function switchTab(tab){
+  APP.activeTab = tab;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  renderAll();
+}
+document.getElementById('tabs').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-tab]');
+  if(btn) switchTab(btn.dataset.tab);
+});
+
+function renderAll(){
+  applySystemTheme();
+  renderListTab();
+  renderRouletteTab();
+  renderLeaderboardTab();
+  renderSubmitTab();
+}
+
+/* ============================= LIST TAB ============================= */
+function renderListTab(){
+  const el = document.getElementById('panel-list');
+  const demons = APP.demons;
+  if(!APP.selectedDemonId && demons.length) APP.selectedDemonId = demons[0].id;
+  const selected = demons.find(d => d.id === APP.selectedDemonId);
+
+  const rows = demons.length ? demons.map((d, i) => {
+    const tagsHtml = (d.tags || []).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('');
+    return `
+    <div class="demon-row ${d.id===APP.selectedDemonId?'selected':''}" onclick="selectDemon('${d.id}')">
+      <div class="rank-badge ${i<3?'top':''}">${i+1}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(d.name)}</div>
+        <div class="creator">by ${escapeHtml(d.creator||'Unknown')}</div>
+        ${tagsHtml ? `<div class="tag-container">${tagsHtml}</div>` : ''}
+      </div>
+      <div class="pts">${d.points}pt</div>
+      ${isMod() ? `
+      <div class="reorder">
+        <button onclick="event.stopPropagation();moveDemon('${d.id}',-1)" ${i===0?'disabled':''}>&#9650;</button>
+        <button onclick="event.stopPropagation();moveDemon('${d.id}',1)" ${i===demons.length-1?'disabled':''}>&#9660;</button>
+      </div>` : ''}
+    </div>
+  `;
+  }).join('') : `<div class="empty-state"><div class="big">No demons yet</div>${isMod() ? 'Add one to get started.' : 'Check back soon.'}</div>`;
+
+  const detail = selected ? renderDemonDetail(selected, demons.findIndex(d=>d.id===selected.id)) :
+    `<div class="empty-state"><div class="big">Nothing selected</div>Pick a level from the list.</div>`;
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title site-name-text">${escapeHtml(APP.settings.siteName)}</h1>
+      <p class="page-desc site-tagline-text">${escapeHtml(APP.settings.siteTagline)}</p>
+    </div>
+    <div class="list-layout">
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Levels</h3>
+          ${isMod() ? `<button class="btn small primary" onclick="openDemonModal()">+ Add Demon</button>` : ''}
+        </div>
+        <div class="demon-rows">${rows}</div>
+      </div>
+      <div class="panel"><div class="detail">${detail}</div></div>
+    </div>
+  `;
+}
+function selectDemon(id){ APP.selectedDemonId = id; renderListTab(); }
+function renderDemonDetail(d, index){
+  const embed = getEmbedUrl(d.video);
+  const tagHtml = (d.tags || []).map(t => `<span class="tag-pill" style="font-size:11px; padding:2px 6px;">${escapeHtml(t)}</span>`).join(' ');
+  
+  return `
+    <div class="detail-top">
+      <div>
+        <div class="detail-title">${escapeHtml(d.name)}</div>
+        <div class="detail-sub">by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
+        ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
+      </div>
+      ${isMod() ? `<div>
+        <button class="btn small" onclick="openDemonModal('${d.id}')">Edit</button>
+        <button class="btn small danger" onclick="deleteDemon('${d.id}')">Delete</button>
+      </div>` : ''}
+    </div>
+    <div class="stat-row">
+      <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Placement</div></div>
+      <div class="stat"><div class="val">${d.points}</div><div class="lbl">Points</div></div>
+    </div>
+    <div class="video-wrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
+    ${d.description ? `<div class="detail-desc">${escapeHtml(d.description)}</div>` : ''}
+  `;
+}
+
+function openDemonModal(id){
+  if(!isMod()) return;
+  const editing = id ? APP.demons.find(d=>d.id===id) : null;
+  const currentTagsString = editing && editing.tags ? editing.tags.join(', ') : '';
+  
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>${editing ? 'Edit Demon' : 'Add Demon'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Level Name</label><input id="dm-name" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="form-grid">
+          <div class="field"><label>Creator</label><input id="dm-creator" value="${editing?escapeHtml(editing.creator||''):''}"></div>
+          <div class="field"><label>Verifier</label><input id="dm-verifier" value="${editing?escapeHtml(editing.verifier||''):''}"></div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>Points if beaten</label><input id="dm-points" type="number" min="0" value="${editing?editing.points:100}"></div>
+          <div class="field"><label>Video URL</label><input id="dm-video" value="${editing?escapeHtml(editing.video||''):''}" placeholder="https://youtube.com/..."></div>
+        </div>
+        <div class="field">
+          <label>Tags</label>
+          <input id="dm-tags" value="${escapeHtml(currentTagsString)}" placeholder="e.g. Memory, Timing, XL, Wave, Challenge">
+          <div class="hint">Type whatever tags you want for this level, separated by commas.</div>
+        </div>
+        <div class="field"><label>Description (optional)</label><textarea id="dm-desc">${editing?escapeHtml(editing.description||''):''}</textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveDemonForm(${editing?`'${editing.id}'`:'null'})">${editing?'Save Changes':'Add Demon'}</button>
+      </div>
+    </div>
+  </div>`);
+}
+async function saveDemonForm(id){
+  const name = document.getElementById('dm-name').value.trim();
+  if(!name) return;
+
+  const rawTags = document.getElementById('dm-tags').value;
+  const processedTags = rawTags.split(',')
+    .map(t => t.trim())
+    .filter(t => t.length > 0);
+
+  const data = {
+    name,
+    creator: document.getElementById('dm-creator').value.trim(),
+    verifier: document.getElementById('dm-verifier').value.trim(),
+    points: parseInt(document.getElementById('dm-points').value) || 0,
+    video: document.getElementById('dm-video').value.trim(),
+    description: document.getElementById('dm-desc').value.trim(),
+    tags: processedTags
+  };
+  if(id){
+    const d = APP.demons.find(x=>x.id===id);
+    Object.assign(d, data);
+  }else{
+    APP.demons.push({ id: uid(), ...data, addedAt: Date.now() });
+    APP.selectedDemonId = APP.demons[APP.demons.length-1].id;
+  }
+  await saveDemons();
+  closeModal();
+  renderAll();
+}
+async function deleteDemon(id){
+  if(!confirm('Remove this demon from the list?')) return;
+  APP.demons = APP.demons.filter(d=>d.id!==id);
+  if(APP.selectedDemonId===id) APP.selectedDemonId = APP.demons[0]?.id || null;
+  await saveDemons();
+  renderAll();
+}
+async function moveDemon(id, dir){
+  const i = APP.demons.findIndex(d=>d.id===id);
+  const j = i+dir;
+  if(j<0 || j>=APP.demons.length) return;
+  [APP.demons[i], APP.demons[j]] = [APP.demons[j], APP.demons[i]];
+  await saveDemons();
+  renderListTab();
+}
+
+/* ============================= ROULETTE TAB ============================= */
+function renderRouletteTab(){
+  const el = document.getElementById('panel-roulette');
+  const rl = APP.roulette;
+
+  if(!APP.demons.length){
+    el.innerHTML = `
+      <div class="page-head">
+        <h1 class="page-title">Roulette</h1>
+      </div>
+      <div class="empty-state"><div class="big">Add some demons first</div>The roulette pulls random levels from the Demon List tab.</div>`;
+    return;
+  }
+
+  let cardInner;
+  if(!rl.current){
+    cardInner = `
+      <div class="roulette-req">Next requirement: ${rl.required}%</div>
+      <div class="roulette-demon">—</div>
+      <div class="roulette-creator">Spin to get a random level</div>
+      <button class="btn primary" style="padding:8px 20px;" onclick="spinRoulette()">Spin</button>
+    `;
+  }else{
+    cardInner = `
+      <div class="roulette-req">Level ${rl.history.length+1}</div>
+      <div class="roulette-demon">${escapeHtml(rl.current.name)}</div>
+      <div class="roulette-creator">by ${escapeHtml(rl.current.creator||'Unknown')}</div>
+      <div class="roulette-target">${rl.required}%</div>
+      <div class="roulette-input-row">
+        <input type="number" min="1" max="100" id="rl-percent" placeholder="0-100">
+        <button class="btn primary" onclick="submitRoulettePercent()">Submit</button>
+      </div>
+      <div class="roulette-feedback" id="rl-feedback"></div>
+    `;
+  }
+
+  const history = rl.history.slice().reverse().map(h => `
+    <div class="rh-item">
+      <span class="rh-name">${escapeHtml(h.name)} — needed ${h.required}%, got ${h.achieved}%</span>
+      <span class="rh-result ${h.result}">${h.result==='pass'?'PASS':'FAIL'}</span>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Roulette</h1>
+      <p class="page-desc">Get a random demon. Clear the required percent and the next one gets harder — whatever you enter becomes (entered % + 1) for the next level. Fall short and it resets to 1%.</p>
+    </div>
+    <div class="roulette-wrap">
+      <div class="roulette-card">${cardInner}</div>
+      ${rl.history.length ? `<div class="panel roulette-history"><div class="panel-head"><h3>Run History</h3><button class="btn small ghost" onclick="resetRoulette()">Reset Run</button></div><div>${history}</div></div>` : ''}
+    </div>
+  `;
+  const input = document.getElementById('rl-percent');
+  if(input){ input.focus(); input.addEventListener('keydown', e=>{ if(e.key==='Enter') submitRoulettePercent(); }); }
+}
+function spinRoulette(){
+  const rl = APP.roulette;
+  let pool = APP.demons.filter(d => !rl.usedIds.includes(d.id));
+  if(pool.length===0){ rl.usedIds = []; pool = APP.demons; }
+  const pick = pool[Math.floor(Math.random()*pool.length)];
+  rl.current = pick;
+  rl.usedIds.push(pick.id);
+  renderRouletteTab();
+}
+function submitRoulettePercent(){
+  const input = document.getElementById('rl-percent');
+  const val = parseInt(input.value);
+  const rl = APP.roulette;
+  const fb = document.getElementById('rl-feedback');
+  if(isNaN(val) || val<1 || val>100){ fb.textContent = 'Enter a percent between 1 and 100.'; fb.className='roulette-feedback fail'; return; }
+
+  const required = rl.required;
+  const pass = val >= required;
+  rl.history.push({ name: rl.current.name, required, achieved: val, result: pass ? 'pass':'fail' });
+
+  if(pass){
+    if(val >= 100){
+      fb.textContent = 'Roulette cleared! Starting a new run at 1%.';
+      fb.className = 'roulette-feedback pass';
+      rl.required = 1;
+    }else{
+      rl.required = Math.min(100, val+1);
+      fb.textContent = `Cleared! Next requirement: ${rl.required}%.`;
+      fb.className = 'roulette-feedback pass';
+    }
+    rl.current = null;
+  }else{
+    fb.textContent = `Short of ${required}% — run reset to 1%.`;
+    fb.className = 'roulette-feedback fail';
+    rl.required = 1;
+    rl.current = null;
+  }
+  setTimeout(renderRouletteTab, pass ? 300 : 900);
+}
+function resetRoulette(){
+  APP.roulette = { required: 1, current: null, usedIds: [], history: [], done:false };
+  renderRouletteTab();
+}
+
+/* ============================= LEADERBOARD TAB ============================= */
+function renderLeaderboardTab(){
+  const el = document.getElementById('panel-leaderboard');
+  const sorted = APP.players.slice().sort((a,b)=>b.points-a.points);
+  const rankClass = i => i===0?'r1':i===1?'r2':i===2?'r3':'';
+  const rows = sorted.length ? sorted.map((p,i) => `
+    <tr>
+      <td class="lb-rank ${rankClass(i)}">#${i+1}</td>
+      <td><span class="flag">${flagEmoji(p.country)}</span><strong>${escapeHtml(p.name)}</strong></td>
+      <td style="color:var(--text-dim);font-size:12px;">${countryName(p.country)}</td>
+      <td class="lb-points">${p.points}</td>
+      ${isMod() ? `<td class="lb-actions">
+        <button class="btn small" onclick="openPlayerModal('${p.id}')">Edit</button>
+        <button class="btn small danger" onclick="deletePlayer('${p.id}')">Delete</button>
+      </td>` : '<td></td>'}
+    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="big">No players yet</div>${isMod() ? 'Add a player to start the leaderboard.' : 'Check back soon.'}</div></td></tr>`;
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Leaderboard</h1>
+      <p class="page-desc">${sorted.length} player${sorted.length===1?'':'s'}, ranked by total points earned from beaten demons.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Players</h3>
+        ${isMod() ? `<button class="btn small primary" onclick="openPlayerModal()">+ Add Player</button>` : ''}
+      </div>
+      <div style="overflow-x:auto;">
+      <table class="lb-table">
+        <thead><tr><th>Rank</th><th>Player</th><th>Region</th><th>Points</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>
+    </div>
+  `;
+}
+function openPlayerModal(id){
+  if(!isMod()) return;
+  const editing = id ? APP.players.find(p=>p.id===id) : null;
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>${editing?'Edit Player':'Add Player'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Player Name</label><input id="pl-name" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="form-grid">
+          <div class="field"><label>Region / Country</label><select id="pl-country">${countryOptions(editing?editing.country:'US')}</select></div>
+          <div class="field"><label>Points</label><input id="pl-points" type="number" min="0" value="${editing?editing.points:0}"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="savePlayerForm(${editing?`'${editing.id}'`:'null'})">${editing?'Save Changes':'Add Player'}</button>
+      </div>
+    </div>
+  </div>`);
+}
+async function savePlayerForm(id){
+  const name = document.getElementById('pl-name').value.trim();
+  if(!name) return;
+  const data = {
+    name,
+    country: document.getElementById('pl-country').value,
+    points: parseInt(document.getElementById('pl-points').value) || 0,
+  };
+  if(id){ Object.assign(APP.players.find(p=>p.id===id), data); }
+  else{ APP.players.push({ id: uid(), ...data }); }
+  await savePlayers();
+  closeModal();
+  renderLeaderboardTab();
+}
+async function deletePlayer(id){
+  if(!confirm('Remove this player from the leaderboard?')) return;
+  APP.players = APP.players.filter(p=>p.id!==id);
+  await savePlayers();
+  renderLeaderboardTab();
+}
+
+/* ============================= SUBMIT TAB ============================= */
+function renderSubmitTab(){
+  const el = document.getElementById('panel-submit');
+  const demonOptions = APP.demons.map(d => `<option value="${d.id}">${escapeHtml(d.name)} (${d.points}pt)</option>`).join('');
+  const queue = APP.submissions.slice().reverse();
+
+  const queueHtml = queue.length ? queue.map(s => {
+    const demon = APP.demons.find(d=>d.id===s.demonId);
+    return `
+    <div class="sub-item">
+      <div class="sub-item-top">
+        <div>
+          <span class="who">${escapeHtml(s.player)}</span>
+          <span class="what"> — ${demon?escapeHtml(demon.name):'(deleted demon)'} · ${s.percent}%</span>
+        </div>
+        <span class="status-pill ${s.status}">${s.status}</span>
+      </div>
+      ${s.note ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px; font-style:italic;">"${escapeHtml(s.note)}"</div>` : ''}
+      <a class="sub-link" href="${escapeHtml(s.video)}" target="_blank">Watch submission ↗</a>
+      ${isMod() && s.status==='pending' ? `
+      <div class="sub-actions">
+        <button class="btn small primary" onclick="reviewSubmission('${s.id}','approved')">Approve</button>
+        <button class="btn small danger" onclick="reviewSubmission('${s.id}','rejected')">Reject</button>
+      </div>` : ''}
+    </div>`;
+  }).join('') : `<div class="empty-state"><div class="big">No submissions yet</div>Plays sent for review will show up here.</div>`;
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Submit a Play</h1>
+      <p class="page-desc">Send a video of your run to the list moderators. Approved plays award the demon's points to your leaderboard total.</p>
+    </div>
+    <div class="list-layout">
+      <div class="panel">
+        <div class="panel-head"><h3>New Submission</h3></div>
+        <div style="padding:14px;">
+          ${APP.demons.length ? `
+          <div class="field"><label>Your Player Name</label><input id="sb-player" ></div>
+          <div class="field"><label>Demon</label><select id="sb-demon">${demonOptions}</select></div>
+          <div class="form-grid">
+            <div class="field"><label>Percent</label><input id="sb-percent" type="number" min="1" max="100" value="100"></div>
+            <div class="field"><label>Region</label><select id="sb-country">${countryOptions('US')}</select></div>
+          </div>
+          <div class="field"><label>Video URL</label><input id="sb-video" placeholder="https://youtube.com/..."></div>
+          <div class="field"><label>Note (optional)</label><textarea id="sb-note" placeholder="Anything moderators should know"></textarea></div>
+          <button class="btn primary" style="width:100%;" onclick="submitPlay()">Send for Review</button>
+          <div id="submitMsg"></div>
+          ` : `<div class="empty-state">Add demons to the list first.</div>`}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Queue</h3></div>
+        <div class="sub-list demon-rows" style="max-height:none;">${queueHtml}</div>
+      </div>
+    </div>
+  `;
+}
+async function submitPlay(){
+  const player = document.getElementById('sb-player').value.trim();
+  const demonId = document.getElementById('sb-demon').value;
+  const percent = parseInt(document.getElementById('sb-percent').value);
+  const video = document.getElementById('sb-video').value.trim();
+  const country = document.getElementById('sb-country').value;
+  const note = document.getElementById('sb-note').value.trim();
+  const msgEl = document.getElementById('submitMsg');
+  if(!player || !video || isNaN(percent) || percent<1 || percent>100){
+    msgEl.innerHTML = `<div class="msg error">Fill in your name, a percent (1-100), and a video URL.</div>`;
+    return;
+  }
+  APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, status:'pending', submittedAt: Date.now() });
+  await saveSubmissions();
+  msgEl.innerHTML = `<div class="msg ok">Submitted! A moderator will review it soon.</div>`;
+  renderSubmitTab();
+}
+async function reviewSubmission(id, status){
+  if(!isMod()) return;
+  const s = APP.submissions.find(x=>x.id===id);
+  if(!s) return;
+  s.status = status;
+  if(status==='approved'){
+    const demon = APP.demons.find(d=>d.id===s.demonId);
+    let player = APP.players.find(p=>p.name.toLowerCase()===s.player.toLowerCase());
+    if(!player){
+      player = { id: uid(), name: s.player, country: s.country||'OTHER', points: 0 };
+      APP.players.push(player);
+    }
+    if(demon) player.points += demon.points;
+    await savePlayers();
+  }
+  await saveSubmissions();
+  renderAll();
+}
+
+/* ============================= INIT ============================= */
+async function init(){     
+  await loadAll();
+  restoreSession();      
+  renderAccountArea();
+  renderAll();
+}
+init();
+</script>
+</body>
+</html>
