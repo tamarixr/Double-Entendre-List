@@ -308,6 +308,59 @@ body.light-theme .lb-rank.r2 { color: #6b7280; }
 .sub-link{font-size:11.5px;color:var(--cyan);display:inline-block;margin-top:2px;}
 
 .footer-note{max-width:1200px;margin:0 auto;padding:20px 15px;color:var(--text-dim);font-size:11px;text-align:center;border-top:1px solid var(--line-soft);}
+
+/* ---------- QOL: stat cards ---------- */
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px;}
+.stat-card{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;}
+.stat-card .sc-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--spike);}
+.stat-card .sc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-top:2px;}
+
+/* ---------- QOL: toolbar (search/sort/filter) ---------- */
+.list-toolbar{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px;background:var(--bg-raised);}
+.list-toolbar-row{display:flex;gap:6px;}
+.search-input-wrap{position:relative;flex:1;}
+.search-input-wrap input{width:100%;padding:6px 10px 6px 26px;background:var(--bg-void);border:1px solid var(--line);color:var(--text);border-radius:var(--radius);font-size:12.5px;outline:none;}
+.search-input-wrap input:focus{border-color:var(--spike);}
+.search-input-wrap .si-icon{position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:11px;pointer-events:none;}
+.sort-select{background:var(--bg-void);border:1px solid var(--line);color:var(--text);border-radius:var(--radius);font-size:12px;padding:6px 8px;outline:none;}
+.tag-filter-row{display:flex;flex-wrap:wrap;gap:4px;}
+.tag-chip{font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bg-void);color:var(--text-muted);text-transform:uppercase;transition:all .1s;}
+.tag-chip:hover{border-color:var(--text-dim);color:var(--text);}
+.tag-chip.active{background:var(--spike-dim);border-color:var(--spike);color:var(--text);}
+.result-count{font-size:11px;color:var(--text-dim);padding:6px 12px 0;}
+.kbd-hint{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-void);border:1px solid var(--line);border-radius:2px;padding:0 4px;color:var(--text-dim);}
+
+/* ---------- QOL: copy link / small icon buttons ---------- */
+.icon-btn{background:none;border:1px solid var(--line);color:var(--text-muted);border-radius:var(--radius);padding:4px 8px;font-size:11.5px;font-weight:600;}
+.icon-btn:hover{color:var(--text);border-color:var(--text-dim);}
+
+/* ---------- QOL: toast notifications ---------- */
+#toastRoot{position:fixed;bottom:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+.toast{background:var(--bg-raised-2);border:1px solid var(--line);border-left:3px solid var(--spike);color:var(--text);
+  padding:9px 14px;border-radius:var(--radius);font-size:12.5px;box-shadow:0 4px 16px rgba(0,0,0,0.3);
+  animation:toastIn .15s ease-out; max-width:280px;}
+.toast.ok{border-left-color:var(--green);}
+.toast.error{border-left-color:var(--red);}
+@keyframes toastIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ---------- QOL: confirm modal ---------- */
+.confirm-modal{max-width:360px;}
+.confirm-modal .modal-body{font-size:13px;color:var(--text-muted);}
+
+/* ---------- QOL: player profile ---------- */
+.player-row-click{cursor:pointer;}
+.player-row-click:hover td{background:var(--bg-raised);}
+.progress-bar-outer{background:var(--bg-void);border:1px solid var(--line);border-radius:20px;height:8px;overflow:hidden;margin:8px 0;}
+.progress-bar-inner{background:var(--spike);height:100%;border-radius:20px;transition:width .2s;}
+.completion-item{display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--line-soft);font-size:12.5px;}
+.completion-item:last-child{border-bottom:none;}
+
+/* ---------- QOL: status filter pills ---------- */
+.status-filter-row{display:flex;gap:4px;padding:10px 12px 0;}
+.status-filter-btn{font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid var(--line);background:var(--bg-void);color:var(--text-muted);}
+.status-filter-btn.active{background:var(--spike-dim);border-color:var(--spike);color:var(--text);}
+
+@media(max-width:520px){.list-toolbar-row{flex-direction:column;} .sort-select{width:100%;}}
 </style>
 </head>
 <body>
@@ -338,6 +391,7 @@ body.light-theme .lb-rank.r2 { color: #6b7280; }
 <div class="footer-note">Lightweight client-side data architecture. Verified ecosystem engine. Admin access strictly curated.</div>
 
 <div id="modalRoot"></div>
+<div id="toastRoot"></div>
 
 <script>
 /* ============================= PRESETS & PALETTES ============================= */
@@ -366,7 +420,10 @@ const APP = {
     siteTagline: "The hardest levels, ranked by difficulty.",
     accentColor: "pink",
     themeMode: "dark" // "dark" or "light"
-  }
+  },
+  listFilter: { search: '', tags: [], sort: 'rank' },
+  lbFilter: { search: '', sort: 'points' },
+  subFilter: { status: 'all', search: '' }
 };
 
 /* ============================= OBFUSCATED CREDENTIALS ============================= */
@@ -551,6 +608,79 @@ function getEmbedUrl(url){
 function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
 function openModal(html){ document.getElementById('modalRoot').innerHTML = html; }
 
+/* ============================= QOL: TOASTS ============================= */
+function showToast(text, type='ok'){
+  const root = document.getElementById('toastRoot');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = text;
+  root.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .2s'; setTimeout(()=>t.remove(), 200); }, 2600);
+}
+
+/* ============================= QOL: CUSTOM CONFIRM ============================= */
+function customConfirm(message, title='Are you sure?'){
+  return new Promise(resolve => {
+    openModal(`
+    <div class="modal-backdrop" onclick="if(event.target===this){ closeModal(); window.__confirmResolve(false); }">
+      <div class="modal confirm-modal">
+        <div class="modal-head"><h3>${escapeHtml(title)}</h3><button class="modal-close" onclick="closeModal(); window.__confirmResolve(false);">&times;</button></div>
+        <div class="modal-body">${escapeHtml(message)}</div>
+        <div class="modal-foot">
+          <button class="btn ghost" onclick="closeModal(); window.__confirmResolve(false);">Cancel</button>
+          <button class="btn danger" style="background:var(--red);color:#fff;border-color:var(--red);" onclick="closeModal(); window.__confirmResolve(true);">Confirm</button>
+        </div>
+      </div>
+    </div>`);
+    window.__confirmResolve = resolve;
+  });
+}
+
+/* ============================= QOL: CLIPBOARD ============================= */
+async function copyToClipboard(text, successMsg='Copied to clipboard'){
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast(successMsg, 'ok');
+  }catch(e){
+    showToast('Could not copy — copy manually: ' + text, 'error');
+  }
+}
+function copyDemonLink(id){
+  const url = location.origin + location.pathname + '#demon-' + id;
+  copyToClipboard(url, 'Link copied!');
+}
+
+/* ============================= QOL: DEEP LINKING ============================= */
+function applyHashRoute(){
+  const hash = location.hash || '';
+  if(hash.startsWith('#demon-')){
+    const id = hash.slice(7);
+    if(APP.demons.some(d=>d.id===id)){
+      APP.selectedDemonId = id;
+      APP.activeTab = 'list';
+    }
+  }
+}
+
+/* ============================= QOL: TAB MEMORY ============================= */
+function rememberTab(tab){ try{ localStorage.setItem('demonlist_last_tab', tab); }catch(e){} }
+function recallTab(){ try{ return localStorage.getItem('demonlist_last_tab'); }catch(e){ return null; } }
+
+/* ============================= QOL: KEYBOARD SHORTCUTS ============================= */
+document.addEventListener('keydown', e => {
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  if(e.key === 'Escape'){
+    const backdrop = document.querySelector('.modal-backdrop');
+    if(backdrop){ closeModal(); if(window.__confirmResolve){ window.__confirmResolve(false); window.__confirmResolve=null; } }
+    return;
+  }
+  if(e.key === '/' && !typing){
+    const search = document.getElementById('list-search');
+    if(search && APP.activeTab === 'list'){ e.preventDefault(); search.focus(); }
+  }
+});
+
 /* ============================= RENDER: ACCOUNT AREA ============================= */
 function renderAccountArea(){
   const el = document.getElementById('accountArea');
@@ -678,11 +808,16 @@ async function handleSaveSettings(){
   applySystemTheme();
   closeModal();
   renderAll();
+  showToast('Settings saved');
 }
 
 /* ============================= TABS ============================= */
 function switchTab(tab){
   APP.activeTab = tab;
+  rememberTab(tab);
+  if(tab !== 'list' && location.hash.startsWith('#demon-')){
+    history.replaceState(null, '', location.pathname + location.search);
+  }
   document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
@@ -702,13 +837,86 @@ function renderAll(){
 }
 
 /* ============================= LIST TAB ============================= */
-function renderListTab(){
+function allDemonTags(){
+  const set = new Set();
+  APP.demons.forEach(d => (d.tags||[]).forEach(t => set.add(t)));
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+function getFilteredSortedDemons(){
+  const demons = APP.demons;
+  const { search, tags, sort } = APP.listFilter;
+  const q = search.trim().toLowerCase();
+  let list = demons.map((d,i) => ({ d, rank: i }));
+  if(q){
+    list = list.filter(({d}) =>
+      d.name.toLowerCase().includes(q) ||
+      (d.creator||'').toLowerCase().includes(q) ||
+      (d.verifier||'').toLowerCase().includes(q)
+    );
+  }
+  if(tags.length){
+    list = list.filter(({d}) => tags.every(t => (d.tags||[]).includes(t)));
+  }
+  const sorted = list.slice();
+  if(sort === 'points-desc') sorted.sort((a,b)=>b.d.points-a.d.points);
+  else if(sort === 'points-asc') sorted.sort((a,b)=>a.d.points-b.d.points);
+  else if(sort === 'az') sorted.sort((a,b)=>a.d.name.localeCompare(b.d.name));
+  else if(sort === 'newest') sorted.sort((a,b)=>(b.d.addedAt||0)-(a.d.addedAt||0));
+  else sorted.sort((a,b)=>a.rank-b.rank); // rank = default list order
+  return sorted;
+}
+function setListSearch(v){ APP.listFilter.search = v; renderListTab(true); }
+function setListSort(v){ APP.listFilter.sort = v; renderListTab(); }
+function toggleListTagFilter(t){
+  const i = APP.listFilter.tags.indexOf(t);
+  if(i===-1) APP.listFilter.tags.push(t); else APP.listFilter.tags.splice(i,1);
+  renderListTab();
+}
+function renderListTab(preserveFocus){
   const el = document.getElementById('panel-list');
   const demons = APP.demons;
   if(!APP.selectedDemonId && demons.length) APP.selectedDemonId = demons[0].id;
   const selected = demons.find(d => d.id === APP.selectedDemonId);
+  const filtered = getFilteredSortedDemons();
 
-  const rows = demons.length ? demons.map((d, i) => {
+  const totalPoints = demons.reduce((s,d)=>s+(d.points||0),0);
+  const hardest = demons[0];
+  const statCards = demons.length ? `
+    <div class="stat-cards">
+      <div class="stat-card"><div class="sc-val">${demons.length}</div><div class="sc-lbl">Levels</div></div>
+      <div class="stat-card"><div class="sc-val">${totalPoints}</div><div class="sc-lbl">Total Points</div></div>
+      <div class="stat-card"><div class="sc-val">${APP.players.length}</div><div class="sc-lbl">Players</div></div>
+      <div class="stat-card"><div class="sc-val" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${hardest?escapeHtml(hardest.name):'—'}</div><div class="sc-lbl">#1 Hardest</div></div>
+    </div>` : '';
+
+  const tags = allDemonTags();
+  const tagChips = tags.length ? `
+    <div class="tag-filter-row">
+      ${tags.map(t => `<button class="tag-chip ${APP.listFilter.tags.includes(t)?'active':''}" onclick="toggleListTagFilter('${escapeHtml(t).replace(/'/g,"\\'")}')">${escapeHtml(t)}</button>`).join('')}
+    </div>` : '';
+
+  const toolbar = `
+    <div class="list-toolbar">
+      <div class="list-toolbar-row">
+        <div class="search-input-wrap">
+          <span class="si-icon">⌕</span>
+          <input id="list-search" placeholder="Search by name, creator, verifier... (press /)" value="${escapeHtml(APP.listFilter.search)}" oninput="setListSearch(this.value)">
+        </div>
+        <select class="sort-select" onchange="setListSort(this.value)">
+          <option value="rank" ${APP.listFilter.sort==='rank'?'selected':''}>List Order</option>
+          <option value="points-desc" ${APP.listFilter.sort==='points-desc'?'selected':''}>Points: High to Low</option>
+          <option value="points-asc" ${APP.listFilter.sort==='points-asc'?'selected':''}>Points: Low to High</option>
+          <option value="az" ${APP.listFilter.sort==='az'?'selected':''}>Name: A-Z</option>
+          <option value="newest" ${APP.listFilter.sort==='newest'?'selected':''}>Newest Added</option>
+        </select>
+      </div>
+      ${tagChips}
+    </div>
+    ${filtered.length !== demons.length ? `<div class="result-count">${filtered.length} of ${demons.length} levels match</div>` : ''}
+  `;
+
+  const rows = demons.length ? (filtered.length ? filtered.map(({d, rank}) => {
+    const i = rank;
     const tagsHtml = (d.tags || []).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('');
     return `
     <div class="demon-row ${d.id===APP.selectedDemonId?'selected':''}" onclick="selectDemon('${d.id}')">
@@ -726,7 +934,8 @@ function renderListTab(){
       </div>` : ''}
     </div>
   `;
-  }).join('') : `<div class="empty-state"><div class="big">No demons yet</div>${isMod() ? 'Add one to get started.' : 'Check back soon.'}</div>`;
+  }).join('') : `<div class="empty-state"><div class="big">No matches</div>Try a different search or clear your tag filters.</div>`)
+   : `<div class="empty-state"><div class="big">No demons yet</div>${isMod() ? 'Add one to get started.' : 'Check back soon.'}</div>`;
 
   const detail = selected ? renderDemonDetail(selected, demons.findIndex(d=>d.id===selected.id)) :
     `<div class="empty-state"><div class="big">Nothing selected</div>Pick a level from the list.</div>`;
@@ -736,19 +945,29 @@ function renderListTab(){
       <h1 class="page-title site-name-text">${escapeHtml(APP.settings.siteName)}</h1>
       <p class="page-desc site-tagline-text">${escapeHtml(APP.settings.siteTagline)}</p>
     </div>
+    ${statCards}
     <div class="list-layout">
       <div class="panel">
         <div class="panel-head">
-          <h3>Levels</h3>
+          <h3>Levels <span class="kbd-hint">/</span></h3>
           ${isMod() ? `<button class="btn small primary" onclick="openDemonModal()">+ Add Demon</button>` : ''}
         </div>
+        ${demons.length ? toolbar : ''}
         <div class="demon-rows">${rows}</div>
       </div>
       <div class="panel"><div class="detail">${detail}</div></div>
     </div>
   `;
+  if(preserveFocus){
+    const s = document.getElementById('list-search');
+    if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
+  }
 }
-function selectDemon(id){ APP.selectedDemonId = id; renderListTab(); }
+function selectDemon(id){
+  APP.selectedDemonId = id;
+  history.replaceState(null, '', location.pathname + location.search + '#demon-' + id);
+  renderListTab();
+}
 function renderDemonDetail(d, index){
   const embed = getEmbedUrl(d.video);
   const tagHtml = (d.tags || []).map(t => `<span class="tag-pill" style="font-size:11px; padding:2px 6px;">${escapeHtml(t)}</span>`).join(' ');
@@ -760,10 +979,12 @@ function renderDemonDetail(d, index){
         <div class="detail-sub">by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
         ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
       </div>
-      ${isMod() ? `<div>
+      <div>
+        <button class="icon-btn" onclick="copyDemonLink('${d.id}')" title="Copy shareable link">🔗 Copy Link</button>
+        ${isMod() ? `
         <button class="btn small" onclick="openDemonModal('${d.id}')">Edit</button>
-        <button class="btn small danger" onclick="deleteDemon('${d.id}')">Delete</button>
-      </div>` : ''}
+        <button class="btn small danger" onclick="deleteDemon('${d.id}')">Delete</button>` : ''}
+      </div>
     </div>
     <div class="stat-row">
       <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Placement</div></div>
@@ -835,13 +1056,17 @@ async function saveDemonForm(id){
   await saveDemons();
   closeModal();
   renderAll();
+  showToast(id ? 'Demon updated' : 'Demon added');
 }
 async function deleteDemon(id){
-  if(!confirm('Remove this demon from the list?')) return;
+  const d = APP.demons.find(x=>x.id===id);
+  const ok = await customConfirm(`Remove "${d?d.name:'this demon'}" from the list? This cannot be undone.`, 'Delete demon');
+  if(!ok) return;
   APP.demons = APP.demons.filter(d=>d.id!==id);
   if(APP.selectedDemonId===id) APP.selectedDemonId = APP.demons[0]?.id || null;
   await saveDemons();
   renderAll();
+  showToast('Demon deleted');
 }
 async function moveDemon(id, dir){
   const i = APP.demons.findIndex(d=>d.id===id);
@@ -907,6 +1132,16 @@ function renderRouletteTab(){
   const input = document.getElementById('rl-percent');
   if(input){ input.focus(); input.addEventListener('keydown', e=>{ if(e.key==='Enter') submitRoulettePercent(); }); }
 }
+function saveRouletteLocal(){ try{ localStorage.setItem('demonlist_roulette', JSON.stringify(APP.roulette)); }catch(e){} }
+function loadRouletteLocal(){
+  try{
+    const raw = localStorage.getItem('demonlist_roulette');
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(parsed && typeof parsed === 'object') APP.roulette = Object.assign({ required:1, current:null, usedIds:[], history:[], done:false }, parsed);
+    }
+  }catch(e){}
+}
 function spinRoulette(){
   const rl = APP.roulette;
   let pool = APP.demons.filter(d => !rl.usedIds.includes(d.id));
@@ -914,6 +1149,7 @@ function spinRoulette(){
   const pick = pool[Math.floor(Math.random()*pool.length)];
   rl.current = pick;
   rl.usedIds.push(pick.id);
+  saveRouletteLocal();
   renderRouletteTab();
 }
 function submitRoulettePercent(){
@@ -944,40 +1180,88 @@ function submitRoulettePercent(){
     rl.required = 1;
     rl.current = null;
   }
+  saveRouletteLocal();
   setTimeout(renderRouletteTab, pass ? 300 : 900);
 }
 function resetRoulette(){
   APP.roulette = { required: 1, current: null, usedIds: [], history: [], done:false };
+  saveRouletteLocal();
   renderRouletteTab();
 }
 
 /* ============================= LEADERBOARD TAB ============================= */
-function renderLeaderboardTab(){
-  const el = document.getElementById('panel-leaderboard');
+function setLbSearch(v){ APP.lbFilter.search = v; renderLeaderboardTab(true); }
+function setLbSort(v){ APP.lbFilter.sort = v; renderLeaderboardTab(); }
+function getFilteredSortedPlayers(){
+  const { search, sort } = APP.lbFilter;
+  const q = search.trim().toLowerCase();
+  let list = APP.players.slice();
+  if(q) list = list.filter(p => p.name.toLowerCase().includes(q) || countryName(p.country).toLowerCase().includes(q));
+  if(sort === 'az') list.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sort === 'za') list.sort((a,b)=>b.name.localeCompare(a.name));
+  else list.sort((a,b)=>b.points-a.points); // points desc default
+  return list;
+}
+function exportLeaderboardCsv(){
   const sorted = APP.players.slice().sort((a,b)=>b.points-a.points);
+  if(!sorted.length){ showToast('No players to export', 'error'); return; }
+  const header = 'Rank,Name,Region,Points\n';
+  const rows = sorted.map((p,i) => `${i+1},"${(p.name||'').replace(/"/g,'""')}",${countryName(p.country)},${p.points}`).join('\n');
+  const blob = new Blob([header+rows], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'leaderboard.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported');
+}
+function renderLeaderboardTab(preserveFocus){
+  const el = document.getElementById('panel-leaderboard');
+  const allSorted = APP.players.slice().sort((a,b)=>b.points-a.points);
+  const rankOf = id => allSorted.findIndex(p=>p.id===id);
+  const filtered = getFilteredSortedPlayers();
   const rankClass = i => i===0?'r1':i===1?'r2':i===2?'r3':'';
-  const rows = sorted.length ? sorted.map((p,i) => `
-    <tr>
+  const rows = filtered.length ? filtered.map((p) => {
+    const i = rankOf(p.id);
+    return `
+    <tr class="player-row-click" onclick="openPlayerProfile('${p.id}')">
       <td class="lb-rank ${rankClass(i)}">#${i+1}</td>
       <td><span class="flag">${flagEmoji(p.country)}</span><strong>${escapeHtml(p.name)}</strong></td>
       <td style="color:var(--text-dim);font-size:12px;">${countryName(p.country)}</td>
       <td class="lb-points">${p.points}</td>
-      ${isMod() ? `<td class="lb-actions">
+      ${isMod() ? `<td class="lb-actions" onclick="event.stopPropagation()">
         <button class="btn small" onclick="openPlayerModal('${p.id}')">Edit</button>
         <button class="btn small danger" onclick="deletePlayer('${p.id}')">Delete</button>
       </td>` : '<td></td>'}
-    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="big">No players yet</div>${isMod() ? 'Add a player to start the leaderboard.' : 'Check back soon.'}</div></td></tr>`;
+    </tr>`;
+  }).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="big">${APP.players.length?'No matches':'No players yet'}</div>${APP.players.length ? 'Try a different search.' : (isMod() ? 'Add a player to start the leaderboard.' : 'Check back soon.')}</div></td></tr>`;
 
   el.innerHTML = `
     <div class="page-head">
       <h1 class="page-title">Leaderboard</h1>
-      <p class="page-desc">${sorted.length} player${sorted.length===1?'':'s'}, ranked by total points earned from beaten demons.</p>
+      <p class="page-desc">${APP.players.length} player${APP.players.length===1?'':'s'}, ranked by total points earned from beaten demons. Click a row to view a player's profile.</p>
     </div>
     <div class="panel">
       <div class="panel-head">
         <h3>Players</h3>
-        ${isMod() ? `<button class="btn small primary" onclick="openPlayerModal()">+ Add Player</button>` : ''}
+        <div style="display:flex;gap:6px;">
+          <button class="icon-btn" onclick="exportLeaderboardCsv()">⇩ Export CSV</button>
+          ${isMod() ? `<button class="btn small primary" onclick="openPlayerModal()">+ Add Player</button>` : ''}
+        </div>
       </div>
+      ${APP.players.length ? `
+      <div class="list-toolbar">
+        <div class="list-toolbar-row">
+          <div class="search-input-wrap">
+            <span class="si-icon">⌕</span>
+            <input id="lb-search" placeholder="Search players or region..." value="${escapeHtml(APP.lbFilter.search)}" oninput="setLbSearch(this.value)">
+          </div>
+          <select class="sort-select" onchange="setLbSort(this.value)">
+            <option value="points" ${APP.lbFilter.sort==='points'?'selected':''}>Points: High to Low</option>
+            <option value="az" ${APP.lbFilter.sort==='az'?'selected':''}>Name: A-Z</option>
+            <option value="za" ${APP.lbFilter.sort==='za'?'selected':''}>Name: Z-A</option>
+          </select>
+        </div>
+      </div>` : ''}
       <div style="overflow-x:auto;">
       <table class="lb-table">
         <thead><tr><th>Rank</th><th>Player</th><th>Region</th><th>Points</th><th></th></tr></thead>
@@ -986,6 +1270,45 @@ function renderLeaderboardTab(){
       </div>
     </div>
   `;
+  if(preserveFocus){
+    const s = document.getElementById('lb-search');
+    if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
+  }
+}
+
+/* ============================= PLAYER PROFILE ============================= */
+function openPlayerProfile(id){
+  const p = APP.players.find(x=>x.id===id);
+  if(!p) return;
+  const rank = APP.players.slice().sort((a,b)=>b.points-a.points).findIndex(x=>x.id===id) + 1;
+  const beaten = APP.submissions.filter(s => s.status==='approved' && s.player.toLowerCase()===p.name.toLowerCase());
+  const totalDemons = APP.demons.length;
+  const pct = totalDemons ? Math.round((beaten.length/totalDemons)*100) : 0;
+  const beatenHtml = beaten.length ? beaten.map(s => {
+    const demon = APP.demons.find(d=>d.id===s.demonId);
+    return `<div class="completion-item"><span>${demon?escapeHtml(demon.name):'(deleted demon)'}</span><span style="color:var(--text-dim);">${s.percent}%${demon?` · ${demon.points}pt`:''}</span></div>`;
+  }).join('') : `<div class="completion-item" style="color:var(--text-dim);">No approved completions on record yet.</div>`;
+
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>${flagEmoji(p.country)} ${escapeHtml(p.name)}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="stat-row" style="margin-top:0;">
+          <div class="stat rankstat"><div class="val">#${rank}</div><div class="lbl">Leaderboard Rank</div></div>
+          <div class="stat"><div class="val">${p.points}</div><div class="lbl">Points</div></div>
+          <div class="stat"><div class="val">${beaten.length}</div><div class="lbl">Demons Beaten</div></div>
+        </div>
+        <div class="field">
+          <label>List Completion — ${pct}%</label>
+          <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>
+        </div>
+        <div class="field"><label>Approved Completions</label></div>
+        <div class="panel">${beatenHtml}</div>
+      </div>
+      <div class="modal-foot"><button class="btn ghost" onclick="closeModal()">Close</button></div>
+    </div>
+  </div>`);
 }
 function openPlayerModal(id){
   if(!isMod()) return;
@@ -1021,19 +1344,40 @@ async function savePlayerForm(id){
   await savePlayers();
   closeModal();
   renderLeaderboardTab();
+  showToast(id ? 'Player updated' : 'Player added');
 }
 async function deletePlayer(id){
-  if(!confirm('Remove this player from the leaderboard?')) return;
+  const p = APP.players.find(x=>x.id===id);
+  const ok = await customConfirm(`Remove "${p?p.name:'this player'}" from the leaderboard?`, 'Delete player');
+  if(!ok) return;
   APP.players = APP.players.filter(p=>p.id!==id);
   await savePlayers();
   renderLeaderboardTab();
+  showToast('Player deleted');
 }
 
 /* ============================= SUBMIT TAB ============================= */
-function renderSubmitTab(){
+function setSubStatusFilter(status){ APP.subFilter.status = status; renderSubmitTab(); }
+function setSubSearch(v){ APP.subFilter.search = v; renderSubmitTab(true); }
+function renderSubmitTab(preserveFocus){
   const el = document.getElementById('panel-submit');
   const demonOptions = APP.demons.map(d => `<option value="${d.id}">${escapeHtml(d.name)} (${d.points}pt)</option>`).join('');
-  const queue = APP.submissions.slice().reverse();
+  let queue = APP.submissions.slice().reverse();
+  const { status, search } = APP.subFilter;
+  if(status !== 'all') queue = queue.filter(s => s.status === status);
+  const q = search.trim().toLowerCase();
+  if(q){
+    queue = queue.filter(s => {
+      const demon = APP.demons.find(d=>d.id===s.demonId);
+      return s.player.toLowerCase().includes(q) || (demon && demon.name.toLowerCase().includes(q));
+    });
+  }
+  const counts = {
+    all: APP.submissions.length,
+    pending: APP.submissions.filter(s=>s.status==='pending').length,
+    approved: APP.submissions.filter(s=>s.status==='approved').length,
+    rejected: APP.submissions.filter(s=>s.status==='rejected').length
+  };
 
   const queueHtml = queue.length ? queue.map(s => {
     const demon = APP.demons.find(d=>d.id===s.demonId);
@@ -1054,7 +1398,7 @@ function renderSubmitTab(){
         <button class="btn small danger" onclick="reviewSubmission('${s.id}','rejected')">Reject</button>
       </div>` : ''}
     </div>`;
-  }).join('') : `<div class="empty-state"><div class="big">No submissions yet</div>Plays sent for review will show up here.</div>`;
+  }).join('') : `<div class="empty-state"><div class="big">No submissions${status!=='all'||q?' match':' yet'}</div>${status!=='all'||q ? 'Try clearing the filters.' : 'Plays sent for review will show up here.'}</div>`;
 
   el.innerHTML = `
     <div class="page-head">
@@ -1081,10 +1425,27 @@ function renderSubmitTab(){
       </div>
       <div class="panel">
         <div class="panel-head"><h3>Queue</h3></div>
+        ${APP.submissions.length ? `
+        <div class="status-filter-row">
+          <button class="status-filter-btn ${status==='all'?'active':''}" onclick="setSubStatusFilter('all')">All (${counts.all})</button>
+          <button class="status-filter-btn ${status==='pending'?'active':''}" onclick="setSubStatusFilter('pending')">Pending (${counts.pending})</button>
+          <button class="status-filter-btn ${status==='approved'?'active':''}" onclick="setSubStatusFilter('approved')">Approved (${counts.approved})</button>
+          <button class="status-filter-btn ${status==='rejected'?'active':''}" onclick="setSubStatusFilter('rejected')">Rejected (${counts.rejected})</button>
+        </div>
+        <div class="list-toolbar" style="border-bottom:none;">
+          <div class="search-input-wrap">
+            <span class="si-icon">⌕</span>
+            <input id="sub-search" placeholder="Search player or level..." value="${escapeHtml(search)}" oninput="setSubSearch(this.value)">
+          </div>
+        </div>` : ''}
         <div class="sub-list demon-rows" style="max-height:none;">${queueHtml}</div>
       </div>
     </div>
   `;
+  if(preserveFocus){
+    const s = document.getElementById('sub-search');
+    if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
+  }
 }
 async function submitPlay(){
   const player = document.getElementById('sb-player').value.trim();
@@ -1120,15 +1481,27 @@ async function reviewSubmission(id, status){
   }
   await saveSubmissions();
   renderAll();
+  showToast(status==='approved' ? 'Submission approved' : 'Submission rejected', status==='approved'?'ok':'error');
 }
 
 /* ============================= INIT ============================= */
 async function init(){     
   await loadAll();
-  restoreSession();      
+  restoreSession();
+  loadRouletteLocal();
+
+  applyHashRoute();
+  if(!location.hash){
+    const lastTab = recallTab();
+    if(lastTab && document.getElementById('panel-'+lastTab)) APP.activeTab = lastTab;
+  }
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===APP.activeTab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+APP.activeTab));
+
   renderAccountArea();
   renderAll();
 }
+window.addEventListener('hashchange', () => { applyHashRoute(); renderAll(); document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===APP.activeTab)); document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+APP.activeTab)); });
 init();
 </script>
 </body>
