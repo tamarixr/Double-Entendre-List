@@ -1,3 +1,36 @@
+## What's new in this pass
+
+Same look, same theme, same layout — this pass just adds more QOL features
+inspired by pointercrate, AREDL, and demonlist.org, on top of what the
+previous pass already added (toasts, confirm modals, deep links, tab memory,
+`/` search shortcut, list search/sort/tag filters, CSV export, player
+profiles, light/dark theme, accent colors):
+
+- **Command palette (Ctrl/Cmd+K)** — a search-everything popup that jumps to
+  demons, players, or any tab. There's also a click-to-open search button in
+  the top bar for mobile/touch users.
+- **Main List / Legacy List split** — set a "Main List Size" in Site Settings
+  (admin) and everything past that position automatically becomes the
+  Legacy List, with a toggle in the Demon List tab to switch between Main,
+  Legacy, and All — same idea as AREDL/pointercrate's main vs legacy lists.
+- **Per-demon record requirement** — set a minimum percent required for a
+  demon (e.g. accept 60%+ records on an easier level), enforced on the
+  submission form with a live hint.
+- **Nation leaderboard** — a Players / Nations / Recent Records toggle on
+  the Leaderboard tab; Nations aggregates combined points per country.
+- **Recent Records feed** — a scrollable feed of the latest approved plays,
+  also under the Leaderboard tab.
+- **Stats tab** — a full list-statistics page: total/legacy demon counts,
+  points available, average points per demon, total points earned, approved
+  record count, top nation, most active player, and a "recently added"
+  panel.
+- **Pending submissions badge** — mods see a small count badge on the
+  "Submit Play" tab when there are unreviewed submissions.
+- **Keyboard navigation** — ↑/↓ moves the selected demon in the list tab.
+- **"New" badge** — demons added in the last 7 days get a small New pill.
+- **Player name autocomplete** on the submission form, pre-filled with your
+  username if you're logged in.
+
 # Deploying the Demon List to Vercel
 
 Your original file used `window.storage`, an API that only exists inside

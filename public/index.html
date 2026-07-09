@@ -360,6 +360,56 @@ body.light-theme .lb-rank.r2 { color: #6b7280; }
 .status-filter-btn{font-size:11px;font-weight:600;padding:4px 10px;border-radius:12px;border:1px solid var(--line);background:var(--bg-void);color:var(--text-muted);}
 .status-filter-btn.active{background:var(--spike-dim);border-color:var(--spike);color:var(--text);}
 
+/* ---------- QOL: nav badge ---------- */
+.nav-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:15px;height:15px;padding:0 4px;margin-left:5px;
+  background:var(--spike);color:#fff;font-size:9.5px;font-weight:700;
+  border-radius:8px;font-family:'JetBrains Mono',monospace;vertical-align:2px;
+}
+
+/* ---------- QOL: NEW pill ---------- */
+.tag-pill.new{background:var(--spike-dim);border-color:var(--spike);color:var(--text);}
+body.light-theme .tag-pill.new{color:var(--spike);}
+
+/* ---------- QOL: legacy section divider ---------- */
+.legacy-divider{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-dim);
+  background:var(--bg-raised);border-bottom:1px solid var(--line);border-top:1px solid var(--line);
+}
+.legacy-divider .line{flex:1;height:1px;background:var(--line);}
+
+/* ---------- QOL: command palette ---------- */
+.cmdk-modal{max-width:560px;padding:0;}
+.cmdk-input-wrap{padding:12px 14px;border-bottom:1px solid var(--line);}
+.cmdk-input-wrap input{
+  width:100%;background:none;border:none;outline:none;color:var(--text);
+  font-size:15px;font-family:'Inter',sans-serif;
+}
+.cmdk-list{max-height:50vh;overflow-y:auto;padding:6px;}
+.cmdk-group-label{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);font-weight:700;padding:8px 8px 4px;}
+.cmdk-item{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 10px;border-radius:var(--radius);cursor:pointer;font-size:13px;
+}
+.cmdk-item .cmdk-main{display:flex;align-items:center;gap:8px;min-width:0;}
+.cmdk-item .cmdk-icon{flex:none;width:20px;text-align:center;color:var(--text-dim);font-size:12px;}
+.cmdk-item .cmdk-label{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cmdk-item .cmdk-sub{color:var(--text-dim);font-size:11px;flex:none;}
+.cmdk-item.active{background:var(--bg-raised-2);}
+.cmdk-item.active .cmdk-label{color:var(--spike);}
+.cmdk-empty{padding:24px 12px;text-align:center;color:var(--text-dim);font-size:12.5px;}
+.cmdk-foot{
+  display:flex;gap:12px;padding:8px 14px;border-top:1px solid var(--line);
+  background:var(--bg-raised);font-size:10.5px;color:var(--text-dim);
+}
+.search-trigger-btn{display:flex;align-items:center;gap:6px;color:var(--text-muted);}
+
+/* ---------- QOL: requirement note ---------- */
+.req-hint{font-size:11px;color:var(--text-dim);margin-top:-4px;margin-bottom:8px;}
+.req-hint.bad{color:var(--red);}
+
 @media(max-width:520px){.list-toolbar-row{flex-direction:column;} .sort-select{width:100%;}}
 </style>
 </head>
@@ -372,9 +422,11 @@ body.light-theme .lb-rank.r2 { color: #6b7280; }
       <button data-tab="list" class="active">Demon List</button>
       <button data-tab="roulette">Roulette</button>
       <button data-tab="leaderboard">Leaderboard</button>
-      <button data-tab="submit">Submit Play</button>
+      <button data-tab="submit">Submit Play<span id="pendingBadgeSlot"></span></button>
+      <button data-tab="stats">Stats</button>
     </nav>
     <div class="account-area-wrapper">
+      <button class="btn ghost small search-trigger-btn" onclick="openCommandPalette()" style="padding:4px 8px;font-size:12px;" title="Search (Ctrl+K)">⌕ <span class="kbd-hint" style="margin-left:2px;">Ctrl K</span></button>
       <button class="btn ghost small" onclick="toggleThemeMode()" style="padding: 4px 6px; font-size: 13px;" title="Toggle Light/Dark Theme">🌓</button>
       <div id="accountArea"></div>
     </div>
@@ -386,6 +438,7 @@ body.light-theme .lb-rank.r2 { color: #6b7280; }
   <div class="tab-panel" id="panel-roulette"></div>
   <div class="tab-panel" id="panel-leaderboard"></div>
   <div class="tab-panel" id="panel-submit"></div>
+  <div class="tab-panel" id="panel-stats"></div>
 </main>
 
 <div class="footer-note">Lightweight client-side data architecture. Verified ecosystem engine. Admin access strictly curated.</div>
@@ -419,10 +472,11 @@ const APP = {
     siteName: "Double Entendre",
     siteTagline: "The hardest levels, ranked by difficulty.",
     accentColor: "pink",
-    themeMode: "dark" // "dark" or "light"
+    themeMode: "dark", // "dark" or "light"
+    mainListSize: 50 // demons ranked beyond this fall into the Legacy List
   },
-  listFilter: { search: '', tags: [], sort: 'rank' },
-  lbFilter: { search: '', sort: 'points' },
+  listFilter: { search: '', tags: [], sort: 'rank', section: 'main' }, // section: main | legacy | all
+  lbFilter: { search: '', sort: 'points', view: 'players' }, // view: players | nations | records
   subFilter: { status: 'all', search: '' }
 };
 
@@ -666,18 +720,125 @@ function applyHashRoute(){
 function rememberTab(tab){ try{ localStorage.setItem('demonlist_last_tab', tab); }catch(e){} }
 function recallTab(){ try{ return localStorage.getItem('demonlist_last_tab'); }catch(e){ return null; } }
 
+/* ============================= QOL: LIST KEYBOARD NAVIGATION ============================= */
+function moveListSelection(dir){
+  const filtered = getFilteredSortedDemons();
+  if(!filtered.length) return;
+  const idx = filtered.findIndex(({d})=>d.id===APP.selectedDemonId);
+  let next = idx + dir;
+  if(next < 0) next = 0;
+  if(next >= filtered.length) next = filtered.length-1;
+  APP.selectedDemonId = filtered[next].d.id;
+  history.replaceState(null, '', location.pathname + location.search + '#demon-' + APP.selectedDemonId);
+  renderListTab();
+  const row = document.querySelector('.demon-row.selected');
+  if(row) row.scrollIntoView({block:'nearest'});
+}
+
+/* ============================= QOL: COMMAND PALETTE ============================= */
+let __cmdkItems = [];
+let __cmdkActive = 0;
+function buildCommandItems(query){
+  const q = (query||'').trim().toLowerCase();
+  const items = [];
+  const tabs = [
+    { label:'Demon List', sub:'Go to tab', tab:'list' },
+    { label:'Roulette', sub:'Go to tab', tab:'roulette' },
+    { label:'Leaderboard', sub:'Go to tab', tab:'leaderboard' },
+    { label:'Submit Play', sub:'Go to tab', tab:'submit' },
+    { label:'Stats', sub:'Go to tab', tab:'stats' },
+  ];
+  tabs.forEach(t => {
+    if(!q || t.label.toLowerCase().includes(q)){
+      items.push({ group:'Go to', icon:'▤', label:t.label, sub:t.sub, action:()=>switchTab(t.tab) });
+    }
+  });
+  APP.demons.forEach((d,i) => {
+    if(!q || d.name.toLowerCase().includes(q) || (d.creator||'').toLowerCase().includes(q)){
+      items.push({ group:'Demons', icon:'#'+(i+1), label:d.name, sub:d.points+'pt', action:()=>{ switchTab('list'); selectDemon(d.id); } });
+    }
+  });
+  APP.players.forEach(p => {
+    if(!q || p.name.toLowerCase().includes(q)){
+      items.push({ group:'Players', icon:flagEmoji(p.country), label:p.name, sub:p.points+'pt', action:()=>{ switchTab('leaderboard'); openPlayerProfile(p.id); } });
+    }
+  });
+  return items.slice(0, 40);
+}
+function openCommandPalette(){
+  __cmdkActive = 0;
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal cmdk-modal">
+      <div class="cmdk-input-wrap"><input id="cmdk-input" placeholder="Search demons, players, or jump to a tab..." oninput="renderCommandResults(this.value)"></div>
+      <div class="cmdk-list" id="cmdk-list"></div>
+      <div class="cmdk-foot"><span>↑↓ Navigate</span><span>Enter Select</span><span>Esc Close</span></div>
+    </div>
+  </div>`);
+  renderCommandResults('');
+  const input = document.getElementById('cmdk-input');
+  if(input){ input.focus(); input.addEventListener('keydown', handleCommandKeydown); }
+}
+function renderCommandResults(query){
+  __cmdkItems = buildCommandItems(query);
+  __cmdkActive = 0;
+  const list = document.getElementById('cmdk-list');
+  if(!list) return;
+  if(!__cmdkItems.length){ list.innerHTML = `<div class="cmdk-empty">No matches found.</div>`; return; }
+  let lastGroup = null;
+  list.innerHTML = __cmdkItems.map((item, i) => {
+    const groupLabel = item.group !== lastGroup ? `<div class="cmdk-group-label">${escapeHtml(item.group)}</div>` : '';
+    lastGroup = item.group;
+    return `${groupLabel}<div class="cmdk-item ${i===0?'active':''}" data-idx="${i}" onclick="runCommandItem(${i})">
+      <div class="cmdk-main"><span class="cmdk-icon">${escapeHtml(String(item.icon||'›'))}</span><span class="cmdk-label">${escapeHtml(item.label)}</span></div>
+      <span class="cmdk-sub">${escapeHtml(item.sub||'')}</span>
+    </div>`;
+  }).join('');
+}
+function setCommandActive(idx){
+  if(!__cmdkItems.length) return;
+  __cmdkActive = Math.max(0, Math.min(__cmdkItems.length-1, idx));
+  document.querySelectorAll('.cmdk-item').forEach(el => el.classList.toggle('active', parseInt(el.dataset.idx)===__cmdkActive));
+  const activeEl = document.querySelector('.cmdk-item.active');
+  if(activeEl) activeEl.scrollIntoView({block:'nearest'});
+}
+function runCommandItem(idx){
+  const item = __cmdkItems[idx];
+  if(!item) return;
+  closeModal();
+  item.action();
+}
+function handleCommandKeydown(e){
+  if(e.key === 'ArrowDown'){ e.preventDefault(); setCommandActive(__cmdkActive+1); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); setCommandActive(__cmdkActive-1); }
+  else if(e.key === 'Enter'){ e.preventDefault(); if(__cmdkItems.length) runCommandItem(__cmdkActive); }
+}
+
 /* ============================= QOL: KEYBOARD SHORTCUTS ============================= */
 document.addEventListener('keydown', e => {
   const tag = (document.activeElement && document.activeElement.tagName) || '';
   const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+  const backdrop = document.querySelector('.modal-backdrop');
+
+  if((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)){
+    e.preventDefault();
+    if(backdrop) closeModal();
+    openCommandPalette();
+    return;
+  }
   if(e.key === 'Escape'){
-    const backdrop = document.querySelector('.modal-backdrop');
     if(backdrop){ closeModal(); if(window.__confirmResolve){ window.__confirmResolve(false); window.__confirmResolve=null; } }
     return;
   }
+  if(backdrop) return;
   if(e.key === '/' && !typing){
     const search = document.getElementById('list-search');
     if(search && APP.activeTab === 'list'){ e.preventDefault(); search.focus(); }
+    return;
+  }
+  if(!typing && APP.activeTab === 'list' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')){
+    e.preventDefault();
+    moveListSelection(e.key === 'ArrowDown' ? 1 : -1);
   }
 });
 
@@ -785,6 +946,11 @@ function openAdminSettingsModal() {
           <label>Accent Color</label>
           <select id="st-color">${colorOptions}</select>
         </div>
+        <div class="field">
+          <label>Main List Size</label>
+          <input id="st-mainsize" type="number" min="1" value="${APP.settings.mainListSize||50}">
+          <div class="hint">Demons ranked below this position are shown in the Legacy List instead of the main list, similar to other demon lists.</div>
+        </div>
       </div>
       <div class="modal-foot">
         <button class="btn ghost" onclick="closeModal()">Cancel</button>
@@ -798,11 +964,13 @@ async function handleSaveSettings(){
   const name = document.getElementById('st-name').value.trim();
   const tagline = document.getElementById('st-tagline').value.trim();
   const accent = document.getElementById('st-color').value;
+  const mainListSize = parseInt(document.getElementById('st-mainsize').value) || 50;
 
   if(!name) return;
   APP.settings.siteName = name;
   APP.settings.siteTagline = tagline;
   APP.settings.accentColor = accent;
+  APP.settings.mainListSize = Math.max(1, mainListSize);
 
   await saveSettings();
   applySystemTheme();
@@ -834,6 +1002,16 @@ function renderAll(){
   renderRouletteTab();
   renderLeaderboardTab();
   renderSubmitTab();
+  renderStatsTab();
+  updateNavBadges();
+}
+
+/* ============================= QOL: NAV BADGES ============================= */
+function updateNavBadges(){
+  const slot = document.getElementById('pendingBadgeSlot');
+  if(!slot) return;
+  const pending = APP.submissions.filter(s=>s.status==='pending').length;
+  slot.innerHTML = (isMod() && pending) ? `<span class="nav-badge">${pending}</span>` : '';
 }
 
 /* ============================= LIST TAB ============================= */
@@ -844,9 +1022,12 @@ function allDemonTags(){
 }
 function getFilteredSortedDemons(){
   const demons = APP.demons;
-  const { search, tags, sort } = APP.listFilter;
+  const { search, tags, sort, section } = APP.listFilter;
+  const mainSize = APP.settings.mainListSize || 50;
   const q = search.trim().toLowerCase();
   let list = demons.map((d,i) => ({ d, rank: i }));
+  if(section === 'main') list = list.filter(({rank}) => rank < mainSize);
+  else if(section === 'legacy') list = list.filter(({rank}) => rank >= mainSize);
   if(q){
     list = list.filter(({d}) =>
       d.name.toLowerCase().includes(q) ||
@@ -867,6 +1048,7 @@ function getFilteredSortedDemons(){
 }
 function setListSearch(v){ APP.listFilter.search = v; renderListTab(true); }
 function setListSort(v){ APP.listFilter.sort = v; renderListTab(); }
+function setListSection(v){ APP.listFilter.section = v; renderListTab(); }
 function toggleListTagFilter(t){
   const i = APP.listFilter.tags.indexOf(t);
   if(i===-1) APP.listFilter.tags.push(t); else APP.listFilter.tags.splice(i,1);
@@ -881,9 +1063,11 @@ function renderListTab(preserveFocus){
 
   const totalPoints = demons.reduce((s,d)=>s+(d.points||0),0);
   const hardest = demons[0];
+  const mainSize = APP.settings.mainListSize || 50;
+  const hasLegacy = demons.length > mainSize;
   const statCards = demons.length ? `
     <div class="stat-cards">
-      <div class="stat-card"><div class="sc-val">${demons.length}</div><div class="sc-lbl">Levels</div></div>
+      <div class="stat-card"><div class="sc-val">${Math.min(demons.length,mainSize)}</div><div class="sc-lbl">Main List</div></div>
       <div class="stat-card"><div class="sc-val">${totalPoints}</div><div class="sc-lbl">Total Points</div></div>
       <div class="stat-card"><div class="sc-val">${APP.players.length}</div><div class="sc-lbl">Players</div></div>
       <div class="stat-card"><div class="sc-val" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${hardest?escapeHtml(hardest.name):'—'}</div><div class="sc-lbl">#1 Hardest</div></div>
@@ -895,7 +1079,15 @@ function renderListTab(preserveFocus){
       ${tags.map(t => `<button class="tag-chip ${APP.listFilter.tags.includes(t)?'active':''}" onclick="toggleListTagFilter('${escapeHtml(t).replace(/'/g,"\\'")}')">${escapeHtml(t)}</button>`).join('')}
     </div>` : '';
 
+  const sectionToggle = hasLegacy ? `
+    <div class="status-filter-row" style="padding:10px 12px 0;">
+      <button class="status-filter-btn ${APP.listFilter.section==='main'?'active':''}" onclick="setListSection('main')">Main List</button>
+      <button class="status-filter-btn ${APP.listFilter.section==='legacy'?'active':''}" onclick="setListSection('legacy')">Legacy List</button>
+      <button class="status-filter-btn ${APP.listFilter.section==='all'?'active':''}" onclick="setListSection('all')">All</button>
+    </div>` : '';
+
   const toolbar = `
+    ${sectionToggle}
     <div class="list-toolbar">
       <div class="list-toolbar-row">
         <div class="search-input-wrap">
@@ -915,16 +1107,19 @@ function renderListTab(preserveFocus){
     ${filtered.length !== demons.length ? `<div class="result-count">${filtered.length} of ${demons.length} levels match</div>` : ''}
   `;
 
-  const rows = demons.length ? (filtered.length ? filtered.map(({d, rank}) => {
+  const now = Date.now();
+  const WEEK = 7*24*60*60*1000;
+  const rowsArr = filtered.map(({d, rank}) => {
     const i = rank;
     const tagsHtml = (d.tags || []).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('');
-    return `
+    const isNew = d.addedAt && (now - d.addedAt) < WEEK;
+    const rowHtml = `
     <div class="demon-row ${d.id===APP.selectedDemonId?'selected':''}" onclick="selectDemon('${d.id}')">
       <div class="rank-badge ${i<3?'top':''}">${i+1}</div>
       <div class="info">
         <div class="name">${escapeHtml(d.name)}</div>
         <div class="creator">by ${escapeHtml(d.creator||'Unknown')}</div>
-        ${tagsHtml ? `<div class="tag-container">${tagsHtml}</div>` : ''}
+        ${tagsHtml || isNew ? `<div class="tag-container">${isNew ? `<span class="tag-pill new">New</span>` : ''}${tagsHtml}</div>` : ''}
       </div>
       <div class="pts">${d.points}pt</div>
       ${isMod() ? `
@@ -932,9 +1127,12 @@ function renderListTab(preserveFocus){
         <button onclick="event.stopPropagation();moveDemon('${d.id}',-1)" ${i===0?'disabled':''}>&#9650;</button>
         <button onclick="event.stopPropagation();moveDemon('${d.id}',1)" ${i===demons.length-1?'disabled':''}>&#9660;</button>
       </div>` : ''}
-    </div>
-  `;
-  }).join('') : `<div class="empty-state"><div class="big">No matches</div>Try a different search or clear your tag filters.</div>`)
+    </div>`;
+    const showDivider = APP.listFilter.section==='all' && APP.listFilter.sort==='rank' && i===mainSize && !APP.listFilter.search && !APP.listFilter.tags.length;
+    return (showDivider ? `<div class="legacy-divider"><span class="line"></span>Legacy List<span class="line"></span></div>` : '') + rowHtml;
+  });
+
+  const rows = demons.length ? (filtered.length ? rowsArr.join('') : `<div class="empty-state"><div class="big">No matches</div>Try a different search or clear your tag filters.</div>`)
    : `<div class="empty-state"><div class="big">No demons yet</div>${isMod() ? 'Add one to get started.' : 'Check back soon.'}</div>`;
 
   const detail = selected ? renderDemonDetail(selected, demons.findIndex(d=>d.id===selected.id)) :
@@ -989,6 +1187,8 @@ function renderDemonDetail(d, index){
     <div class="stat-row">
       <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Placement</div></div>
       <div class="stat"><div class="val">${d.points}</div><div class="lbl">Points</div></div>
+      <div class="stat"><div class="val">${d.requirement||100}%</div><div class="lbl">Requirement</div></div>
+      ${index >= (APP.settings.mainListSize||50) ? `<div class="stat"><div class="val" style="color:var(--text-muted);">Legacy</div><div class="lbl">List Status</div></div>` : ''}
     </div>
     <div class="video-wrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
     ${d.description ? `<div class="detail-desc">${escapeHtml(d.description)}</div>` : ''}
@@ -1015,6 +1215,11 @@ function openDemonModal(id){
           <div class="field"><label>Video URL</label><input id="dm-video" value="${editing?escapeHtml(editing.video||''):''}" placeholder="https://youtube.com/..."></div>
         </div>
         <div class="field">
+          <label>Record Requirement (%)</label>
+          <input id="dm-requirement" type="number" min="1" max="100" value="${editing&&editing.requirement?editing.requirement:100}">
+          <div class="hint">Minimum percent a submission must reach to be accepted for this demon.</div>
+        </div>
+        <div class="field">
           <label>Tags</label>
           <input id="dm-tags" value="${escapeHtml(currentTagsString)}" placeholder="e.g. Memory, Timing, XL, Wave, Challenge">
           <div class="hint">Type whatever tags you want for this level, separated by commas.</div>
@@ -1037,6 +1242,10 @@ async function saveDemonForm(id){
     .map(t => t.trim())
     .filter(t => t.length > 0);
 
+  let requirement = parseInt(document.getElementById('dm-requirement').value);
+  if(isNaN(requirement)) requirement = 100;
+  requirement = Math.min(100, Math.max(1, requirement));
+
   const data = {
     name,
     creator: document.getElementById('dm-creator').value.trim(),
@@ -1044,7 +1253,8 @@ async function saveDemonForm(id){
     points: parseInt(document.getElementById('dm-points').value) || 0,
     video: document.getElementById('dm-video').value.trim(),
     description: document.getElementById('dm-desc').value.trim(),
-    tags: processedTags
+    tags: processedTags,
+    requirement
   };
   if(id){
     const d = APP.demons.find(x=>x.id===id);
@@ -1214,40 +1424,89 @@ function exportLeaderboardCsv(){
   URL.revokeObjectURL(url);
   showToast('CSV exported');
 }
+function setLbView(v){ APP.lbFilter.view = v; renderLeaderboardTab(); }
+function getNationStandings(){
+  const byCountry = {};
+  APP.players.forEach(p => {
+    const c = p.country || 'OTHER';
+    if(!byCountry[c]) byCountry[c] = { country: c, points: 0, players: 0, best: null };
+    byCountry[c].points += (p.points||0);
+    byCountry[c].players += 1;
+    if(!byCountry[c].best || p.points > byCountry[c].best.points) byCountry[c].best = p;
+  });
+  return Object.values(byCountry).sort((a,b)=>b.points-a.points);
+}
+function getRecentRecords(limit){
+  return APP.submissions.filter(s=>s.status==='approved').slice().reverse().slice(0, limit||25);
+}
 function renderLeaderboardTab(preserveFocus){
   const el = document.getElementById('panel-leaderboard');
+  const view = APP.lbFilter.view || 'players';
   const allSorted = APP.players.slice().sort((a,b)=>b.points-a.points);
   const rankOf = id => allSorted.findIndex(p=>p.id===id);
   const filtered = getFilteredSortedPlayers();
   const rankClass = i => i===0?'r1':i===1?'r2':i===2?'r3':'';
-  const rows = filtered.length ? filtered.map((p) => {
-    const i = rankOf(p.id);
-    return `
-    <tr class="player-row-click" onclick="openPlayerProfile('${p.id}')">
-      <td class="lb-rank ${rankClass(i)}">#${i+1}</td>
-      <td><span class="flag">${flagEmoji(p.country)}</span><strong>${escapeHtml(p.name)}</strong></td>
-      <td style="color:var(--text-dim);font-size:12px;">${countryName(p.country)}</td>
-      <td class="lb-points">${p.points}</td>
-      ${isMod() ? `<td class="lb-actions" onclick="event.stopPropagation()">
-        <button class="btn small" onclick="openPlayerModal('${p.id}')">Edit</button>
-        <button class="btn small danger" onclick="deletePlayer('${p.id}')">Delete</button>
-      </td>` : '<td></td>'}
-    </tr>`;
-  }).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="big">${APP.players.length?'No matches':'No players yet'}</div>${APP.players.length ? 'Try a different search.' : (isMod() ? 'Add a player to start the leaderboard.' : 'Check back soon.')}</div></td></tr>`;
 
-  el.innerHTML = `
-    <div class="page-head">
-      <h1 class="page-title">Leaderboard</h1>
-      <p class="page-desc">${APP.players.length} player${APP.players.length===1?'':'s'}, ranked by total points earned from beaten demons. Click a row to view a player's profile.</p>
-    </div>
-    <div class="panel">
-      <div class="panel-head">
-        <h3>Players</h3>
-        <div style="display:flex;gap:6px;">
-          <button class="icon-btn" onclick="exportLeaderboardCsv()">⇩ Export CSV</button>
-          ${isMod() ? `<button class="btn small primary" onclick="openPlayerModal()">+ Add Player</button>` : ''}
+  const viewToggle = `
+    <div class="status-filter-row" style="padding:10px 12px 0;">
+      <button class="status-filter-btn ${view==='players'?'active':''}" onclick="setLbView('players')">Players</button>
+      <button class="status-filter-btn ${view==='nations'?'active':''}" onclick="setLbView('nations')">Nations</button>
+      <button class="status-filter-btn ${view==='records'?'active':''}" onclick="setLbView('records')">Recent Records</button>
+    </div>`;
+
+  let body = '';
+  let headActions = `<button class="icon-btn" onclick="exportLeaderboardCsv()">⇩ Export CSV</button>${isMod() ? `<button class="btn small primary" onclick="openPlayerModal()">+ Add Player</button>` : ''}`;
+
+  if(view === 'nations'){
+    const nations = getNationStandings();
+    const rows = nations.length ? nations.map((n,i) => `
+      <tr>
+        <td class="lb-rank ${rankClass(i)}">#${i+1}</td>
+        <td><span class="flag">${flagEmoji(n.country)}</span><strong>${escapeHtml(countryName(n.country))}</strong></td>
+        <td style="color:var(--text-dim);font-size:12px;">${n.players} player${n.players===1?'':'s'}</td>
+        <td style="color:var(--text-dim);font-size:12px;">${n.best?escapeHtml(n.best.name):'—'}</td>
+        <td class="lb-points">${n.points}</td>
+      </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="big">No players yet</div>Nation rankings appear once players are added.</div></td></tr>`;
+    body = `
+      <div style="overflow-x:auto;">
+      <table class="lb-table">
+        <thead><tr><th>Rank</th><th>Nation</th><th>Players</th><th>Top Player</th><th>Combined Points</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>`;
+  } else if(view === 'records'){
+    const records = getRecentRecords(30);
+    body = records.length ? `<div class="sub-list demon-rows" style="max-height:none;">${records.map(s => {
+      const demon = APP.demons.find(d=>d.id===s.demonId);
+      const when = s.submittedAt ? new Date(s.submittedAt).toLocaleDateString() : '';
+      return `
+      <div class="sub-item">
+        <div class="sub-item-top">
+          <div>
+            <span class="who">${escapeHtml(s.player)}</span>
+            <span class="what"> — ${demon?escapeHtml(demon.name):'(deleted demon)'} · ${s.percent}%</span>
+          </div>
+          <span class="status-pill approved">${when}</span>
         </div>
-      </div>
+        <a class="sub-link" href="${escapeHtml(s.video)}" target="_blank">Watch submission ↗</a>
+      </div>`;
+    }).join('')}</div>` : `<div class="empty-state"><div class="big">No records yet</div>Approved plays will show up here.</div>`;
+  } else {
+    const rows = filtered.length ? filtered.map((p) => {
+      const i = rankOf(p.id);
+      return `
+      <tr class="player-row-click" onclick="openPlayerProfile('${p.id}')">
+        <td class="lb-rank ${rankClass(i)}">#${i+1}</td>
+        <td><span class="flag">${flagEmoji(p.country)}</span><strong>${escapeHtml(p.name)}</strong></td>
+        <td style="color:var(--text-dim);font-size:12px;">${countryName(p.country)}</td>
+        <td class="lb-points">${p.points}</td>
+        ${isMod() ? `<td class="lb-actions" onclick="event.stopPropagation()">
+          <button class="btn small" onclick="openPlayerModal('${p.id}')">Edit</button>
+          <button class="btn small danger" onclick="deletePlayer('${p.id}')">Delete</button>
+        </td>` : '<td></td>'}
+      </tr>`;
+    }).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="big">${APP.players.length?'No matches':'No players yet'}</div>${APP.players.length ? 'Try a different search.' : (isMod() ? 'Add a player to start the leaderboard.' : 'Check back soon.')}</div></td></tr>`;
+    body = `
       ${APP.players.length ? `
       <div class="list-toolbar">
         <div class="list-toolbar-row">
@@ -1267,13 +1526,91 @@ function renderLeaderboardTab(preserveFocus){
         <thead><tr><th>Rank</th><th>Player</th><th>Region</th><th>Points</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
+      </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Leaderboard</h1>
+      <p class="page-desc">${APP.players.length} player${APP.players.length===1?'':'s'}, ranked by total points earned from beaten demons. Click a row to view a player's profile.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>${view==='nations'?'Nations':view==='records'?'Recent Records':'Players'}</h3>
+        <div style="display:flex;gap:6px;">${headActions}</div>
       </div>
+      ${viewToggle}
+      ${body}
     </div>
   `;
   if(preserveFocus){
     const s = document.getElementById('lb-search');
     if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
   }
+}
+
+/* ============================= STATS TAB ============================= */
+function renderStatsTab(){
+  const el = document.getElementById('panel-stats');
+  if(!el) return;
+  const demons = APP.demons;
+  const mainSize = APP.settings.mainListSize || 50;
+  const totalPoints = demons.reduce((s,d)=>s+(d.points||0),0);
+  const avgPoints = demons.length ? Math.round(totalPoints/demons.length) : 0;
+  const hardest = demons[0];
+  const easiest = demons[demons.length-1];
+  const legacyCount = Math.max(0, demons.length - mainSize);
+  const newest = demons.slice().sort((a,b)=>(b.addedAt||0)-(a.addedAt||0))[0];
+  const totalEarned = APP.players.reduce((s,p)=>s+(p.points||0),0);
+  const approvedRecords = APP.submissions.filter(s=>s.status==='approved');
+  const pendingCount = APP.submissions.filter(s=>s.status==='pending').length;
+
+  const nations = getNationStandings();
+  const topNation = nations[0];
+
+  const recordCounts = {};
+  approvedRecords.forEach(s => { recordCounts[s.player] = (recordCounts[s.player]||0)+1; });
+  let mostActive = null, mostActiveCount = 0;
+  Object.entries(recordCounts).forEach(([name,c]) => { if(c>mostActiveCount){ mostActive = name; mostActiveCount = c; } });
+
+  const recentDemons = demons.slice().sort((a,b)=>(b.addedAt||0)-(a.addedAt||0)).slice(0,5);
+  const recentHtml = recentDemons.length ? recentDemons.map(d => {
+    const rank = demons.findIndex(x=>x.id===d.id);
+    return `<div class="completion-item"><span>#${rank+1} ${escapeHtml(d.name)}</span><span style="color:var(--text-dim);">${d.points}pt${d.addedAt ? ' · '+new Date(d.addedAt).toLocaleDateString() : ''}</span></div>`;
+  }).join('') : `<div class="completion-item" style="color:var(--text-dim);">No demons added yet.</div>`;
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">List Statistics</h1>
+      <p class="page-desc">An overview of the list, its players, and recent activity — similar to a stats viewer on other demon lists.</p>
+    </div>
+    <div class="stat-cards">
+      <div class="stat-card"><div class="sc-val">${demons.length}</div><div class="sc-lbl">Total Demons</div></div>
+      <div class="stat-card"><div class="sc-val">${legacyCount}</div><div class="sc-lbl">Legacy Demons</div></div>
+      <div class="stat-card"><div class="sc-val">${totalPoints}</div><div class="sc-lbl">Points Available</div></div>
+      <div class="stat-card"><div class="sc-val">${avgPoints}</div><div class="sc-lbl">Avg Points / Demon</div></div>
+      <div class="stat-card"><div class="sc-val">${APP.players.length}</div><div class="sc-lbl">Players</div></div>
+      <div class="stat-card"><div class="sc-val">${totalEarned}</div><div class="sc-lbl">Total Points Earned</div></div>
+      <div class="stat-card"><div class="sc-val">${approvedRecords.length}</div><div class="sc-lbl">Approved Records</div></div>
+      ${isMod() ? `<div class="stat-card"><div class="sc-val">${pendingCount}</div><div class="sc-lbl">Pending Review</div></div>` : ''}
+    </div>
+    <div class="list-layout">
+      <div class="panel">
+        <div class="panel-head"><h3>List Highlights</h3></div>
+        <div style="padding:12px;">
+          <div class="completion-item"><span>#1 Hardest</span><span style="color:var(--text-dim);">${hardest?escapeHtml(hardest.name):'—'}</span></div>
+          <div class="completion-item"><span>Easiest on the list</span><span style="color:var(--text-dim);">${easiest?escapeHtml(easiest.name):'—'}</span></div>
+          <div class="completion-item"><span>Newest addition</span><span style="color:var(--text-dim);">${newest?escapeHtml(newest.name):'—'}</span></div>
+          <div class="completion-item"><span>Top nation</span><span style="color:var(--text-dim);">${topNation?flagEmoji(topNation.country)+' '+escapeHtml(countryName(topNation.country))+' ('+topNation.points+'pt)':'—'}</span></div>
+          <div class="completion-item"><span>Most active player</span><span style="color:var(--text-dim);">${mostActive?escapeHtml(mostActive)+' ('+mostActiveCount+' records)':'—'}</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Recently Added</h3></div>
+        <div>${recentHtml}</div>
+      </div>
+    </div>
+  `;
 }
 
 /* ============================= PLAYER PROFILE ============================= */
@@ -1410,12 +1747,14 @@ function renderSubmitTab(preserveFocus){
         <div class="panel-head"><h3>New Submission</h3></div>
         <div style="padding:14px;">
           ${APP.demons.length ? `
-          <div class="field"><label>Your Player Name</label><input id="sb-player" ></div>
-          <div class="field"><label>Demon</label><select id="sb-demon">${demonOptions}</select></div>
+          <div class="field"><label>Your Player Name</label><input id="sb-player" list="knownPlayers" value="${APP.currentUser?escapeHtml(APP.currentUser.username):''}"></div>
+          <datalist id="knownPlayers">${APP.players.map(p=>`<option value="${escapeHtml(p.name)}">`).join('')}</datalist>
+          <div class="field"><label>Demon</label><select id="sb-demon" onchange="updateSubRequirementHint()">${demonOptions}</select></div>
           <div class="form-grid">
             <div class="field"><label>Percent</label><input id="sb-percent" type="number" min="1" max="100" value="100"></div>
             <div class="field"><label>Region</label><select id="sb-country">${countryOptions('US')}</select></div>
           </div>
+          <div class="req-hint" id="subReqHint"></div>
           <div class="field"><label>Video URL</label><input id="sb-video" placeholder="https://youtube.com/..."></div>
           <div class="field"><label>Note (optional)</label><textarea id="sb-note" placeholder="Anything moderators should know"></textarea></div>
           <button class="btn primary" style="width:100%;" onclick="submitPlay()">Send for Review</button>
@@ -1446,6 +1785,15 @@ function renderSubmitTab(preserveFocus){
     const s = document.getElementById('sub-search');
     if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
   }
+  updateSubRequirementHint();
+}
+function updateSubRequirementHint(){
+  const sel = document.getElementById('sb-demon');
+  const hint = document.getElementById('subReqHint');
+  if(!sel || !hint) return;
+  const demon = APP.demons.find(d=>d.id===sel.value);
+  const req = demon && demon.requirement ? demon.requirement : 100;
+  hint.textContent = req < 100 ? `This demon accepts records of ${req}% or higher.` : `This demon requires a 100% completion.`;
 }
 async function submitPlay(){
   const player = document.getElementById('sb-player').value.trim();
@@ -1457,6 +1805,12 @@ async function submitPlay(){
   const msgEl = document.getElementById('submitMsg');
   if(!player || !video || isNaN(percent) || percent<1 || percent>100){
     msgEl.innerHTML = `<div class="msg error">Fill in your name, a percent (1-100), and a video URL.</div>`;
+    return;
+  }
+  const demon = APP.demons.find(d=>d.id===demonId);
+  const req = demon && demon.requirement ? demon.requirement : 100;
+  if(percent < req){
+    msgEl.innerHTML = `<div class="msg error">This demon requires at least ${req}% to be submitted.</div>`;
     return;
   }
   APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, status:'pending', submittedAt: Date.now() });
