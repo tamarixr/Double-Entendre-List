@@ -4,6 +4,6 @@
   "private": true,
   "description": "Double Entendre Demon List — static site + Vercel serverless storage API",
   "dependencies": {
-    "@vercel/kv": "^2.0.0"
+    "@upstash/redis": "^1.38.0"
   }
 }

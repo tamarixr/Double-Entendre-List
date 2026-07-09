@@ -1,13 +1,18 @@
 // /api/storage.js
 // Drop-in replacement for the Claude-artifact "window.storage" API,
-// backed by Vercel KV (Upstash Redis under the hood).
+// backed by Upstash Redis (installed via the Vercel Marketplace).
 //
 // GET  /api/storage?key=demons        -> { key, value }
 // POST /api/storage  { key, value }   -> { key, value }
 //
-// Requires a Vercel KV store attached to this project (see README.md).
+// Requires an Upstash Redis integration attached to this project (see README.md).
+// Vercel KV was sunset in 2025 — this uses @upstash/redis directly instead.
 
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+// Redis.fromEnv() reads UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN,
+// which the Vercel Marketplace integration injects into your project automatically.
+const redis = Redis.fromEnv();
 
 // Keys this app is allowed to touch. Prevents the endpoint from being used
 // as an arbitrary open key-value store for unrelated data.
@@ -26,7 +31,8 @@ export default async function handler(req, res) {
       if (!key || !ALLOWED_KEYS.has(key)) {
         return res.status(400).json({ error: 'invalid or missing key' });
       }
-      const value = await kv.get(key);
+      // @upstash/redis auto-deserializes JSON values that were stored as objects/arrays.
+      const value = await redis.get(key);
       if (value === null || value === undefined) {
         return res.status(404).json({ error: 'not found' });
       }
@@ -39,7 +45,7 @@ export default async function handler(req, res) {
       if (!key || !ALLOWED_KEYS.has(key)) {
         return res.status(400).json({ error: 'invalid or missing key' });
       }
-      await kv.set(key, value);
+      await redis.set(key, value);
       return res.status(200).json({ key, value });
     }
 

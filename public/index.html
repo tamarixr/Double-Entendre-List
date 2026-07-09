@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Double Entendre Demon List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght=500;600;700&family=Inter:wght=400;500;600;700&family=JetBrains+Mono:wght=500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg-void:#08090c;
@@ -60,14 +60,13 @@ a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
 input,select,textarea{font-family:inherit;}
 
-h1,h2,h3,.display{font-family:'Chakra Petch',sans-serif;letter-spacing:0.01em;}
+h1,h2,h3,.display{font-family:'Inter',sans-serif;}
 .mono{font-family:'JetBrains Mono',monospace;}
 
 /* ---------- top nav ---------- */
 .topbar{
   position:sticky;top:0;z-index:40;
   background:rgba(8,9,12,0.95);
-  backdrop-filter:blur(6px);
   border-bottom:1px solid var(--line);
 }
 body.light-theme .topbar {
@@ -79,8 +78,8 @@ body.light-theme .topbar {
   padding:10px 15px;
 }
 .logo{
-  font-family:'Chakra Petch',sans-serif;
-  font-weight:700;font-size:18px;letter-spacing:0.02em;
+  font-family:'Inter',sans-serif;
+  font-weight:700;font-size:16px;letter-spacing:-0.01em;
   display:flex;align-items:center;gap:8px;
   color:var(--text);white-space:nowrap;
 }
@@ -92,8 +91,7 @@ body.light-theme .topbar {
 nav.tabs{display:flex;gap:2px;flex:1;}
 nav.tabs button{
   background:none;border:none;color:var(--text-muted);
-  font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:13px;
-  letter-spacing:0.03em;
+  font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
   padding:6px 12px;border-radius:var(--radius);transition:all .1s;
 }
 nav.tabs button:hover{color:var(--text);background:var(--bg-raised);}
@@ -125,7 +123,7 @@ body.light-theme .role-tag.admin { background: var(--spike-dim); color: var(--sp
 }
 .btn:hover{border-color:var(--text-dim);background:var(--bg-raised-2);}
 .btn.primary{background:var(--spike);border-color:var(--spike);color:#fff;}
-.btn.primary:hover{background:var(--spike-hover);box-shadow:0 0 10px var(--spike-shadow);}
+.btn.primary:hover{background:var(--spike-hover);}
 .btn.ghost{background:none;}
 .btn.small{padding:4px 8px;font-size:11.5px;}
 .btn.danger{border-color:var(--red);color:var(--red);background:none;}
@@ -135,10 +133,6 @@ body.light-theme .role-tag.admin { background: var(--spike-dim); color: var(--sp
 /* ---------- layout ---------- */
 main{max-width:1200px;margin:0 auto;padding:20px 15px 60px;}
 .page-head{margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:15px;}
-.eyebrow{
-  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.1em;
-  color:var(--spike);text-transform:uppercase;margin-bottom:4px;
-}
 .page-title{font-size:26px;font-weight:700;margin-bottom:4px;}
 .page-desc{color:var(--text-muted);font-size:13px;max-width:720px;line-height:1.4;}
 
@@ -199,12 +193,12 @@ body.light-theme .rank-badge.top { color: var(--spike); }
 .reorder button:hover{color:var(--text);border-color:var(--text-dim);}
 
 .empty-state{padding:30px 15px;text-align:center;color:var(--text-dim);font-size:12.5px;}
-.empty-state .big{font-family:'Chakra Petch',sans-serif;font-size:14px;color:var(--text-muted);margin-bottom:4px;font-weight:600;}
+.empty-state .big{font-family:'Inter',sans-serif;font-size:14px;color:var(--text-muted);margin-bottom:4px;font-weight:600;}
 
 /* detail panel */
 .detail{padding:16px;}
 .detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
-.detail-title{font-size:22px;font-weight:700;font-family:'Chakra Petch',sans-serif;}
+.detail-title{font-size:20px;font-weight:700;font-family:'Inter',sans-serif;}
 .detail-sub{color:var(--text-muted);font-size:13px;margin-top:2px;}
 .stat-row{display:flex;gap:16px;margin:12px 0;flex-wrap:wrap;}
 .stat{background:var(--bg-raised);border:1px solid var(--line);padding:6px 12px;border-radius:var(--radius);min-width:80px;}
@@ -236,7 +230,7 @@ body.light-theme .rank-badge.top { color: var(--spike); }
 .field textarea{resize:vertical;min-height:60px;}
 .field .hint{font-size:10.5px;color:var(--text-dim);line-height:1.3;}
 .modal-backdrop{
-  position:fixed;inset:0;background:rgba(4,5,7,0.8);backdrop-filter:blur(1px);
+  position:fixed;inset:0;background:rgba(4,5,7,0.8);
   display:flex;align-items:center;justify-content:center;z-index:100;padding:15px;
 }
 .modal{
@@ -244,7 +238,7 @@ body.light-theme .rank-badge.top { color: var(--spike); }
   width:100%;max-width:460px;max-height:90vh;overflow-y:auto;
 }
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg-raised);}
-.modal-head h3{font-family:'Chakra Petch',sans-serif;font-size:14px;text-transform:uppercase;color:var(--text-muted);}
+.modal-head h3{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--text);}
 .modal-close{background:none;border:none;color:var(--text-dim);font-size:18px;line-height:1;}
 .modal-close:hover{color:var(--text);}
 .modal-body{padding:16px;}
@@ -278,9 +272,9 @@ body.light-theme .lb-rank.r2 { color: #6b7280; }
   border-radius:var(--radius);padding:20px;text-align:center;position:relative;
 }
 .roulette-req{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);margin-bottom:10px;text-transform:uppercase;}
-.roulette-demon{font-family:'Chakra Petch',sans-serif;font-size:22px;font-weight:700;margin-bottom:2px;}
+.roulette-demon{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;margin-bottom:2px;}
 .roulette-creator{color:var(--text-muted);font-size:12.5px;margin-bottom:15px;}
-.roulette-target{font-size:42px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--spike);text-shadow:0 0 15px var(--spike-shadow);margin-bottom:15px;}
+.roulette-target{font-size:40px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--spike);margin-bottom:15px;}
 .roulette-input-row{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}
 .roulette-input-row input{
   width:90px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:15px;
@@ -320,7 +314,7 @@ body.light-theme .lb-rank.r2 { color: #6b7280; }
 
 <div class="topbar">
   <div class="topbar-inner">
-    <div class="logo"><span class="mark"></span><span class="site-name-text">SPIKELINE</span></div>
+    <div class="logo"><span class="mark"></span><span class="site-name-text">Double Entendre</span></div>
     <nav class="tabs" id="tabs">
       <button data-tab="list" class="active">Demon List</button>
       <button data-tab="roulette">Roulette</button>
@@ -368,8 +362,8 @@ const APP = {
   selectedDemonId: null,
   roulette: { required: 1, current: null, usedIds: [], history: [], done:false },
   settings: {
-    siteName: "SPIKELINE",
-    siteTagline: "Index of high-tier community level completions, calibrated by placement difficulty metrics.",
+    siteName: "Double Entendre",
+    siteTagline: "The hardest levels, ranked by difficulty.",
     accentColor: "pink",
     themeMode: "dark" // "dark" or "light"
   }
@@ -481,7 +475,7 @@ async function loginAccount(username, password){
       APP.currentUser = { username: normalizedUser === 'tamari' ? 'tamari' : 'hakku', role: 'admin' };
       return APP.currentUser;
     } else {
-      throw new Error('Invalid signature matching passkey record.');
+      throw new Error('Incorrect password.');
     }
   }
   
@@ -492,17 +486,17 @@ async function loginAccount(username, password){
     return APP.currentUser;
   }
   
-  throw new Error('Access Denied. Credentials match no registered profiles.');
+  throw new Error('No account with that username.');
 }
 
 async function registerAccount(username, password){
   const cleanUser = username.trim();
   const normalizedUser = cleanUser.toLowerCase();
   if(!cleanUser || !password) {
-    throw new Error('Structure constraints fault. Credentials fields cannot be blank.');
+    throw new Error('Username and password cannot be blank.');
   }
   if(DIRECT_AUTH[normalizedUser] || APP.registeredUsers.some(u => u.username.toLowerCase() === normalizedUser)) {
-    throw new Error('Identity unavailable. Username reservation collision detected.');
+    throw new Error('That username is already taken.');
   }
 
   const newUser = {
@@ -554,7 +548,7 @@ function renderAccountArea(){
     return;
   }
   const u = APP.currentUser;
-  const roleLabel = u.role === 'admin' ? 'System Operator' : 'User';
+  const roleLabel = u.role === 'admin' ? 'admin' : 'member';
   const roleClass = u.role === 'admin' ? 'admin' : '';
   
   el.innerHTML = `
@@ -562,7 +556,7 @@ function renderAccountArea(){
       ${u.role === 'admin' ? `<button class="btn small ghost" onclick="openAdminSettingsModal()">Settings</button>` : ''}
       <span class="name">${escapeHtml(u.username)}</span>
       <span class="role-tag ${roleClass}">${roleLabel}</span>
-      <button class="btn small" onclick="logout()">Exit</button>
+      <button class="btn small" onclick="logout()">Log Out</button>
     </div>`;
 }
 
@@ -574,8 +568,8 @@ function openLoginModal(){
       <div class="modal-body">
         <div id="authMsg"></div>
         <div id="loginForm">
-          <div class="field"><label>Identity Username</label><input id="li-user" autocomplete="username" placeholder="Username"></div>
-          <div class="field"><label>Passkey / Password</label><input id="li-pass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+          <div class="field"><label>Username</label><input id="li-user" autocomplete="username" placeholder="Username"></div>
+          <div class="field"><label>Password</label><input id="li-pass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
           
           <div style="margin-top: 15px; display:flex; flex-direction:column; gap:10px;">
             <button id="authSubmitBtn" class="btn primary" style="width:100%;" onclick="handleLoginSubmit()">Sign In</button>
@@ -643,18 +637,18 @@ function openAdminSettingsModal() {
   openModal(`
   <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
     <div class="modal">
-      <div class="modal-head"><h3>System Control Panel</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-head"><h3>Site Settings</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
       <div class="modal-body">
-        <div class="field"><label>Platform Title</label><input id="st-name" value="${escapeHtml(APP.settings.siteName)}"></div>
-        <div class="field"><label>Subtext Tagline / Core Description</label><textarea id="st-tagline">${escapeHtml(APP.settings.siteTagline)}</textarea></div>
+        <div class="field"><label>Site Name</label><input id="st-name" value="${escapeHtml(APP.settings.siteName)}"></div>
+        <div class="field"><label>Tagline</label><textarea id="st-tagline">${escapeHtml(APP.settings.siteTagline)}</textarea></div>
         <div class="field">
-          <label>Interface Core Accent Color</label>
+          <label>Accent Color</label>
           <select id="st-color">${colorOptions}</select>
         </div>
       </div>
       <div class="modal-foot">
         <button class="btn ghost" onclick="closeModal()">Cancel</button>
-        <button class="btn primary" onclick="handleSaveSettings()">Commit Changes</button>
+        <button class="btn primary" onclick="handleSaveSettings()">Save</button>
       </div>
     </div>
   </div>`);
@@ -722,22 +716,21 @@ function renderListTab(){
       </div>` : ''}
     </div>
   `;
-  }).join('') : `<div class="empty-state"><div class="big">Index Unpopulated</div>${isMod() ? 'Insert entry to initialize registry.' : 'Awaiting data deployment.'}</div>`;
+  }).join('') : `<div class="empty-state"><div class="big">No demons yet</div>${isMod() ? 'Add one to get started.' : 'Check back soon.'}</div>`;
 
   const detail = selected ? renderDemonDetail(selected, demons.findIndex(d=>d.id===selected.id)) :
-    `<div class="empty-state"><div class="big">No target entry highlighted</div>Select a ledger level element.</div>`;
+    `<div class="empty-state"><div class="big">Nothing selected</div>Pick a level from the list.</div>`;
 
   el.innerHTML = `
     <div class="page-head">
-      <div class="eyebrow">Registry · ${demons.length} Level Records</div>
       <h1 class="page-title site-name-text">${escapeHtml(APP.settings.siteName)}</h1>
       <p class="page-desc site-tagline-text">${escapeHtml(APP.settings.siteTagline)}</p>
     </div>
     <div class="list-layout">
       <div class="panel">
         <div class="panel-head">
-          <h3>Tier Listing</h3>
-          ${isMod() ? `<button class="btn small primary" onclick="openDemonModal()">+ Insert Entry</button>` : ''}
+          <h3>Levels</h3>
+          ${isMod() ? `<button class="btn small primary" onclick="openDemonModal()">+ Add Demon</button>` : ''}
         </div>
         <div class="demon-rows">${rows}</div>
       </div>
@@ -748,31 +741,26 @@ function renderListTab(){
 function selectDemon(id){ APP.selectedDemonId = id; renderListTab(); }
 function renderDemonDetail(d, index){
   const embed = getEmbedUrl(d.video);
-  const dateString = d.addedAt ? new Date(d.addedAt).toLocaleDateString() : 'Legacy Matrix';
   const tagHtml = (d.tags || []).map(t => `<span class="tag-pill" style="font-size:11px; padding:2px 6px;">${escapeHtml(t)}</span>`).join(' ');
   
   return `
     <div class="detail-top">
       <div>
         <div class="detail-title">${escapeHtml(d.name)}</div>
-        <div class="detail-sub">Authored by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · Verified via '+escapeHtml(d.verifier) : ''}</div>
+        <div class="detail-sub">by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
         ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
       </div>
       ${isMod() ? `<div>
-        <button class="btn small" onclick="openDemonModal('${d.id}')">Modify</button>
-        <button class="btn small danger" onclick="deleteDemon('${d.id}')">Purge</button>
+        <button class="btn small" onclick="openDemonModal('${d.id}')">Edit</button>
+        <button class="btn small danger" onclick="deleteDemon('${d.id}')">Delete</button>
       </div>` : ''}
     </div>
     <div class="stat-row">
-      <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Rank Placement</div></div>
-      <div class="stat"><div class="val">${d.points}</div><div class="lbl">Yield Points</div></div>
+      <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Placement</div></div>
+      <div class="stat"><div class="val">${d.points}</div><div class="lbl">Points</div></div>
     </div>
-    <div class="video-wrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Launch External Stream ↗</a>` : 'Verification stream offline'}</div>`}</div>
+    <div class="video-wrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
     ${d.description ? `<div class="detail-desc">${escapeHtml(d.description)}</div>` : ''}
-    <div class="detail-meta">
-      <div>System UID: <span style="color:var(--text-muted);">${d.id}</span></div>
-      <div>Indexed: <span style="color:var(--text-muted);">${dateString}</span></div>
-    </div>
   `;
 }
 
@@ -784,7 +772,7 @@ function openDemonModal(id){
   openModal(`
   <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
     <div class="modal">
-      <div class="modal-head"><h3>${editing ? 'Edit Entry Parameters' : 'Deploy New Entry'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-head"><h3>${editing ? 'Edit Demon' : 'Add Demon'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
       <div class="modal-body">
         <div class="field"><label>Level Name</label><input id="dm-name" value="${editing?escapeHtml(editing.name):''}"></div>
         <div class="form-grid">
@@ -792,19 +780,19 @@ function openDemonModal(id){
           <div class="field"><label>Verifier</label><input id="dm-verifier" value="${editing?escapeHtml(editing.verifier||''):''}"></div>
         </div>
         <div class="form-grid">
-          <div class="field"><label>Yield Points</label><input id="dm-points" type="number" min="0" value="${editing?editing.points:100}"></div>
-          <div class="field"><label>Stream Record URL</label><input id="dm-video" value="${editing?escapeHtml(editing.video||''):''}" placeholder="https://youtube.com/..."></div>
+          <div class="field"><label>Points if beaten</label><input id="dm-points" type="number" min="0" value="${editing?editing.points:100}"></div>
+          <div class="field"><label>Video URL</label><input id="dm-video" value="${editing?escapeHtml(editing.video||''):''}" placeholder="https://youtube.com/..."></div>
         </div>
         <div class="field">
-          <label>Attribute Level Tags (Customizable)</label>
+          <label>Tags</label>
           <input id="dm-tags" value="${escapeHtml(currentTagsString)}" placeholder="e.g. Memory, Timing, XL, Wave, Challenge">
           <div class="hint">Type whatever tags you want for this level, separated by commas.</div>
         </div>
-        <div class="field"><label>Internal Dossier/Description (Optional)</label><textarea id="dm-desc">${editing?escapeHtml(editing.description||''):''}</textarea></div>
+        <div class="field"><label>Description (optional)</label><textarea id="dm-desc">${editing?escapeHtml(editing.description||''):''}</textarea></div>
       </div>
       <div class="modal-foot">
         <button class="btn ghost" onclick="closeModal()">Cancel</button>
-        <button class="btn primary" onclick="saveDemonForm(${editing?`'${editing.id}'`:'null'})">${editing?'Save Diagnostics':'Commit Entry'}</button>
+        <button class="btn primary" onclick="saveDemonForm(${editing?`'${editing.id}'`:'null'})">${editing?'Save Changes':'Add Demon'}</button>
       </div>
     </div>
   </div>`);
@@ -840,7 +828,7 @@ async function saveDemonForm(id){
   renderAll();
 }
 async function deleteDemon(id){
-  if(!confirm('Purge entry completely from ledger records?')) return;
+  if(!confirm('Remove this demon from the list?')) return;
   APP.demons = APP.demons.filter(d=>d.id!==id);
   if(APP.selectedDemonId===id) APP.selectedDemonId = APP.demons[0]?.id || null;
   await saveDemons();
@@ -863,30 +851,29 @@ function renderRouletteTab(){
   if(!APP.demons.length){
     el.innerHTML = `
       <div class="page-head">
-        <div class="eyebrow">Stochastic Simulation</div>
-        <h1 class="page-title">Roulette Challenge</h1>
+        <h1 class="page-title">Roulette</h1>
       </div>
-      <div class="empty-state"><div class="big">Data Pools Unpopulated</div>Populate entries inside the primary listing to initialize roulette sequences.</div>`;
+      <div class="empty-state"><div class="big">Add some demons first</div>The roulette pulls random levels from the Demon List tab.</div>`;
     return;
   }
 
   let cardInner;
   if(!rl.current){
     cardInner = `
-      <div class="roulette-req">Baseline Target Requirement: ${rl.required}%</div>
+      <div class="roulette-req">Next requirement: ${rl.required}%</div>
       <div class="roulette-demon">—</div>
-      <div class="roulette-creator">Awaiting Sequence Generation</div>
-      <button class="btn primary" style="padding:8px 20px;" onclick="spinRoulette()">Initialize Stream Spin</button>
+      <div class="roulette-creator">Spin to get a random level</div>
+      <button class="btn primary" style="padding:8px 20px;" onclick="spinRoulette()">Spin</button>
     `;
   }else{
     cardInner = `
-      <div class="roulette-req">Sequence Tier Layer ${rl.history.length+1}</div>
+      <div class="roulette-req">Level ${rl.history.length+1}</div>
       <div class="roulette-demon">${escapeHtml(rl.current.name)}</div>
       <div class="roulette-creator">by ${escapeHtml(rl.current.creator||'Unknown')}</div>
       <div class="roulette-target">${rl.required}%</div>
       <div class="roulette-input-row">
-        <input type="number" min="1" max="100" id="rl-percent" placeholder="Result %">
-        <button class="btn primary" onclick="submitRoulettePercent()">Commit</button>
+        <input type="number" min="1" max="100" id="rl-percent" placeholder="0-100">
+        <button class="btn primary" onclick="submitRoulettePercent()">Submit</button>
       </div>
       <div class="roulette-feedback" id="rl-feedback"></div>
     `;
@@ -894,19 +881,18 @@ function renderRouletteTab(){
 
   const history = rl.history.slice().reverse().map(h => `
     <div class="rh-item">
-      <span class="rh-name">${escapeHtml(h.name)} — baseline ${h.required}%, registered ${h.achieved}%</span>
-      <span class="rh-result ${h.result}">${h.result==='pass'?'SUCCESS':'FAIL'}</span>
+      <span class="rh-name">${escapeHtml(h.name)} — needed ${h.required}%, got ${h.achieved}%</span>
+      <span class="rh-result ${h.result}">${h.result==='pass'?'PASS':'FAIL'}</span>
     </div>`).join('');
 
   el.innerHTML = `
     <div class="page-head">
-      <div class="eyebrow">Stochastic Matrix Evaluation</div>
-      <h1 class="page-title">Roulette Engine</h1>
-      <p class="page-desc">Sequential algorithmic progression evaluation. Attaining targeted parameters scaling step thresholds (+1% margin steps). Falling short resets structural progression loops to 1% metrics.</p>
+      <h1 class="page-title">Roulette</h1>
+      <p class="page-desc">Get a random demon. Clear the required percent and the next one gets harder — whatever you enter becomes (entered % + 1) for the next level. Fall short and it resets to 1%.</p>
     </div>
     <div class="roulette-wrap">
       <div class="roulette-card">${cardInner}</div>
-      ${rl.history.length ? `<div class="panel roulette-history"><div class="panel-head"><h3>Execution Analytics Log</h3><button class="btn small ghost" onclick="resetRoulette()">Reset Circuit</button></div><div>${history}</div></div>` : ''}
+      ${rl.history.length ? `<div class="panel roulette-history"><div class="panel-head"><h3>Run History</h3><button class="btn small ghost" onclick="resetRoulette()">Reset Run</button></div><div>${history}</div></div>` : ''}
     </div>
   `;
   const input = document.getElementById('rl-percent');
@@ -926,7 +912,7 @@ function submitRoulettePercent(){
   const val = parseInt(input.value);
   const rl = APP.roulette;
   const fb = document.getElementById('rl-feedback');
-  if(isNaN(val) || val<1 || val>100){ fb.textContent = 'Invalid parameter range (1-100).'; fb.className='roulette-feedback fail'; return; }
+  if(isNaN(val) || val<1 || val>100){ fb.textContent = 'Enter a percent between 1 and 100.'; fb.className='roulette-feedback fail'; return; }
 
   const required = rl.required;
   const pass = val >= required;
@@ -934,17 +920,17 @@ function submitRoulettePercent(){
 
   if(pass){
     if(val >= 100){
-      fb.textContent = 'Sequence Terminal Matrix cleared. Re-indexing loop to 1%.';
+      fb.textContent = 'Roulette cleared! Starting a new run at 1%.';
       fb.className = 'roulette-feedback pass';
       rl.required = 1;
     }else{
       rl.required = Math.min(100, val+1);
-      fb.textContent = `Target cleared. Next phase variable calibration set to: ${rl.required}%.`;
+      fb.textContent = `Cleared! Next requirement: ${rl.required}%.`;
       fb.className = 'roulette-feedback pass';
     }
     rl.current = null;
   }else{
-    fb.textContent = `Parameter threshold breach. Sequence loop tracking dropped to 1%.`;
+    fb.textContent = `Short of ${required}% — run reset to 1%.`;
     fb.className = 'roulette-feedback fail';
     rl.required = 1;
     rl.current = null;
@@ -969,24 +955,23 @@ function renderLeaderboardTab(){
       <td class="lb-points">${p.points}</td>
       ${isMod() ? `<td class="lb-actions">
         <button class="btn small" onclick="openPlayerModal('${p.id}')">Edit</button>
-        <button class="btn small danger" onclick="deletePlayer('${p.id}')">Drop</button>
+        <button class="btn small danger" onclick="deletePlayer('${p.id}')">Delete</button>
       </td>` : '<td></td>'}
-    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="big">No Operator Elements Records</div>${isMod() ? 'Insert entries to construct point standings matrix.' : 'Standings evaluation calculation processing.'}</div></td></tr>`;
+    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="big">No players yet</div>${isMod() ? 'Add a player to start the leaderboard.' : 'Check back soon.'}</div></td></tr>`;
 
   el.innerHTML = `
     <div class="page-head">
-      <div class="eyebrow">Calculated Standings · ${sorted.length} Operator Nodes</div>
-      <h1 class="page-title">Global Standings Leaderboard</h1>
-      <p class="page-desc">Calibrated system positioning tracked via cumulative points allocated from authenticated, verified demon level clears.</p>
+      <h1 class="page-title">Leaderboard</h1>
+      <p class="page-desc">${sorted.length} player${sorted.length===1?'':'s'}, ranked by total points earned from beaten demons.</p>
     </div>
     <div class="panel">
       <div class="panel-head">
-        <h3>Operator Standings Grid</h3>
-        ${isMod() ? `<button class="btn small primary" onclick="openPlayerModal()">+ Manual Node Profile</button>` : ''}
+        <h3>Players</h3>
+        ${isMod() ? `<button class="btn small primary" onclick="openPlayerModal()">+ Add Player</button>` : ''}
       </div>
       <div style="overflow-x:auto;">
       <table class="lb-table">
-        <thead><tr><th>Pos</th><th>Operator Node</th><th>Domain Sector</th><th>Calibrated Points</th><th></th></tr></thead>
+        <thead><tr><th>Rank</th><th>Player</th><th>Region</th><th>Points</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       </div>
@@ -999,17 +984,17 @@ function openPlayerModal(id){
   openModal(`
   <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
     <div class="modal">
-      <div class="modal-head"><h3>${editing?'Modify Node Parameters':'Instantiate Operator Profile'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-head"><h3>${editing?'Edit Player':'Add Player'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
       <div class="modal-body">
-        <div class="field"><label>Profile Handler Name</label><input id="pl-name" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="field"><label>Player Name</label><input id="pl-name" value="${editing?escapeHtml(editing.name):''}"></div>
         <div class="form-grid">
-          <div class="field"><label>Domain Sector / Region</label><select id="pl-country">${countryOptions(editing?editing.country:'US')}</select></div>
-          <div class="field"><label>Allocated Points Baseline</label><input id="pl-points" type="number" min="0" value="${editing?editing.points:0}"></div>
+          <div class="field"><label>Region / Country</label><select id="pl-country">${countryOptions(editing?editing.country:'US')}</select></div>
+          <div class="field"><label>Points</label><input id="pl-points" type="number" min="0" value="${editing?editing.points:0}"></div>
         </div>
       </div>
       <div class="modal-foot">
         <button class="btn ghost" onclick="closeModal()">Cancel</button>
-        <button class="btn primary" onclick="savePlayerForm(${editing?`'${editing.id}'`:'null'})">${editing?'Commit Modifications':'Register Node'}</button>
+        <button class="btn primary" onclick="savePlayerForm(${editing?`'${editing.id}'`:'null'})">${editing?'Save Changes':'Add Player'}</button>
       </div>
     </div>
   </div>`);
@@ -1029,7 +1014,7 @@ async function savePlayerForm(id){
   renderLeaderboardTab();
 }
 async function deletePlayer(id){
-  if(!confirm('Delete operator track file and reset leaderboard allocation points?')) return;
+  if(!confirm('Remove this player from the leaderboard?')) return;
   APP.players = APP.players.filter(p=>p.id!==id);
   await savePlayers();
   renderLeaderboardTab();
@@ -1048,46 +1033,45 @@ function renderSubmitTab(){
       <div class="sub-item-top">
         <div>
           <span class="who">${escapeHtml(s.player)}</span>
-          <span class="what"> — ${demon?escapeHtml(demon.name):'(Purged Entry Link)'} · ${s.percent}% tracking</span>
+          <span class="what"> — ${demon?escapeHtml(demon.name):'(deleted demon)'} · ${s.percent}%</span>
         </div>
         <span class="status-pill ${s.status}">${s.status}</span>
       </div>
       ${s.note ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px; font-style:italic;">"${escapeHtml(s.note)}"</div>` : ''}
-      <a class="sub-link" href="${escapeHtml(s.video)}" target="_blank">Analyze Record Metadata Stream ↗</a>
+      <a class="sub-link" href="${escapeHtml(s.video)}" target="_blank">Watch submission ↗</a>
       ${isMod() && s.status==='pending' ? `
       <div class="sub-actions">
-        <button class="btn small primary" onclick="reviewSubmission('${s.id}','approved')">Pass/Approve</button>
-        <button class="btn small danger" onclick="reviewSubmission('${s.id}','rejected')">Deny/Reject</button>
+        <button class="btn small primary" onclick="reviewSubmission('${s.id}','approved')">Approve</button>
+        <button class="btn small danger" onclick="reviewSubmission('${s.id}','rejected')">Reject</button>
       </div>` : ''}
     </div>`;
-  }).join('') : `<div class="empty-state"><div class="big">Verification Streams Clear</div>No submissions presently queued inside triage pipelines.</div>`;
+  }).join('') : `<div class="empty-state"><div class="big">No submissions yet</div>Plays sent for review will show up here.</div>`;
 
   el.innerHTML = `
     <div class="page-head">
-      <div class="eyebrow">Triage & Validation Pipeline</div>
-      <h1 class="page-title">Submit Verification File</h1>
-      <p class="page-desc">Deploy record transmission metadata to system analysts. Approved record streams automatically calculate tracking metrics and modify global ranking values.</p>
+      <h1 class="page-title">Submit a Play</h1>
+      <p class="page-desc">Send a video of your run to the list moderators. Approved plays award the demon's points to your leaderboard total.</p>
     </div>
     <div class="list-layout">
       <div class="panel">
-        <div class="panel-head"><h3>Transmission Dispatch</h3></div>
+        <div class="panel-head"><h3>New Submission</h3></div>
         <div style="padding:14px;">
           ${APP.demons.length ? `
-          <div class="field"><label>Operator Profile Handler</label><input id="sb-player" placeholder="Enter name identifier"></div>
-          <div class="field"><label>Target Demon Record Element</label><select id="sb-demon">${demonOptions}</select></div>
+          <div class="field"><label>Your Player Name</label><input id="sb-player" ></div>
+          <div class="field"><label>Demon</label><select id="sb-demon">${demonOptions}</select></div>
           <div class="form-grid">
-            <div class="field"><label>Metric Completion %</label><input id="sb-percent" type="number" min="1" max="100" value="100"></div>
-            <div class="field"><label>Domain Sector</label><select id="sb-country">${countryOptions('US')}</select></div>
+            <div class="field"><label>Percent</label><input id="sb-percent" type="number" min="1" max="100" value="100"></div>
+            <div class="field"><label>Region</label><select id="sb-country">${countryOptions('US')}</select></div>
           </div>
-          <div class="field"><label>Stream Footage URL Evidence</label><input id="sb-video" placeholder="https://youtube.com/..."></div>
-          <div class="field"><label>Transmission Note / Context (Optional)</label><textarea id="sb-note" placeholder="Provide system documentation variables if needed..."></textarea></div>
-          <button class="btn primary" style="width:100%;" onclick="submitPlay()">Transmit Entry File</button>
+          <div class="field"><label>Video URL</label><input id="sb-video" placeholder="https://youtube.com/..."></div>
+          <div class="field"><label>Note (optional)</label><textarea id="sb-note" placeholder="Anything moderators should know"></textarea></div>
+          <button class="btn primary" style="width:100%;" onclick="submitPlay()">Send for Review</button>
           <div id="submitMsg"></div>
-          ` : `<div class="empty-state">System listing database unpopulated. Submission vectors disabled.</div>`}
+          ` : `<div class="empty-state">Add demons to the list first.</div>`}
         </div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h3>Live Triage Queues</h3></div>
+        <div class="panel-head"><h3>Queue</h3></div>
         <div class="sub-list demon-rows" style="max-height:none;">${queueHtml}</div>
       </div>
     </div>
@@ -1102,12 +1086,12 @@ async function submitPlay(){
   const note = document.getElementById('sb-note').value.trim();
   const msgEl = document.getElementById('submitMsg');
   if(!player || !video || isNaN(percent) || percent<1 || percent>100){
-    msgEl.innerHTML = `<div class="msg error">Structural parameter lack. Validate name, completion percent range boundaries, and video stream pointers.</div>`;
+    msgEl.innerHTML = `<div class="msg error">Fill in your name, a percent (1-100), and a video URL.</div>`;
     return;
   }
   APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, status:'pending', submittedAt: Date.now() });
   await saveSubmissions();
-  msgEl.innerHTML = `<div class="msg ok">Transmission processed successfully. Operational queues updated.</div>`;
+  msgEl.innerHTML = `<div class="msg ok">Submitted! A moderator will review it soon.</div>`;
   renderSubmitTab();
 }
 async function reviewSubmission(id, status){

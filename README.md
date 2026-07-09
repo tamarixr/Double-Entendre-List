@@ -3,9 +3,14 @@
 Your original file used `window.storage`, an API that only exists inside
 Claude.ai's artifact preview — it doesn't exist on a real website. This
 project swaps that out for a tiny serverless API (`/api/storage.js`) backed
-by **Vercel KV**, so the site keeps working exactly the same, but the data
-(demons, players, submissions, settings) is now stored in a real,
+by **Upstash Redis**, so the site keeps working exactly the same, but the
+data (demons, players, submissions, settings) is now stored in a real,
 shared database that every visitor sees.
+
+Note: this used to run on **Vercel KV**, but Vercel discontinued that
+product in 2025. Storage is now handled by Upstash Redis, installed through
+the Vercel Marketplace — same idea, different provider, and it's still on
+Vercel's free tier.
 
 ## File list
 
@@ -14,8 +19,8 @@ demon-list-vercel/
 ├── public/
 │   └── index.html      # your site, with window.storage calls replaced by fetch()
 ├── api/
-│   └── storage.js       # serverless function: GET/POST to Vercel KV
-├── package.json          # declares the @vercel/kv dependency
+│   └── storage.js       # serverless function: GET/POST to Upstash Redis
+├── package.json          # declares the @upstash/redis dependency
 ├── vercel.json           # minor routing config
 └── README.md
 ```
@@ -28,11 +33,16 @@ demon-list-vercel/
 2. **Import the repo in Vercel** (vercel.com → Add New → Project).
    Framework preset: leave as "Other" — no build step is needed.
 
-3. **Attach a KV store** (one-time, free tier available):
-   - In your Vercel project → **Storage** tab → **Create Database** → **KV**.
+3. **Attach an Upstash Redis database** (one-time, free tier available):
+   - In your Vercel project → **Storage** tab → **Create Database** →
+     **Marketplace Database Providers** → **Upstash** → **Redis**.
    - Vercel automatically injects the required env vars
-     (`KV_REST_API_URL`, `KV_REST_API_TOKEN`, etc.) into your project —
-     you don't need to copy anything manually.
+     (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`) into your
+     project — you don't need to copy anything manually.
+   - If your dashboard shows a raw Upstash "Marketplace" listing instead of
+     an in-context "Create Database" flow, you can also install it from
+     vercel.com/marketplace, category **Storage**, search **Redis** — then
+     connect the resulting integration to this project.
 
 4. **Deploy.** Your site will be live at `your-project.vercel.app`.
 
@@ -60,4 +70,5 @@ vercel dev
 ```
 
 This runs the static file + the `/api/storage` function locally with the
-same routing Vercel uses in production.
+same routing Vercel uses in production — as long as you've run `vercel link`
+and `vercel env pull` first so the Upstash env vars are available locally.
