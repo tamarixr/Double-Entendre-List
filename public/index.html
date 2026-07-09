@@ -402,9 +402,6 @@ function countryOptions(selected){
 }
 
 /* ============================= STORAGE ============================= */
-/* Replaces the Claude-artifact-only window.storage API with calls to
-   /api/storage, a Vercel serverless function backed by Vercel KV.
-   See README.md for the one-time setup (attaching a KV store). */
 async function storageGet(key){
   try{
     const r = await fetch('/api/storage?key=' + encodeURIComponent(key));
@@ -440,7 +437,6 @@ function saveUsers(){ return storageSet('registered_users', APP.registeredUsers)
 function saveSettings(){ return storageSet('site_settings', APP.settings); }
 
 function applySystemTheme(){
-  // Apply visual framework mode
   if(APP.settings.themeMode === 'light') {
     document.body.classList.add('light-theme');
   } else {
@@ -468,21 +464,21 @@ function toggleThemeMode(){
 async function loginAccount(username, password){
   const normalizedUser = username.trim().toLowerCase();
   
-  // Rule Check 1: Verify Staff signatures (tamari/hakku)
   if(DIRECT_AUTH[normalizedUser]){
     const obscuredInput = btoa(password.split('').reverse().join(''));
     if(obscuredInput === DIRECT_AUTH[normalizedUser]){
       APP.currentUser = { username: normalizedUser === 'tamari' ? 'tamari' : 'hakku', role: 'admin' };
+      saveSession();
       return APP.currentUser;
     } else {
       throw new Error('Incorrect password.');
     }
   }
   
-  // Rule Check 2: Evaluate public standard registry profiles
   const matchedUser = APP.registeredUsers.find(u => u.username.toLowerCase() === normalizedUser);
   if(matchedUser && matchedUser.password === btoa(password)) {
     APP.currentUser = { username: matchedUser.username, role: 'user' };
+    saveSession();
     return APP.currentUser;
   }
   
@@ -501,19 +497,34 @@ async function registerAccount(username, password){
 
   const newUser = {
     username: cleanUser,
-    password: btoa(password), // Base-tier structural obfuscation storage mapping
+    password: btoa(password),
     role: 'user'
   };
 
   APP.registeredUsers.push(newUser);
   await saveUsers();
   
-  // Autologin upon instance generation
   APP.currentUser = { username: newUser.username, role: 'user' };
+  saveSession();
   return APP.currentUser;
 }
-
-function logout(){ APP.currentUser = null; renderAccountArea(); renderAll(); }
+  
+function saveSession(){
+  try{ localStorage.setItem('demonlist_session', JSON.stringify(APP.currentUser)); }catch(e){}
+}
+  
+function restoreSession(){
+  try{
+    const raw = localStorage.getItem('demonlist_session');
+    if(raw) APP.currentUser = JSON.parse(raw);
+  }catch(e){}
+}
+  
+function logout(){
+  APP.currentUser = null;
+  localStorage.removeItem('demonlist_session');
+  renderAccountArea(); renderAll();
+}
 function isMod(){ return APP.currentUser !== null && APP.currentUser.role === 'admin'; }
 function isAdmin(){ return APP.currentUser !== null && APP.currentUser.role === 'admin'; }
 
@@ -581,7 +592,6 @@ function openLoginModal(){
       </div>
     </div>
   </div>`);
-  // Initialize baseline mode tracker attribute
   document.getElementById('loginForm').dataset.mode = 'login';
 }
 
@@ -801,7 +811,6 @@ async function saveDemonForm(id){
   const name = document.getElementById('dm-name').value.trim();
   if(!name) return;
 
-  // Extract freely customizable level tags from custom string field
   const rawTags = document.getElementById('dm-tags').value;
   const processedTags = rawTags.split(',')
     .map(t => t.trim())
@@ -1116,6 +1125,7 @@ async function reviewSubmission(id, status){
 /* ============================= INIT ============================= */
 async function init(){
   await loadAll();
+  restoreSession();      
   renderAccountArea();
   renderAll();
 }
