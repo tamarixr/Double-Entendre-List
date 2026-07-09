@@ -408,14 +408,25 @@ function countryOptions(selected){
 }
 
 /* ============================= STORAGE ============================= */
+/* Replaces the Claude-artifact-only window.storage API with calls to
+   /api/storage, a Vercel serverless function backed by Vercel KV.
+   See README.md for the one-time setup (attaching a KV store). */
 async function storageGet(key){
   try{
-    const r = await window.storage.get(key, true);
-    return r ? JSON.parse(r.value) : null;
-  }catch(e){ return null; }
+    const r = await fetch('/api/storage?key=' + encodeURIComponent(key));
+    if(!r.ok) return null;
+    const data = await r.json();
+    return data.value ?? null;
+  }catch(e){ console.error('Storage read fault', e); return null; }
 }
 async function storageSet(key, value){
-  try{ await window.storage.set(key, JSON.stringify(value), true); }catch(e){ console.error('Storage operational fault', e); }
+  try{
+    await fetch('/api/storage', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ key, value })
+    });
+  }catch(e){ console.error('Storage write fault', e); }
 }
 async function loadAll(){
   APP.demons = (await storageGet('demons')) || [];
