@@ -1135,9 +1135,9 @@ async function reviewSubmission(id, status){
 }
 
 /* ============================= INIT ============================= */
-async function init(){
-  restoreSession();      // <-- add this line
+async function init(){     // <-- add this line
   await loadAll();
+  restoreSession();      
   renderAccountArea();
   renderAll();
 }
