@@ -1742,7 +1742,7 @@ function renderSubmitTab(preserveFocus){
       <h1 class="page-title">Submit a Play</h1>
       <p class="page-desc">Send a video of your run to the list moderators. Approved plays award the demon's points to your leaderboard total.</p>
     </div>
-    <div class="list-layout">
+    <div class="list-layout" ${isMod() ? '' : 'style="grid-template-columns:1fr;"'}>
       <div class="panel">
         <div class="panel-head"><h3>New Submission</h3></div>
         <div style="padding:14px;">
@@ -1762,6 +1762,7 @@ function renderSubmitTab(preserveFocus){
           ` : `<div class="empty-state">Add demons to the list first.</div>`}
         </div>
       </div>
+      ${isMod() ? `
       <div class="panel">
         <div class="panel-head"><h3>Queue</h3></div>
         ${APP.submissions.length ? `
@@ -1778,7 +1779,7 @@ function renderSubmitTab(preserveFocus){
           </div>
         </div>` : ''}
         <div class="sub-list demon-rows" style="max-height:none;">${queueHtml}</div>
-      </div>
+      </div>` : ''}
     </div>
   `;
   if(preserveFocus){
