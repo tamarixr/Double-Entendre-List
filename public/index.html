@@ -411,6 +411,55 @@ body.light-theme .tag-pill.new{color:var(--spike);}
 .req-hint.bad{color:var(--red);}
 
 @media(max-width:520px){.list-toolbar-row{flex-direction:column;} .sort-select{width:100%;}}
+
+/* ---------- QOL: upcoming levels ---------- */
+.upcoming-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.upcoming-card{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px;display:flex;flex-direction:column;gap:8px;
+  transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.upcoming-card:hover{transform:translateY(-3px);border-color:var(--text-dim);box-shadow:0 6px 18px rgba(0,0,0,0.25);}
+.upcoming-card .uc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.upcoming-card .uc-name{font-weight:700;font-size:14.5px;}
+.upcoming-card .uc-creator{font-size:11.5px;color:var(--text-dim);margin-top:1px;display:flex;align-items:center;gap:4px;}
+.upcoming-card .uc-rank{
+  font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);
+  border:1px solid var(--line);border-radius:2px;padding:1px 6px;flex:none;
+}
+.upcoming-card .uc-video{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);}
+.upcoming-card .uc-video iframe{width:100%;height:100%;border:none;}
+.upcoming-card .uc-video .noVideo{height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:11.5px;}
+.upcoming-card .uc-desc{font-size:12px;color:var(--text-muted);line-height:1.4;}
+.upcoming-card .uc-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
+.upcoming-card .uc-reorder{display:flex;gap:4px;}
+
+/* ---------- animations ---------- */
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes popIn{from{opacity:0;transform:scale(.96) translateY(4px);}to{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes rankPulse{0%,100%{box-shadow:0 0 0 rgba(255,59,107,0);}50%{box-shadow:0 0 12px var(--spike-shadow);}}
+
+.tab-panel.active{animation:fadeSlideIn .28s ease both;}
+.demon-row{animation:fadeSlideIn .22s ease both;}
+.upcoming-card{animation:fadeSlideIn .22s ease both;}
+.demon-row{transition:background .15s ease, transform .15s ease;}
+.demon-row:hover{transform:translateX(2px);}
+.rank-badge.top{animation:rankPulse 2.6s ease-in-out infinite;}
+.stat-card{transition:transform .15s ease, border-color .15s ease;}
+.stat-card:hover{transform:translateY(-2px);border-color:var(--text-dim);}
+.btn{transition:transform .1s ease, background .1s ease, border-color .1s ease;}
+.btn:active{transform:scale(.96);}
+.modal-backdrop{animation:fadeIn .15s ease both;}
+.modal{animation:popIn .18s ease both;}
+.toast{animation:toastIn .2s ease both;}
+.lb-table tr{animation:fadeSlideIn .22s ease both;}
+nav.tabs button.active{transition:background .15s ease;}
+
+@media (prefers-reduced-motion: reduce){
+  .tab-panel.active,.demon-row,.upcoming-card,.rank-badge.top,.modal-backdrop,.modal,.toast,.lb-table tr{animation:none !important;}
+  .demon-row:hover,.stat-card:hover,.upcoming-card:hover{transform:none;}
+}
 </style>
 </head>
 <body>
@@ -420,6 +469,7 @@ body.light-theme .tag-pill.new{color:var(--spike);}
     <div class="logo"><span class="mark"></span><span class="site-name-text">Double Entendre</span></div>
     <nav class="tabs" id="tabs">
       <button data-tab="list" class="active">Demon List</button>
+      <button data-tab="upcoming">Upcoming<span id="upcomingBadgeSlot"></span></button>
       <button data-tab="roulette">Roulette</button>
       <button data-tab="leaderboard">Leaderboard</button>
       <button data-tab="submit">Submit Play<span id="pendingBadgeSlot"></span></button>
@@ -435,6 +485,7 @@ body.light-theme .tag-pill.new{color:var(--spike);}
 
 <main>
   <div class="tab-panel active" id="panel-list"></div>
+  <div class="tab-panel" id="panel-upcoming"></div>
   <div class="tab-panel" id="panel-roulette"></div>
   <div class="tab-panel" id="panel-leaderboard"></div>
   <div class="tab-panel" id="panel-submit"></div>
@@ -461,6 +512,7 @@ const ACCENT_PALETTES = {
 /* ============================= STATE ============================= */
 const APP = {
   demons: [],
+  upcoming: [],
   players: [],
   submissions: [],
   registeredUsers: [], // Normal public registered users storage
@@ -476,6 +528,7 @@ const APP = {
     mainListSize: 50 // demons ranked beyond this fall into the Legacy List
   },
   listFilter: { search: '', tags: [], sort: 'rank', section: 'main' }, // section: main | legacy | all
+  upcomingFilter: { search: '' },
   lbFilter: { search: '', sort: 'points', view: 'players' }, // view: players | nations | records
   subFilter: { status: 'all', search: '' }
 };
@@ -532,6 +585,7 @@ async function storageSet(key, value){
 }
 async function loadAll(){
   APP.demons = (await storageGet('demons')) || [];
+  APP.upcoming = (await storageGet('upcoming')) || [];
   APP.players = (await storageGet('players')) || [];
   APP.submissions = (await storageGet('submissions')) || [];
   APP.registeredUsers = (await storageGet('registered_users')) || [];
@@ -542,6 +596,7 @@ async function loadAll(){
   applySystemTheme();
 }
 function saveDemons(){ return storageSet('demons', APP.demons); }
+function saveUpcoming(){ return storageSet('upcoming', APP.upcoming); }
 function savePlayers(){ return storageSet('players', APP.players); }
 function saveSubmissions(){ return storageSet('submissions', APP.submissions); }
 function saveUsers(){ return storageSet('registered_users', APP.registeredUsers); }
@@ -662,6 +717,29 @@ function getEmbedUrl(url){
 function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
 function openModal(html){ document.getElementById('modalRoot').innerHTML = html; }
 
+/* ============================= QOL: COUNT-UP ANIMATION ============================= */
+function animateCounters(container){
+  if(!container) return;
+  const nodes = container.querySelectorAll('[data-count]');
+  if(!nodes.length) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  nodes.forEach(el => {
+    const target = parseInt(el.dataset.count, 10);
+    if(isNaN(target)){ return; }
+    if(reduce || target === 0){ el.textContent = target; return; }
+    const dur = 500;
+    const start = performance.now();
+    function step(now){
+      const p = Math.min(1, (now - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased);
+      if(p < 1) requestAnimationFrame(step);
+      else el.textContent = target;
+    }
+    requestAnimationFrame(step);
+  });
+}
+
 /* ============================= QOL: TOASTS ============================= */
 function showToast(text, type='ok'){
   const root = document.getElementById('toastRoot');
@@ -743,6 +821,7 @@ function buildCommandItems(query){
   const items = [];
   const tabs = [
     { label:'Demon List', sub:'Go to tab', tab:'list' },
+    { label:'Upcoming', sub:'Go to tab', tab:'upcoming' },
     { label:'Roulette', sub:'Go to tab', tab:'roulette' },
     { label:'Leaderboard', sub:'Go to tab', tab:'leaderboard' },
     { label:'Submit Play', sub:'Go to tab', tab:'submit' },
@@ -756,6 +835,11 @@ function buildCommandItems(query){
   APP.demons.forEach((d,i) => {
     if(!q || d.name.toLowerCase().includes(q) || (d.creator||'').toLowerCase().includes(q)){
       items.push({ group:'Demons', icon:'#'+(i+1), label:d.name, sub:d.points+'pt', action:()=>{ switchTab('list'); selectDemon(d.id); } });
+    }
+  });
+  APP.upcoming.forEach(u => {
+    if(!q || u.name.toLowerCase().includes(q) || (u.creator||'').toLowerCase().includes(q)){
+      items.push({ group:'Upcoming', icon:flagEmoji(u.country), label:u.name, sub:'Upcoming', action:()=>switchTab('upcoming') });
     }
   });
   APP.players.forEach(p => {
@@ -999,6 +1083,7 @@ document.getElementById('tabs').addEventListener('click', e=>{
 function renderAll(){
   applySystemTheme();
   renderListTab();
+  renderUpcomingTab();
   renderRouletteTab();
   renderLeaderboardTab();
   renderSubmitTab();
@@ -1009,9 +1094,14 @@ function renderAll(){
 /* ============================= QOL: NAV BADGES ============================= */
 function updateNavBadges(){
   const slot = document.getElementById('pendingBadgeSlot');
-  if(!slot) return;
-  const pending = APP.submissions.filter(s=>s.status==='pending').length;
-  slot.innerHTML = (isMod() && pending) ? `<span class="nav-badge">${pending}</span>` : '';
+  if(slot){
+    const pending = APP.submissions.filter(s=>s.status==='pending').length;
+    slot.innerHTML = (isMod() && pending) ? `<span class="nav-badge">${pending}</span>` : '';
+  }
+  const upSlot = document.getElementById('upcomingBadgeSlot');
+  if(upSlot){
+    upSlot.innerHTML = APP.upcoming.length ? `<span class="nav-badge">${APP.upcoming.length}</span>` : '';
+  }
 }
 
 /* ============================= LIST TAB ============================= */
@@ -1032,7 +1122,8 @@ function getFilteredSortedDemons(){
     list = list.filter(({d}) =>
       d.name.toLowerCase().includes(q) ||
       (d.creator||'').toLowerCase().includes(q) ||
-      (d.verifier||'').toLowerCase().includes(q)
+      (d.verifier||'').toLowerCase().includes(q) ||
+      countryName(d.country).toLowerCase().includes(q)
     );
   }
   if(tags.length){
@@ -1067,9 +1158,9 @@ function renderListTab(preserveFocus){
   const hasLegacy = demons.length > mainSize;
   const statCards = demons.length ? `
     <div class="stat-cards">
-      <div class="stat-card"><div class="sc-val">${Math.min(demons.length,mainSize)}</div><div class="sc-lbl">Main List</div></div>
-      <div class="stat-card"><div class="sc-val">${totalPoints}</div><div class="sc-lbl">Total Points</div></div>
-      <div class="stat-card"><div class="sc-val">${APP.players.length}</div><div class="sc-lbl">Players</div></div>
+      <div class="stat-card"><div class="sc-val" data-count="${Math.min(demons.length,mainSize)}">0</div><div class="sc-lbl">Main List</div></div>
+      <div class="stat-card"><div class="sc-val" data-count="${totalPoints}">0</div><div class="sc-lbl">Total Points</div></div>
+      <div class="stat-card"><div class="sc-val" data-count="${APP.players.length}">0</div><div class="sc-lbl">Players</div></div>
       <div class="stat-card"><div class="sc-val" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${hardest?escapeHtml(hardest.name):'—'}</div><div class="sc-lbl">#1 Hardest</div></div>
     </div>` : '';
 
@@ -1109,16 +1200,17 @@ function renderListTab(preserveFocus){
 
   const now = Date.now();
   const WEEK = 7*24*60*60*1000;
-  const rowsArr = filtered.map(({d, rank}) => {
+  const rowsArr = filtered.map(({d, rank}, idx) => {
     const i = rank;
     const tagsHtml = (d.tags || []).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('');
     const isNew = d.addedAt && (now - d.addedAt) < WEEK;
+    const delay = Math.min(idx, 12) * 18;
     const rowHtml = `
-    <div class="demon-row ${d.id===APP.selectedDemonId?'selected':''}" onclick="selectDemon('${d.id}')">
+    <div class="demon-row ${d.id===APP.selectedDemonId?'selected':''}" style="animation-delay:${delay}ms" onclick="selectDemon('${d.id}')">
       <div class="rank-badge ${i<3?'top':''}">${i+1}</div>
       <div class="info">
         <div class="name">${escapeHtml(d.name)}</div>
-        <div class="creator">by ${escapeHtml(d.creator||'Unknown')}</div>
+        <div class="creator">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}</div>
         ${tagsHtml || isNew ? `<div class="tag-container">${isNew ? `<span class="tag-pill new">New</span>` : ''}${tagsHtml}</div>` : ''}
       </div>
       <div class="pts">${d.points}pt</div>
@@ -1160,6 +1252,7 @@ function renderListTab(preserveFocus){
     const s = document.getElementById('list-search');
     if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
   }
+  animateCounters(el);
 }
 function selectDemon(id){
   APP.selectedDemonId = id;
@@ -1174,7 +1267,7 @@ function renderDemonDetail(d, index){
     <div class="detail-top">
       <div>
         <div class="detail-title">${escapeHtml(d.name)}</div>
-        <div class="detail-sub">by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
+        <div class="detail-sub">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
         ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
       </div>
       <div>
@@ -1196,24 +1289,26 @@ function renderDemonDetail(d, index){
   `;
 }
 
-function openDemonModal(id){
+function openDemonModal(id, prefill){
   if(!isMod()) return;
   const editing = id ? APP.demons.find(d=>d.id===id) : null;
-  const currentTagsString = editing && editing.tags ? editing.tags.join(', ') : '';
+  const src = editing || prefill || null;
+  const currentTagsString = src && src.tags ? src.tags.join(', ') : '';
   
   openModal(`
   <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
     <div class="modal">
-      <div class="modal-head"><h3>${editing ? 'Edit Demon' : 'Add Demon'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-head"><h3>${editing ? 'Edit Demon' : (prefill ? 'Promote to Main List' : 'Add Demon')}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
       <div class="modal-body">
-        <div class="field"><label>Level Name</label><input id="dm-name" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="field"><label>Level Name</label><input id="dm-name" value="${src?escapeHtml(src.name):''}"></div>
         <div class="form-grid">
-          <div class="field"><label>Creator</label><input id="dm-creator" value="${editing?escapeHtml(editing.creator||''):''}"></div>
-          <div class="field"><label>Verifier</label><input id="dm-verifier" value="${editing?escapeHtml(editing.verifier||''):''}"></div>
+          <div class="field"><label>Creator</label><input id="dm-creator" value="${src?escapeHtml(src.creator||''):''}"></div>
+          <div class="field"><label>Verifier</label><input id="dm-verifier" value="${src?escapeHtml(src.verifier||''):''}"></div>
         </div>
+        <div class="field"><label>Creator's Country</label><select id="dm-country">${countryOptions(src?src.country:'OTHER')}</select></div>
         <div class="form-grid">
           <div class="field"><label>Points if beaten</label><input id="dm-points" type="number" min="0" value="${editing?editing.points:100}"></div>
-          <div class="field"><label>Video URL</label><input id="dm-video" value="${editing?escapeHtml(editing.video||''):''}" placeholder="https://youtube.com/..."></div>
+          <div class="field"><label>Video URL</label><input id="dm-video" value="${src?escapeHtml(src.video||''):''}" placeholder="https://youtube.com/..."></div>
         </div>
         <div class="field">
           <label>Record Requirement (%)</label>
@@ -1236,16 +1331,16 @@ function openDemonModal(id){
           <input id="dm-tags" value="${escapeHtml(currentTagsString)}" placeholder="e.g. Memory, Timing, XL, Wave, Challenge">
           <div class="hint">Type whatever tags you want for this level, separated by commas.</div>
         </div>
-        <div class="field"><label>Description (optional)</label><textarea id="dm-desc">${editing?escapeHtml(editing.description||''):''}</textarea></div>
+        <div class="field"><label>Description (optional)</label><textarea id="dm-desc">${src?escapeHtml(src.description||''):''}</textarea></div>
       </div>
       <div class="modal-foot">
         <button class="btn ghost" onclick="closeModal()">Cancel</button>
-        <button class="btn primary" onclick="saveDemonForm(${editing?`'${editing.id}'`:'null'})">${editing?'Save Changes':'Add Demon'}</button>
+        <button class="btn primary" onclick="saveDemonForm(${editing?`'${editing.id}'`:'null'}${prefill?`,'${prefill.id}'`:''})">${editing?'Save Changes':'Add Demon'}</button>
       </div>
     </div>
   </div>`);
 }
-async function saveDemonForm(id){
+async function saveDemonForm(id, promotedFromId){
   const name = document.getElementById('dm-name').value.trim();
   if(!name) return;
 
@@ -1267,6 +1362,7 @@ async function saveDemonForm(id){
     name,
     creator: document.getElementById('dm-creator').value.trim(),
     verifier: document.getElementById('dm-verifier').value.trim(),
+    country: document.getElementById('dm-country').value,
     points: parseInt(document.getElementById('dm-points').value) || 0,
     video: document.getElementById('dm-video').value.trim(),
     description: document.getElementById('dm-desc').value.trim(),
@@ -1283,9 +1379,13 @@ async function saveDemonForm(id){
     APP.selectedDemonId = APP.demons[APP.demons.length-1].id;
   }
   await saveDemons();
+  if(promotedFromId){
+    APP.upcoming = APP.upcoming.filter(u=>u.id!==promotedFromId);
+    await saveUpcoming();
+  }
   closeModal();
   renderAll();
-  showToast(id ? 'Demon updated' : 'Demon added');
+  showToast(id ? 'Demon updated' : (promotedFromId ? 'Promoted to main list' : 'Demon added'));
 }
 async function deleteDemon(id){
   const d = APP.demons.find(x=>x.id===id);
@@ -1304,6 +1404,165 @@ async function moveDemon(id, dir){
   [APP.demons[i], APP.demons[j]] = [APP.demons[j], APP.demons[i]];
   await saveDemons();
   renderListTab();
+}
+
+/* ============================= UPCOMING LEVELS TAB ============================= */
+function setUpcomingSearch(v){ APP.upcomingFilter.search = v; renderUpcomingTab(true); }
+function getFilteredUpcoming(){
+  const q = APP.upcomingFilter.search.trim().toLowerCase();
+  let list = APP.upcoming.map((u,i) => ({ u, rank: i }));
+  if(q){
+    list = list.filter(({u}) =>
+      u.name.toLowerCase().includes(q) ||
+      (u.creator||'').toLowerCase().includes(q) ||
+      (u.verifier||'').toLowerCase().includes(q)
+    );
+  }
+  return list;
+}
+function renderUpcomingTab(preserveFocus){
+  const el = document.getElementById('panel-upcoming');
+  if(!el) return;
+  const filtered = getFilteredUpcoming();
+
+  const toolbar = APP.upcoming.length ? `
+    <div class="list-toolbar">
+      <div class="list-toolbar-row">
+        <div class="search-input-wrap">
+          <span class="si-icon">⌕</span>
+          <input id="upcoming-search" placeholder="Search upcoming levels..." value="${escapeHtml(APP.upcomingFilter.search)}" oninput="setUpcomingSearch(this.value)">
+        </div>
+      </div>
+    </div>
+    ${filtered.length !== APP.upcoming.length ? `<div class="result-count">${filtered.length} of ${APP.upcoming.length} levels match</div>` : ''}
+  ` : '';
+
+  const cards = filtered.map(({u, rank}, idx) => {
+    const embed = getEmbedUrl(u.video);
+    const tagsHtml = (u.tags||[]).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('');
+    const delay = Math.min(idx, 12) * 18;
+    return `
+    <div class="upcoming-card" style="animation-delay:${delay}ms">
+      <div class="uc-top">
+        <div>
+          <div class="uc-name">${escapeHtml(u.name)}</div>
+          <div class="uc-creator">${flagEmoji(u.country)} by ${escapeHtml(u.creator||'Unknown')}${u.verifier ? ' · verified by '+escapeHtml(u.verifier) : ''}</div>
+        </div>
+        <div class="uc-rank">#${rank+1} queued</div>
+      </div>
+      ${tagsHtml ? `<div class="tag-container">${tagsHtml}</div>` : ''}
+      <div class="uc-video">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${u.video ? `<a href="${escapeHtml(u.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
+      ${u.description ? `<div class="uc-desc">${escapeHtml(u.description)}</div>` : ''}
+      ${isMod() ? `
+      <div class="uc-actions">
+        <button class="btn small primary" onclick="promoteUpcoming('${u.id}')">Promote to List</button>
+        <button class="btn small" onclick="openUpcomingModal('${u.id}')">Edit</button>
+        <button class="btn small danger" onclick="deleteUpcoming('${u.id}')">Delete</button>
+        <div class="uc-reorder">
+          <button class="btn small ghost" onclick="moveUpcoming('${u.id}',-1)" ${rank===0?'disabled':''} title="Move up">&#9650;</button>
+          <button class="btn small ghost" onclick="moveUpcoming('${u.id}',1)" ${rank===APP.upcoming.length-1?'disabled':''} title="Move down">&#9660;</button>
+        </div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Upcoming Levels</h1>
+      <p class="page-desc">Hard levels being watched or awaiting verification, not yet ranked on the main list. ${isMod() ? 'Promote one once it\'s ready to be placed.' : ''}</p>
+    </div>
+    ${isMod() ? `<div style="margin-bottom:12px;"><button class="btn small primary" onclick="openUpcomingModal()">+ Add Upcoming Level</button></div>` : ''}
+    ${toolbar}
+    ${APP.upcoming.length ? (filtered.length ? `<div class="upcoming-grid">${cards}</div>` : `<div class="empty-state"><div class="big">No matches</div>Try a different search.</div>`)
+      : `<div class="empty-state"><div class="big">Nothing queued yet</div>${isMod() ? 'Add a level that\'s being worked on or verified.' : 'Check back soon for levels headed to the list.'}</div>`}
+  `;
+  if(preserveFocus){
+    const s = document.getElementById('upcoming-search');
+    if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
+  }
+}
+function openUpcomingModal(id){
+  if(!isMod()) return;
+  const editing = id ? APP.upcoming.find(u=>u.id===id) : null;
+  const currentTagsString = editing && editing.tags ? editing.tags.join(', ') : '';
+
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>${editing ? 'Edit Upcoming Level' : 'Add Upcoming Level'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Level Name</label><input id="up-name" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="form-grid">
+          <div class="field"><label>Creator</label><input id="up-creator" value="${editing?escapeHtml(editing.creator||''):''}"></div>
+          <div class="field"><label>Verifier</label><input id="up-verifier" value="${editing?escapeHtml(editing.verifier||''):''}"></div>
+        </div>
+        <div class="field"><label>Creator's Country</label><select id="up-country">${countryOptions(editing?editing.country:'OTHER')}</select></div>
+        <div class="field"><label>Video URL (progress / preview)</label><input id="up-video" value="${editing?escapeHtml(editing.video||''):''}" placeholder="https://youtube.com/..."></div>
+        <div class="field">
+          <label>Tags</label>
+          <input id="up-tags" value="${escapeHtml(currentTagsString)}" placeholder="e.g. Memory, Timing, XL, Wave, Challenge">
+        </div>
+        <div class="field"><label>Notes (optional)</label><textarea id="up-desc" placeholder="Progress notes, expected difficulty, etc.">${editing?escapeHtml(editing.description||''):''}</textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveUpcomingForm(${editing?`'${editing.id}'`:'null'})">${editing?'Save Changes':'Add Level'}</button>
+      </div>
+    </div>
+  </div>`);
+}
+async function saveUpcomingForm(id){
+  const name = document.getElementById('up-name').value.trim();
+  if(!name) return;
+  const rawTags = document.getElementById('up-tags').value;
+  const processedTags = rawTags.split(',').map(t=>t.trim()).filter(t=>t.length>0);
+  const data = {
+    name,
+    creator: document.getElementById('up-creator').value.trim(),
+    verifier: document.getElementById('up-verifier').value.trim(),
+    country: document.getElementById('up-country').value,
+    video: document.getElementById('up-video').value.trim(),
+    description: document.getElementById('up-desc').value.trim(),
+    tags: processedTags
+  };
+  if(id){
+    const u = APP.upcoming.find(x=>x.id===id);
+    Object.assign(u, data);
+  }else{
+    APP.upcoming.push({ id: uid(), ...data, addedAt: Date.now() });
+  }
+  await saveUpcoming();
+  closeModal();
+  renderUpcomingTab();
+  updateNavBadges();
+  showToast(id ? 'Upcoming level updated' : 'Upcoming level added');
+}
+async function deleteUpcoming(id){
+  const u = APP.upcoming.find(x=>x.id===id);
+  const ok = await customConfirm(`Remove "${u?u.name:'this level'}" from Upcoming? This cannot be undone.`, 'Delete upcoming level');
+  if(!ok) return;
+  APP.upcoming = APP.upcoming.filter(x=>x.id!==id);
+  await saveUpcoming();
+  renderUpcomingTab();
+  showToast('Upcoming level deleted');
+}
+async function moveUpcoming(id, dir){
+  const i = APP.upcoming.findIndex(u=>u.id===id);
+  const j = i+dir;
+  if(i<0 || j<0 || j>=APP.upcoming.length) return;
+  [APP.upcoming[i], APP.upcoming[j]] = [APP.upcoming[j], APP.upcoming[i]];
+  await saveUpcoming();
+  renderUpcomingTab();
+}
+async function promoteUpcoming(id){
+  if(!isMod()) return;
+  const u = APP.upcoming.find(x=>x.id===id);
+  if(!u) return;
+  const ok = await customConfirm(`Promote "${u.name}" to the main Demon List? You'll set its final points and requirements next.`, 'Promote level');
+  if(!ok) return;
+  closeModal();
+  switchTab('list');
+  openDemonModal(null, u);
 }
 
 /* ============================= ROULETTE TAB ============================= */
@@ -1332,7 +1591,7 @@ function renderRouletteTab(){
     cardInner = `
       <div class="roulette-req">Level ${rl.history.length+1}</div>
       <div class="roulette-demon">${escapeHtml(rl.current.name)}</div>
-      <div class="roulette-creator">by ${escapeHtml(rl.current.creator||'Unknown')}</div>
+      <div class="roulette-creator">${flagEmoji(rl.current.country)} by ${escapeHtml(rl.current.creator||'Unknown')}</div>
       <div class="roulette-target">${rl.required}%</div>
       <div class="roulette-input-row">
         <input type="number" min="1" max="100" id="rl-percent" placeholder="0-100">
