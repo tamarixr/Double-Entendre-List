@@ -3,795 +3,1133 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Demon List Platform</title>
+<title>Double Entendre Demon List</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg-void:#05070a;
-  --bg-panel:#0b0e14;
-  --bg-raised:#11151f;
-  --bg-raised-2:#171d2a;
-  --line:#1e2536;
-  --line-soft:#141924;
-  --text:#f1f3f5;
-  --text-muted:#949eb4;
-  --text-dim:#525d73;
-  --spike:#3b82f6;
-  --spike-dim:#13284a;
-  --spike-hover:#5091f7;
-  --spike-shadow:rgba(59,130,246,0.25);
-  --gold:#ffd000;
-  --silver:#b0b8c6;
-  --bronze:#cd7f32;
-  --cyan:#22d3ee;
+  --bg-void:#08090c;
+  --bg-panel:#11131a;
+  --bg-raised:#171a24;
+  --bg-raised-2:#1f2330;
+  --line:#242836;
+  --line-soft:#1a1d28;
+  --text:#e4e6eb;
+  --text-muted:#82879c;
+  --text-dim:#4e5266;
+  --spike:#ff3b6b;
+  --spike-dim:#7a2138;
+  --spike-hover:#ff5580;
+  --spike-shadow:rgba(255,59,107,0.4);
+  --gold:#ffb845;
+  --cyan:#4fd8ff;
   --green:#4ade80;
-  --red:#f87171;
-  --radius:4px;
+  --red:#ff5470;
+  --radius:3px;
 }
 
 body.light-theme {
   --bg-void:#f3f4f6;
   --bg-panel:#ffffff;
   --bg-raised:#f9fafb;
-  --bg-raised-2:#e5e7eb;
-  --line:#d1d5db;
+  --bg-raised-2:#f3f4f6;
+  --line:#e5e7eb;
   --line-soft:#f3f4f6;
   --text:#111827;
   --text-muted:#4b5563;
   --text-dim:#9ca3af;
-  --spike-dim:#dbeafe;
+  --spike-dim:#fce7f3;
 }
 
 *{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
 body{
-  background:var(--bg-void);color:var(--text);
-  font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;
-  min-height:100vh;overflow-y:scroll;
+  background:var(--bg-void);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
 }
-::-webkit-scrollbar{width:8px;height:8px;}
+::selection{background:var(--spike);color:#fff;}
+::-webkit-scrollbar{width:7px;height:7px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--text-dim);}
 
-/* Top Bar Styling */
-.topbar{position:sticky;top:0;z-index:100;background:rgba(5,7,10,0.95);border-bottom:1px solid var(--line);backdrop-filter:blur(8px);}
-body.light-theme .topbar{background:rgba(255,255,255,0.95);}
-.topbar-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;padding:0 20px;height:56px;gap:25px;}
-.logo{font-weight:700;font-size:15px;letter-spacing:-0.02em;display:flex;align-items:center;gap:8px;text-transform:uppercase;}
-.logo .mark{width:12px;height:12px;background:var(--spike);transform:rotate(45deg);}
-nav.tabs{display:flex;gap:4px;height:100%;align-items:center;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+
+h1,h2,h3,.display{font-family:'Inter',sans-serif;}
+.mono{font-family:'JetBrains Mono',monospace;}
+
+/* ---------- top nav ---------- */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:rgba(8,9,12,0.95);
+  border-bottom:1px solid var(--line);
+}
+body.light-theme .topbar {
+  background:rgba(255,255,255,0.95);
+}
+.topbar-inner{
+  max-width:1200px;margin:0 auto;
+  display:flex;align-items:center;gap:20px;
+  padding:10px 15px;
+}
+.logo{
+  font-family:'Inter',sans-serif;
+  font-weight:700;font-size:16px;letter-spacing:-0.01em;
+  display:flex;align-items:center;gap:8px;
+  color:var(--text);white-space:nowrap;
+}
+.logo .mark{
+  width:14px;height:14px;
+  background:var(--spike);
+  display:inline-block;
+}
+nav.tabs{display:flex;gap:2px;flex:1;}
 nav.tabs button{
-  background:none;border:none;color:var(--text-muted);font-weight:600;font-size:13px;
-  padding:8px 14px;border-radius:var(--radius);transition:all .15s ease;
+  background:none;border:none;color:var(--text-muted);
+  font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
+  padding:6px 12px;border-radius:var(--radius);transition:all .1s;
 }
 nav.tabs button:hover{color:var(--text);background:var(--bg-raised);}
-nav.tabs button.active{color:var(--text);background:var(--bg-raised-2);box-shadow:inset 0 -2px 0 var(--spike);}
+nav.tabs button.active{color:var(--text);background:var(--bg-raised-2);border:1px solid var(--line);}
 
-.account-area-wrapper{display:flex;align-items:center;gap:12px;margin-left:auto;}
-.account-chip{display:flex;align-items:center;gap:10px;font-size:12.5px;}
-.role-tag{font-size:9px;font-weight:700;text-transform:uppercase;padding:2px 6px;border-radius:2px;background:var(--bg-raised-2);color:var(--text-muted);border:1px solid var(--line);}
-.role-tag.admin{color:var(--spike);border-color:var(--spike-hover);background:var(--spike-dim);}
+.account-area-wrapper {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.account-chip{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;color:var(--text-muted);
+}
+.account-chip .name{color:var(--text);font-weight:600;}
+.role-tag{
+  font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;
+  padding:1px 5px;border-radius:2px;background:var(--bg-raised-2);color:var(--text-muted);
+  border:1px solid var(--line);
+}
+.role-tag.admin{color:var(--spike);border-color:var(--spike-dim);background:var(--spike-dim);}
+body.light-theme .role-tag.admin { background: var(--spike-dim); color: var(--spike); }
 
 .btn{
   border:1px solid var(--line);background:var(--bg-raised);color:var(--text);
-  padding:7px 14px;border-radius:var(--radius);font-size:12.5px;font-weight:600;transition:all .1s;
+  padding:6px 12px;border-radius:var(--radius);font-size:12.5px;font-weight:600;
+  transition:all .1s;
 }
-.btn:hover{border-color:var(--text-muted);background:var(--bg-raised-2);}
+.btn:hover{border-color:var(--text-dim);background:var(--bg-raised-2);}
 .btn.primary{background:var(--spike);border-color:var(--spike);color:#fff;}
-.btn.primary:hover{background:var(--spike-hover);border-color:var(--spike-hover);}
-.btn.danger{border-color:var(--red);color:var(--red);background:none;}
-.btn.danger:hover{background:rgba(248,113,113,0.1);}
+.btn.primary:hover{background:var(--spike-hover);}
+.btn.ghost{background:none;}
 .btn.small{padding:4px 8px;font-size:11.5px;}
+.btn.danger{border-color:var(--red);color:var(--red);background:none;}
+.btn.danger:hover{background:rgba(255,84,112,0.08);}
+.btn:disabled{opacity:0.3;cursor:not-allowed;}
 
-/* Sub-Tier Filter Segment (Pointercrate/AREDL Style) */
-.tier-bar{display:flex;gap:6px;background:var(--bg-panel);padding:6px;border-radius:var(--radius);border:1px solid var(--line);margin-bottom:15px;}
-.tier-bar button{
-  flex:1;background:none;border:none;color:var(--text-muted);font-size:11px;font-weight:700;
-  text-transform:uppercase;padding:6px;border-radius:2px;transition:all .12s;
+/* ---------- layout ---------- */
+main{max-width:1200px;margin:0 auto;padding:20px 15px 60px;}
+.page-head{margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:15px;}
+.page-title{font-size:26px;font-weight:700;margin-bottom:4px;}
+.page-desc{color:var(--text-muted);font-size:13px;max-width:720px;line-height:1.4;}
+
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ---------- list layout ---------- */
+.list-layout{display:grid;grid-template-columns:360px 1fr;gap:15px;align-items:start;}
+@media(max-width:820px){.list-layout{grid-template-columns:1fr;}}
+
+.panel{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
 }
-.tier-bar button.active{background:var(--bg-raised-2);color:var(--text);}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--bg-raised);border-bottom:1px solid var(--line);
+}
+.panel-head h3{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);}
 
-/* Main Architecture Grid */
-main{max-width:1400px;margin:0 auto;padding:20px;min-height:calc(100vh - 120px);}
-.split-view{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;}
-@media(max-width:960px){.split-view{grid-template-columns:1fr;}}
-
-.panel{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
-.panel-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-raised);border-bottom:1px solid var(--line);}
-.panel-head h3{font-size:11.5px;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);font-weight:700;}
-
-/* Demon Rows Roster list */
-.demon-rows{max-height:calc(100vh - 200px);overflow-y:auto;}
+.demon-rows{max-height:75vh;overflow-y:auto;}
 .demon-row{
-  display:flex;align-items:center;gap:12px;padding:10px 16px;
-  border-bottom:1px solid var(--line-soft);cursor:pointer;transition:all .1s;
+  display:flex;align-items:center;gap:10px;padding:8px 12px;
+  border-bottom:1px solid var(--line-soft);cursor:pointer;transition:background .1s;
 }
+.demon-row:last-child{border-bottom:none;}
 .demon-row:hover{background:var(--bg-raised);}
-.demon-row.selected{background:var(--bg-raised-2);box-shadow:inset 4px 0 0 var(--spike);}
+.demon-row.selected{background:var(--bg-raised-2);border-left:3px solid var(--spike);padding-left:9px;}
+
 .rank-badge{
-  width:32px;height:24px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;
-  color:var(--text-muted);background:var(--bg-void);border:1px solid var(--line);
-  display:flex;align-items:center;justify-content:center;border-radius:2px;
+  width:26px;height:22px;flex:none;
+  background:var(--bg-raised-2);
+  border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;color:var(--text-muted);
+  border-radius:2px;
 }
-.demon-row.selected .rank-badge{border-color:var(--spike);color:var(--text);}
+.rank-badge.top{background:var(--spike-dim);color:var(--text);border-color:var(--spike);}
+body.light-theme .rank-badge.top { color: var(--spike); }
+
 .demon-row .info{flex:1;min-width:0;}
-.demon-row .name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.demon-row .author{font-size:11px;color:var(--text-muted);margin-top:2px;}
-.demon-row .pts{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--gold);}
+.demon-row .name{font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.demon-row .creator{font-size:11px;color:var(--text-dim);margin-top:1px;}
+.demon-row .pts{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gold);flex:none;}
 
-/* Deep Page Record Containers */
-.detail-box{padding:20px;}
-.detail-header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:15px;border-bottom:1px solid var(--line-soft);padding-bottom:15px;}
-.detail-title{font-size:24px;font-weight:700;letter-spacing:-0.02em;}
-.detail-subtitle{font-size:13px;color:var(--text-muted);margin-top:4px;}
-
-.grid-stats{display:grid;grid-template-columns:repeat(auto-fill, minmax(120px, 1fr));gap:10px;margin-bottom:20px;}
-.stat-card{background:var(--bg-raised);border:1px solid var(--line);padding:10px 14px;border-radius:var(--radius);}
-.stat-card .val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--text);}
-.stat-card .lbl{font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:600;margin-top:2px;}
-
-.video-frame-container{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);margin-bottom:20px;}
-.video-frame-container iframe{width:100%;height:100%;border:none;}
-
-/* Records Grid Display inside levels */
-.records-section-title{font-size:12px;text-transform:uppercase;font-weight:700;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-.records-section-title::after{content:'';flex:1;height:1px;background:var(--line-soft);}
-.records-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));gap:10px;}
-.record-card{
-  background:var(--bg-raised);border:1px solid var(--line);border-radius:var(--radius);
-  padding:10px 12px;display:flex;align-items:center;justify-content:between;gap:10px;
+.tag-container {
+  display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;
 }
-.record-card .user-info{flex:1;min-width:0;}
-.record-card .user-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.record-card .meta{font-size:11px;color:var(--text-muted);margin-top:2px;display:flex;align-items:center;gap:6px;}
-.record-card .proof-link{font-size:11px;color:var(--spike);font-weight:600;}
-.record-card .percent-tag{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--green);}
-
-/* Leaderboards View with Sub-Country Toggling */
-.lb-grid{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start;}
-@media(max-width:1100px){.lb-grid{grid-template-columns:1fr;}}
-
-.table-wrapper{overflow-x:auto;}
-.list-table{width:100%;border-collapse:collapse;text-align:left;}
-.list-table th{
-  padding:12px 16px;font-size:11px;text-transform:uppercase;color:var(--text-muted);
-  font-weight:700;background:var(--bg-raised);border-bottom:1px solid var(--line);
+.tag-pill {
+  font-size:9px;font-weight:600;padding:1px 5px;background:var(--bg-void);
+  border:1px solid var(--line);color:var(--text-muted);text-transform:uppercase;border-radius:2px;
 }
-.list-table td{padding:12px 16px;border-bottom:1px solid var(--line-soft);font-size:13.5px;}
-.list-table tr:hover td{background:var(--bg-raised-2);}
-.rank-col{font-family:'JetBrains Mono',monospace;font-weight:700;width:60px;}
-.rank-col.gold{color:var(--gold);}
-.rank-col.silver{color:var(--silver);}
-.rank-col.bronze{color:var(--bronze);}
 
-/* Modals */
-.modal-overlay{position:fixed;inset:0;background:rgba(3,4,6,0.85);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;backdrop-filter:blur(3px);}
-.modal-window{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);width:100%;max-width:500px;overflow:hidden;}
-.modal-window-head{padding:14px 16px;background:var(--bg-raised);border-bottom:1px solid var(--line);display:flex;justify-content:between;align-items:center;}
-.modal-window-body{padding:16px;}
-.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
-.field label{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-muted);}
-.field input, .field select, .field textarea{
-  background:var(--bg-raised);border:1px solid var(--line);color:var(--text);padding:8px 12px;
-  border-radius:var(--radius);font-size:13px;outline:none;
+.reorder{display:flex;flex-direction:column;gap:1px;flex:none;}
+.reorder button{
+  width:16px;height:12px;background:var(--bg-raised);border:1px solid var(--line);
+  color:var(--text-dim);font-size:8px;border-radius:1px;display:flex;align-items:center;justify-content:center;
 }
-.field input:focus, .field select:focus, .field textarea:focus{border-color:var(--spike);}
+.reorder button:hover{color:var(--text);border-color:var(--text-dim);}
 
-.msg{padding:10px;border-radius:var(--radius);font-size:12px;margin-bottom:12px;font-weight:500;}
-.msg.err{background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
-.msg.ok{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
+.empty-state{padding:30px 15px;text-align:center;color:var(--text-dim);font-size:12.5px;}
+.empty-state .big{font-family:'Inter',sans-serif;font-size:14px;color:var(--text-muted);margin-bottom:4px;font-weight:600;}
 
-.flag{font-size:15px;vertical-align:middle;margin-right:6px;}
+/* detail panel */
+.detail{padding:16px;}
+.detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.detail-title{font-size:20px;font-weight:700;font-family:'Inter',sans-serif;}
+.detail-sub{color:var(--text-muted);font-size:13px;margin-top:2px;}
+.stat-row{display:flex;gap:16px;margin:12px 0;flex-wrap:wrap;}
+.stat{background:var(--bg-raised);border:1px solid var(--line);padding:6px 12px;border-radius:var(--radius);min-width:80px;}
+.stat .val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--gold);}
+.stat.rankstat .val{color:var(--spike);}
+.stat .lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-top:1px;}
+.video-wrap{
+  position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:var(--radius);
+  overflow:hidden;border:1px solid var(--line);margin-top:10px;
+}
+.video-wrap iframe{width:100%;height:100%;border:none;}
+.video-wrap .noVideo{
+  height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:12.5px;
+}
+.detail-desc{margin-top:12px;color:var(--text-muted);font-size:13px;line-height:1.5;padding:10px;background:var(--bg-raised);border:1px solid var(--line);border-radius:var(--radius);}
+.detail-meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-dim);margin-top:10px;display:flex;gap:15px;}
+.detail-actions{display:flex;gap:6px;margin-top:14px;}
+
+/* forms */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-grid.full{grid-template-columns:1fr;}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.field label{font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:var(--text-dim);font-weight:600;}
+.field input,.field select,.field textarea{
+  background:var(--bg-raised);border:1px solid var(--line);color:var(--text);
+  padding:7px 10px;border-radius:var(--radius);font-size:13px;outline:none;transition:border-color .1s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--spike);}
+.field textarea{resize:vertical;min-height:60px;}
+.field .hint{font-size:10.5px;color:var(--text-dim);line-height:1.3;}
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(4,5,7,0.8);
+  display:flex;align-items:center;justify-content:center;z-index:100;padding:15px;
+}
+.modal{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);
+  width:100%;max-width:460px;max-height:90vh;overflow-y:auto;
+}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg-raised);}
+.modal-head h3{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--text);}
+.modal-close{background:none;border:none;color:var(--text-dim);font-size:18px;line-height:1;}
+.modal-close:hover{color:var(--text);}
+.modal-body{padding:16px;}
+.modal-foot{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:6px;background:var(--bg-raised);}
+.msg{font-size:12px;padding:8px 10px;border-radius:var(--radius);margin-bottom:10px;}
+.msg.error{background:rgba(255,84,112,0.08);color:var(--red);border:1px solid rgba(255,84,112,0.2);}
+.msg.ok{background:rgba(74,222,128,0.08);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
+
+/* leaderboard */
+.lb-table{width:100%;border-collapse:collapse;}
+.lb-table th{
+  text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);
+  padding:8px 12px;border-bottom:1px solid var(--line);font-weight:600;background:var(--bg-raised);
+}
+.lb-table td{padding:8px 12px;border-bottom:1px solid var(--line-soft);font-size:13px;vertical-align:middle;}
+.lb-table tr:last-child td{border-bottom:none;}
+.lb-table tr:hover td{background:var(--bg-raised);}
+.flag{font-size:16px;margin-right:6px;}
+.lb-rank{font-family:'JetBrains Mono',monospace;color:var(--text-dim);width:36px;}
+.lb-rank.r1{color:var(--gold);font-weight:700;}
+.lb-rank.r2{color:#c9cbe0;font-weight:700;}
+body.light-theme .lb-rank.r2 { color: #6b7280; }
+.lb-rank.r3{color:#d8935a;font-weight:700;}
+.lb-points{font-family:'JetBrains Mono',monospace;color:var(--gold);font-weight:600;}
+.lb-actions{display:flex;gap:4px;}
+
+/* roulette */
+.roulette-wrap{display:flex;flex-direction:column;align-items:center;gap:15px;padding:5px 0 20px;}
+.roulette-card{
+  width:100%;max-width:440px;background:var(--bg-panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:20px;text-align:center;position:relative;
+}
+.roulette-req{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-dim);margin-bottom:10px;text-transform:uppercase;}
+.roulette-demon{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;margin-bottom:2px;}
+.roulette-creator{color:var(--text-muted);font-size:12.5px;margin-bottom:15px;}
+.roulette-target{font-size:40px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--spike);margin-bottom:15px;}
+.roulette-input-row{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}
+.roulette-input-row input{
+  width:90px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:15px;
+  background:var(--bg-raised);border:1px solid var(--line);color:var(--text);border-radius:var(--radius);padding:6px;
+}
+.roulette-input-row input:focus{outline:none;border-color:var(--spike);}
+.roulette-feedback{font-size:12.5px;min-height:18px;margin-bottom:4px;font-weight:600;}
+.roulette-feedback.pass{color:var(--green);}
+.roulette-feedback.fail{color:var(--red);}
+.roulette-history{width:100%;max-width:440px;}
+.rh-item{
+  display:flex;align-items:center;justify-content:space-between;padding:7px 12px;
+  border-bottom:1px solid var(--line-soft);font-size:12px;
+}
+.rh-item .rh-name{color:var(--text-muted);}
+.rh-item .rh-result{font-family:'JetBrains Mono',monospace;font-weight:600;}
+.rh-item .rh-result.pass{color:var(--green);}
+.rh-item .rh-result.fail{color:var(--red);}
+
+/* submissions */
+.sub-item{padding:10px 12px;border-bottom:1px solid var(--line-soft);}
+.sub-item:last-child{border-bottom:none;}
+.sub-item-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;}
+.sub-item .who{font-weight:600;font-size:13px;}
+.sub-item .what{color:var(--text-muted);font-size:12px;}
+.status-pill{font-size:9px;text-transform:uppercase;padding:2px 6px;border-radius:2px;font-weight:700;}
+.status-pill.pending{background:rgba(255,184,69,0.08);color:var(--gold);border:1px solid rgba(255,184,69,0.2);}
+.status-pill.approved{background:rgba(74,222,128,0.08);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
+.status-pill.rejected{background:rgba(255,84,112,0.08);color:var(--red);border:1px solid rgba(255,84,112,0.2);}
+.sub-actions{display:flex;gap:4px;margin-top:6px;}
+.sub-link{font-size:11.5px;color:var(--cyan);display:inline-block;margin-top:2px;}
+
+.footer-note{max-width:1200px;margin:0 auto;padding:20px 15px;color:var(--text-dim);font-size:11px;text-align:center;border-top:1px solid var(--line-soft);}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div class="topbar-inner">
-    <div class="logo"><span class="mark"></span>DemonList Engine</div>
-    <nav class="tabs" id="globalTabs">
-      <button data-tab="demons" class="active">Demons</button>
-      <button data-tab="leaderboards">Leaderboard</button>
-      <button data-tab="submissions">Submissions</button>
+    <div class="logo"><span class="mark"></span><span class="site-name-text">Double Entendre</span></div>
+    <nav class="tabs" id="tabs">
+      <button data-tab="list" class="active">Demon List</button>
+      <button data-tab="roulette">Roulette</button>
+      <button data-tab="leaderboard">Leaderboard</button>
+      <button data-tab="submit">Submit Play</button>
     </nav>
     <div class="account-area-wrapper">
-      <button class="btn small" onclick="toggleTheme()" style="padding:4px 6px;">🌓</button>
-      <div id="authDynamicZone"></div>
+      <button class="btn ghost small" onclick="toggleThemeMode()" style="padding: 4px 6px; font-size: 13px;" title="Toggle Light/Dark Theme">🌓</button>
+      <div id="accountArea"></div>
     </div>
   </div>
 </div>
 
 <main>
-  <div class="tab-view active" id="view-demons"></div>
-  <div class="tab-view" id="view-leaderboards" style="display:none;"></div>
-  <div class="tab-view" id="view-submissions" style="display:none;"></div>
+  <div class="tab-panel active" id="panel-list"></div>
+  <div class="tab-panel" id="panel-roulette"></div>
+  <div class="tab-panel" id="panel-leaderboard"></div>
+  <div class="tab-panel" id="panel-submit"></div>
 </main>
 
-<div id="modalPortal"></div>
+<div class="footer-note">Lightweight client-side data architecture. Verified ecosystem engine. Admin access strictly curated.</div>
+
+<div id="modalRoot"></div>
 
 <script>
-/* ============================= SYSTEM DATA ARCHITECTURE ============================= */
-const DB = {
-  demons: [],       // {id, name, creator, verifier, points, video, description, tier}
-  players: [],      // {id, name, country}
-  records: [],      // {id, demonId, playerName, country, percent, video, status}
-  users: [],
-  session: null,
-  activeTab: 'demons',
-  currentTier: 'main', // main (1-75), extended (76-150), legacy (>150)
+/* ============================= PRESETS & PALETTES ============================= */
+const ACCENT_PALETTES = {
+  pink: { main: '#ff3b6b', dim: '#541424', hover: '#ff5580', shadow: 'rgba(255,59,107,0.25)' },
+  red: { main: '#ff4a4a', dim: '#541414', hover: '#ff6161', shadow: 'rgba(255,74,74,0.25)' },
+  blue: { main: '#3b82f6', dim: '#13284a', hover: '#5091f7', shadow: 'rgba(59,130,246,0.25)' },
+  purple: { main: '#a855f7', dim: '#351654', hover: '#b56ff8', shadow: 'rgba(168,85,247,0.25)' },
+  green: { main: '#22c55e', dim: '#0d421f', hover: '#39d372', shadow: 'rgba(34,197,94,0.25)' },
+  orange: { main: '#f97316', dim: '#542403', hover: '#fa8432', shadow: 'rgba(249,115,22,0.25)' },
+  cyan: { main: '#06b6d4', dim: '#053942', hover: '#1cd1f0', shadow: 'rgba(6,182,212,0.25)' }
+};
+
+/* ============================= STATE ============================= */
+const APP = {
+  demons: [],
+  players: [],
+  submissions: [],
+  registeredUsers: [], // Normal public registered users storage
+  currentUser: null,
+  activeTab: 'list',
   selectedDemonId: null,
-  theme: 'dark'
+  roulette: { required: 1, current: null, usedIds: [], history: [], done:false },
+  settings: {
+    siteName: "Double Entendre",
+    siteTagline: "The hardest levels, ranked by difficulty.",
+    accentColor: "pink",
+    themeMode: "dark" // "dark" or "light"
+  }
 };
 
-const COUNTRIES = {
-  US: "United States", GB: "United Kingdom", CA: "Canada", DE: "Germany", FR: "France",
-  KR: "South Korea", JP: "Japan", BR: "Brazil", AU: "Australia", RU: "Russia"
+/* ============================= OBFUSCATED CREDENTIALS ============================= */
+const DIRECT_AUTH = {
+  "tamari": "NjU0OTg3bmF3ZQ==",
+  "hakku": "NjU0OTg3dWtrYWg="
 };
 
-function getFlag(code) {
-  if (!code || code === 'OTHER') return '🏳️';
+/* ============================= COUNTRIES ============================= */
+const COUNTRIES = [
+["US","United States"],["GB","United Kingdom"],["CA","Canada"],["AU","Australia"],["DE","Germany"],
+["FR","France"],["NL","Netherlands"],["BE","Belgium"],["SE","Sweden"],["NO","Norway"],["DK","Denmark"],
+["FI","Finland"],["PL","Poland"],["RU","Russia"],["UA","Ukraine"],["ES","Spain"],["PT","Portugal"],
+["IT","Italy"],["CH","Switzerland"],["AT","Austria"],["CZ","Czechia"],["SK","Slovakia"],["HU","Hungary"],
+["RO","Romania"],["BG","Bulgaria"],["GR","Greece"],["TR","Turkey"],["IE","Ireland"],["IS","Iceland"],
+["EE","Estonia"],["LV","Latvia"],["LT","Lithuania"],["HR","Croatia"],["SI","Slovenia"],["RS","Serbia"],
+["BR","Brazil"],["AR","Argentina"],["MX","Mexico"],["CL","Chile"],["CO","Colombia"],["PE","Peru"],
+["UY","Uruguay"],["EC","Ecuador"],["VE","Venezuela"],["JP","Japan"],["KR","South Korea"],["CN","China"],
+["TW","Taiwan"],["HK","Hong Kong"],["IN","India"],["ID","Indonesia"],["MY","Malaysia"],["SG","Singapore"],
+["TH","Thailand"],["VN","Vietnam"],["PH","Philippines"],["PK","Pakistan"],["BD","Bangladesh"],
+["SA","Saudi Arabia"],["AE","United Arab Emirates"],["IL","Israel"],["EG","Egypt"],["ZA","South Africa"],
+["NG","Nigeria"],["KE","Kenya"],["MA","Morocco"],["NZ","New Zealand"],["OTHER","Other / Unspecified"]
+];
+function flagEmoji(code){
+  if(!code || code==="OTHER") return "🏳️";
   return code.toUpperCase().replace(/./g, c => String.fromCodePoint(127397 + c.charCodeAt(0)));
 }
-
-/* ============================= STORAGE LAYER ============================= */
-async function storageFetch(key) {
-  try {
-    const r = await fetch(`/api/storage?key=${encodeURIComponent(key)}`);
-    if (!r.ok) return null;
-    const d = await r.json();
-    return d.value;
-  } catch(e) { return null; }
+function countryName(code){ const f=COUNTRIES.find(c=>c[0]===code); return f?f[1]:"Unspecified"; }
+function countryOptions(selected){
+  return COUNTRIES.map(([code,name]) =>
+    `<option value="${code}" ${code===selected?'selected':''}>${flagEmoji(code)} ${name}</option>`
+  ).join('');
 }
-async function storageSave(key, val) {
-  try {
+
+/* ============================= STORAGE ============================= */
+async function storageGet(key){
+  try{
+    const r = await fetch('/api/storage?key=' + encodeURIComponent(key));
+    if(!r.ok) return null;
+    const data = await r.json();
+    return data.value ?? null;
+  }catch(e){ console.error('Storage read fault', e); return null; }
+}
+async function storageSet(key, value){
+  try{
     await fetch('/api/storage', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ key, value: val })
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ key, value })
     });
-  } catch(e) {}
+  }catch(e){ console.error('Storage write fault', e); }
 }
-
-async function loadEcosystem() {
-  DB.demons = (await storageFetch('dl_demons')) || seedDemons();
-  DB.players = (await storageFetch('dl_players')) || seedPlayers();
-  DB.records = (await storageFetch('dl_records')) || seedRecords();
-  DB.users = (await storageFetch('dl_users')) || [];
-  
-  try {
-    const sess = localStorage.getItem('dl_session');
-    if (sess) DB.session = JSON.parse(sess);
-  } catch(e) {}
-  
-  assignTiers();
+async function loadAll(){
+  APP.demons = (await storageGet('demons')) || [];
+  APP.players = (await storageGet('players')) || [];
+  APP.submissions = (await storageGet('submissions')) || [];
+  APP.registeredUsers = (await storageGet('registered_users')) || [];
+  const savedSettings = await storageGet('site_settings');
+  if(savedSettings) {
+    APP.settings = Object.assign(APP.settings, savedSettings);
+  }
+  applySystemTheme();
 }
+function saveDemons(){ return storageSet('demons', APP.demons); }
+function savePlayers(){ return storageSet('players', APP.players); }
+function saveSubmissions(){ return storageSet('submissions', APP.submissions); }
+function saveUsers(){ return storageSet('registered_users', APP.registeredUsers); }
+function saveSettings(){ return storageSet('site_settings', APP.settings); }
 
-function assignTiers() {
-  // Sort naturally by internal hierarchy position or placement points to match Pointercrate standard
-  DB.demons.sort((a,b) => b.points - a.points);
-  DB.demons.forEach((d, idx) => {
-    const pos = idx + 1;
-    if (pos <= 75) d.tier = 'main';
-    else if (pos <= 150) d.tier = 'extended';
-    else d.tier = 'legacy';
-  });
-}
-
-async function syncDemons() { assignTiers(); await storageSave('dl_demons', DB.demons); }
-async function syncPlayers() { await storageSave('dl_players', DB.players); }
-async function syncRecords() { await storageSave('dl_records', DB.records); }
-async function syncUsers() { await storageSave('dl_users', DB.users); }
-
-/* ============================= SEED GENERATION DATA ============================= */
-function seedDemons() {
-  return [
-    { id: 'd1', name: 'Society', creator: 'neomarbilan', verifier: 'neomarbilan', points: 250, video: 'https://www.youtube.com/embed/dQw4w9WgXcQ', description: 'Currently top tier threat.' },
-    { id: 'd2', name: 'Silent Clubstep', creator: 'Sailent', verifier: 'Paqell', points: 240, video: '', description: 'Historical legacy monster.' },
-    { id: 'd3', name: 'Avernus', creator: 'PockeWindfish', verifier: 'Diamond', points: 235, video: '', description: 'Extreme precision hazards.' },
-    { id: 'd4', name: 'Zodiac', creator: 'Bianox', verifier: 'Xanii', points: 120, video: '', description: 'Classic legendary marathon endurance level.' }
-  ];
-}
-function seedPlayers() {
-  return [
-    { id: 'p1', name: 'Zoink', country: 'US' },
-    { id: 'p2', name: 'Trick', country: 'US' },
-    { id: 'p3', name: 'Wpopoff', country: 'KR' }
-  ];
-}
-function seedRecords() {
-  return [
-    { id: 'r1', demonId: 'd1', playerName: 'Zoink', country: 'US', percent: 100, video: 'https://youtube.com', status: 'approved' },
-    { id: 'r2', demonId: 'd2', playerName: 'Trick', country: 'US', percent: 100, video: 'https://youtube.com', status: 'approved' },
-    { id: 'r3', demonId: 'd1', playerName: 'Wpopoff', country: 'KR', percent: 84, video: 'https://youtube.com', status: 'approved' }
-  ];
-}
-
-/* ============================= CALCULATING STATS DYNAMICALLY ============================= */
-function calculatePlayerPoints() {
-  const scoreMap = {};
-  DB.players.forEach(p => { scoreMap[p.name.toLowerCase()] = { playerObj: p, pt: 0 }; });
-  
-  DB.records.forEach(rec => {
-    if (rec.status !== 'approved') return;
-    const d = DB.demons.find(dm => dm.id === rec.demonId);
-    if (!d) return;
-    
-    const pKey = rec.playerName.toLowerCase();
-    if (!scoreMap[pKey]) {
-      // Auto register unknown players coming from records
-      scoreMap[pKey] = { playerObj: { id: 'p_' + Math.random(), name: rec.playerName, country: rec.country || 'US' }, pt: 0 };
-    }
-    
-    // Points formula weighting matching percent score rules
-    if (parseInt(rec.percent) === 100) {
-      scoreMap[pKey].pt += d.points;
-    } else if (d.tier === 'main') { 
-      // Main list partial progress reward rule inspired by Pointercrate/Global list
-      const partialWeight = d.points * (rec.percent / 100) * 0.4;
-      scoreMap[pKey].pt += Math.round(partialWeight * 10) / 10;
-    }
-  });
-  
-  return Object.values(scoreMap).map(item => ({
-    ...item.playerObj,
-    totalPoints: Math.round(item.pt * 10) / 10
-  })).sort((a,b) => b.totalPoints - a.totalPoints);
-}
-
-function calculateCountryPoints(playerRankings) {
-  const countryMap = {};
-  playerRankings.forEach(p => {
-    const c = p.country || 'OTHER';
-    if (!countryMap[c]) countryMap[c] = 0;
-    countryMap[c] += p.totalPoints;
-  });
-  return Object.entries(countryMap).map(([code, pts]) => ({
-    code,
-    name: COUNTRIES[code] || 'Other/Unspecified',
-    points: Math.round(pts * 10) / 10
-  })).sort((a,b) => b.points - a.points);
-}
-
-/* ============================= AUTH MIDDLEWARE ============================= */
-function isStaff() { return DB.session !== null && DB.session.role === 'admin'; }
-
-function renderAuthZone() {
-  const zone = document.getElementById('authDynamicZone');
-  if (DB.session) {
-    zone.innerHTML = `
-      <div class="account-chip">
-        <span class="role-tag ${DB.session.role === 'admin' ? 'admin' : ''}">${DB.session.role}</span>
-        <strong>${escapeHtml(DB.session.name)}</strong>
-        <button class="btn small" onclick="triggerLogout()">Logout</button>
-      </div>`;
+function applySystemTheme(){
+  if(APP.settings.themeMode === 'light') {
+    document.body.classList.add('light-theme');
   } else {
-    zone.innerHTML = `<button class="btn primary small" onclick="openLoginWindow()">Staff Access</button>`;
-  }
-}
-
-function openLoginWindow() {
-  openPortal(`
-    <div class="modal-overlay" onclick="if(event.target===this) closePortal()">
-      <div class="modal-window">
-        <div class="modal-window-head"><strong>Staff Authentication</strong></div>
-        <div class="modal-window-body">
-          <div id="modalAuthAlert"></div>
-          <div class="field"><label>Username Key</label><input type="text" id="auth_user"></div>
-          <div class="field"><label>Password Signature</label><input type="password" id="auth_pass"></div>
-          <button class="btn primary" style="width:100%; margin-top:10px;" onclick="executeLogin()">Verify Signatures</button>
-        </div>
-      </div>
-    </div>
-  `);
-}
-
-function executeLogin() {
-  const u = document.getElementById('auth_user').value.trim();
-  const p = document.getElementById('auth_pass').value;
-  const alertBox = document.getElementById('modalAuthAlert');
-
-  // Mirror direct auth structure matching your underlying system configuration keys
-  const lookup = u.toLowerCase();
-  if (lookup === 'tamari' || lookup === 'hakku') {
-    const b64 = btoa(p.split('').reverse().join(''));
-    const valid = (lookup === 'tamari' && b64 === 'NjU0OTg3bmF3ZQ==') || (lookup === 'hakku' && b64 === 'NjU0OTg3dWttYWg=');
-    if (valid) {
-      DB.session = { name: lookup, role: 'admin' };
-      localStorage.setItem('dl_session', JSON.stringify(DB.session));
-      closePortal();
-      renderAuthZone();
-      renderGlobalViews();
-      return;
-    }
-  }
-  alertBox.innerHTML = `<div class="msg err">Invalid authentication key parameters.</div>`;
-}
-
-function triggerLogout() {
-  DB.session = null;
-  localStorage.removeItem('dl_session');
-  renderAuthZone();
-  renderGlobalViews();
-}
-
-/* ============================= CORE NAVIGATION ROUTERS ============================= */
-document.getElementById('globalTabs').addEventListener('click', e => {
-  const btn = e.target.closest('button[data-tab]');
-  if (!btn) return;
-  DB.activeTab = btn.dataset.tab;
-  document.querySelectorAll('#globalTabs button').forEach(b => b.classList.toggle('active', b === btn));
-  renderGlobalViews();
-});
-
-function renderGlobalViews() {
-  document.querySelectorAll('.tab-view').forEach(v => v.style.display = 'none');
-  const target = document.getElementById(`view-${DB.activeTab}`);
-  target.style.display = 'block';
-
-  if (DB.activeTab === 'demons') renderDemonsView(target);
-  if (DB.activeTab === 'leaderboards') renderLeaderboardsView(target);
-  if (DB.activeTab === 'submissions') renderSubmissionsView(target);
-}
-
-/* ============================= VIEW: DEMONS PANEL ============================= */
-function renderDemonsView(container) {
-  const filteredDemons = DB.demons.filter(d => d.tier === DB.currentTier);
-  if (!DB.selectedDemonId && filteredDemons.length) DB.selectedDemonId = filteredDemons[0].id;
-  const currentDemon = DB.demons.find(d => d.id === DB.selectedDemonId);
-
-  let listRosterHtml = filteredDemons.map(d => {
-    const globalIndex = DB.demons.findIndex(x => x.id === d.id) + 1;
-    return `
-      <div class="demon-row ${d.id === DB.selectedDemonId ? 'selected' : ''}" onclick="selectDemon('${d.id}')">
-        <div class="rank-badge">${globalIndex}</div>
-        <div class="info">
-          <div class="name">${escapeHtml(d.name)}</div>
-          <div class="author">by ${escapeHtml(d.creator)}</div>
-        </div>
-        <div class="pts">${d.points}★</div>
-      </div>`;
-  }).join('');
-
-  if (!listRosterHtml) {
-    listRosterHtml = `<div style="padding:4px;color:var(--text-dim);font-size:12px;">No levels populated in this tier index list.</div>`;
+    document.body.classList.remove('light-theme');
   }
 
-  let detailAreaHtml = `<div style="color:var(--text-muted);font-size:13px;">Select a demon framework row file to observe complete ledger completions.</div>`;
+  const theme = ACCENT_PALETTES[APP.settings.accentColor] || ACCENT_PALETTES.pink;
+  const root = document.documentElement.style;
+  root.setProperty('--spike', theme.main);
+  root.setProperty('--spike-dim', theme.dim);
+  root.setProperty('--spike-hover', theme.hover);
+  root.setProperty('--spike-shadow', theme.shadow);
   
-  if (currentDemon) {
-    const globalPos = DB.demons.findIndex(x => x.id === currentDemon.id) + 1;
-    const associatedCompletions = DB.records.filter(r => r.demonId === currentDemon.id && r.status === 'approved');
-    
-    let embedFrame = `<div class="video-frame-container"><div style="padding:20px;color:var(--text-dim);font-size:13px;text-align:center;">No valid demonstration display asset configured.</div></div>`;
-    if (currentDemon.video) {
-      embedFrame = `<div class="video-frame-container"><iframe src="${escapeHtml(currentDemon.video)}" allowfullscreen></iframe></div>`;
+  document.querySelectorAll('.site-name-text').forEach(el => el.textContent = APP.settings.siteName);
+  document.querySelectorAll('.site-tagline-text').forEach(el => el.textContent = APP.settings.siteTagline);
+}
+
+function toggleThemeMode(){
+  APP.settings.themeMode = APP.settings.themeMode === 'light' ? 'dark' : 'light';
+  saveSettings();
+  applySystemTheme();
+}
+
+/* ============================= AUTH ============================= */
+async function loginAccount(username, password){
+  const normalizedUser = username.trim().toLowerCase();
+  
+  if(DIRECT_AUTH[normalizedUser]){
+    const obscuredInput = btoa(password.split('').reverse().join(''));
+    if(obscuredInput === DIRECT_AUTH[normalizedUser]){
+      APP.currentUser = { username: normalizedUser === 'tamari' ? 'tamari' : 'hakku', role: 'admin' };
+      saveSession();
+      return APP.currentUser;
+    } else {
+      throw new Error('Incorrect password.');
     }
+  }
+  
+  const matchedUser = APP.registeredUsers.find(u => u.username.toLowerCase() === normalizedUser);
+  if(matchedUser && matchedUser.password === btoa(password)) {
+    APP.currentUser = { username: matchedUser.username, role: 'user' };
+    saveSession();
+    return APP.currentUser;
+  }
+  
+  throw new Error('No account with that username.');
+}
 
-    let recordsGridHtml = associatedCompletions.map(r => `
-      <div class="record-card">
-        <div class="user-info">
-          <div class="user-name">${escapeHtml(r.playerName)}</div>
-          <div class="meta">
-            <span>${getFlag(r.country)} ${r.country || 'US'}</span>
-            <a class="proof-link" href="${escapeHtml(r.video)}" target="_blank">Proof URL ↗</a>
-          </div>
-        </div>
-        <div class="percent-tag">${r.percent}%</div>
-      </div>
-    `).join('');
-
-    if(!recordsGridHtml) {
-      recordsGridHtml = `<div style="grid-column:1/-1; padding:20px; text-align:center; color:var(--text-dim); font-size:12.5px; background:var(--bg-raised); border:1px dashed var(--line); border-radius:var(--radius);">No verified completion entries registered to this dynamic level layout.</div>`;
-    }
-
-    detailAreaHtml = `
-      <div class="detail-box">
-        <div class="detail-header">
-          <div>
-            <div class="detail-title">${escapeHtml(currentDemon.name)}</div>
-            <div class="detail-subtitle">Created by <strong>${escapeHtml(currentDemon.creator)}</strong> · Verified by <strong>${escapeHtml(currentDemon.verifier || currentDemon.creator)}</strong></div>
-          </div>
-          ${isStaff() ? `
-            <div>
-              <button class="btn small primary" onclick="openDemonManagementWizard('${currentDemon.id}')">Modify level details</button>
-            </div>
-          ` : ''}
-        </div>
-
-        <div class="grid-stats">
-          <div class="stat-card"><div class="val">#${globalPos}</div><div class="lbl">List Rank</div></div>
-          <div class="stat-card"><div class="val">${currentDemon.points}</div><div class="lbl">Point Weight</div></div>
-          <div class="stat-card"><div class="val">${associatedCompletions.length}</div><div class="lbl">Total Records</div></div>
-        </div>
-
-        ${embedFrame}
-
-        <div class="records-section-title">Verified Records & Progress Matrix</div>
-        <div class="records-grid">${recordsGridHtml}</div>
-      </div>
-    `;
+async function registerAccount(username, password){
+  const cleanUser = username.trim();
+  const normalizedUser = cleanUser.toLowerCase();
+  if(!cleanUser || !password) {
+    throw new Error('Username and password cannot be blank.');
+  }
+  if(DIRECT_AUTH[normalizedUser] || APP.registeredUsers.some(u => u.username.toLowerCase() === normalizedUser)) {
+    throw new Error('That username is already taken.');
   }
 
-  container.innerHTML = `
-    <div class="tier-bar" id="tierSelector">
-      <button class="${DB.currentTier === 'main' ? 'active' : ''}" data-tier="main">Main List (Top 75)</button>
-      <button class="${DB.currentTier === 'extended' ? 'active' : ''}" data-tier="extended">Extended List (Top 150)</button>
-      <button class="${DB.currentTier === 'legacy' ? 'active' : ''}" data-tier="legacy">Legacy Archive</button>
-    </div>
-    <div class="split-view">
-      <div class="panel">
-        <div class="panel-head">
-          <h3>Tier Index Layout</h3>
-          ${isStaff() ? `<button class="btn small primary" onclick="openDemonManagementWizard()">+ Append Level</button>` : ''}
-        </div>
-        <div class="demon-rows">${listRosterHtml}</div>
-      </div>
-      <div class="panel">${detailAreaHtml}</div>
-    </div>
-  `;
-
-  document.getElementById('tierSelector').addEventListener('click', e => {
-    const b = e.target.closest('button[data-tier]');
-    if (!b) return;
-    DB.currentTier = b.dataset.tier;
-    DB.selectedDemonId = null;
-    renderDemonsView(container);
-  });
-}
-
-function selectDemon(id) { DB.selectedDemonId = id; renderGlobalViews(); }
-
-function openDemonManagementWizard(id = null) {
-  const d = DB.demons.find(x => x.id === id);
-  openPortal(`
-    <div class="modal-overlay" onclick="if(event.target===this) closePortal()">
-      <div class="modal-window">
-        <div class="modal-window-head"><strong>${d ? 'Modify Demon Config' : 'Initialize Level Entry'}</strong></div>
-        <div class="modal-window-body">
-          <div class="field"><label>Level Name</label><input type="text" id="fm_d_name" value="${d ? escapeHtml(d.name) : ''}"></div>
-          <div class="field"><label>Creator Author</label><input type="text" id="fm_d_creator" value="${d ? escapeHtml(d.creator) : ''}"></div>
-          <div class="field"><label>Verifier</label><input type="text" id="fm_d_verifier" value="${d ? escapeHtml(d.verifier) : ''}"></div>
-          <div class="field"><label>Base point distribution score</label><input type="number" id="fm_d_pts" value="${d ? d.points : 100}"></div>
-          <div class="field"><label>Direct Embed URL</label><input type="text" id="fm_d_vid" value="${d ? escapeHtml(d.video) : ''}"></div>
-          <div style="display:flex;gap:10px;margin-top:15px;">
-            <button class="btn" style="flex:1;" onclick="closePortal()">Abort</button>
-            <button class="btn primary" style="flex:1;" onclick="saveDemonForm('${id || ''}')">Commit Array</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `);
-}
-
-async function saveDemonForm(id) {
-  const payload = {
-    name: document.getElementById('fm_d_name').value.trim(),
-    creator: document.getElementById('fm_d_creator').value.trim(),
-    verifier: document.getElementById('fm_d_verifier').value.trim(),
-    points: parseInt(document.getElementById('fm_d_pts').value) || 0,
-    video: document.getElementById('fm_d_vid').value.trim()
+  const newUser = {
+    username: cleanUser,
+    password: btoa(password), 
+    role: 'user'
   };
 
-  if (!payload.name) return;
+  APP.registeredUsers.push(newUser);
+  await saveUsers();
+  
+  APP.currentUser = { username: newUser.username, role: 'user' };
+  saveSession();
+  return APP.currentUser;
+}
+  
+function saveSession(){
+  try{ localStorage.setItem('demonlist_session', JSON.stringify(APP.currentUser)); }catch(e){}
+}
+  
+function restoreSession(){
+  try{
+    const raw = localStorage.getItem('demonlist_session');
+    if(raw) APP.currentUser = JSON.parse(raw);
+  }catch(e){}
+}
+  
+function logout(){
+  APP.currentUser = null;
+  localStorage.removeItem('demonlist_session');
+  renderAccountArea(); renderAll();
+}
+function isMod(){ return APP.currentUser !== null && APP.currentUser.role === 'admin'; }
+function isAdmin(){ return APP.currentUser !== null && APP.currentUser.role === 'admin'; }
 
-  if (id) {
-    const idx = DB.demons.findIndex(x => x.id === id);
-    DB.demons[idx] = { ...DB.demons[idx], ...payload };
-  } else {
-    DB.demons.push({ id: 'dem_' + Date.now(), ...payload });
+/* ============================= HELPERS ============================= */
+function uid(){ return 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2, 10); }
+function escapeHtml(str){
+  return (str||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function getEmbedUrl(url){
+  if(!url) return null;
+  try{
+    const u = new URL(url);
+    if(u.hostname.includes('youtu.be')) return 'https://www.youtube.com/embed/'+u.pathname.slice(1);
+    if(u.hostname.includes('youtube.com')){
+      const id = u.searchParams.get('v');
+      if(id) return 'https://www.youtube.com/embed/'+id;
+      if(u.pathname.startsWith('/embed/')) return url;
+      if(u.pathname.startsWith('/live/')) return 'https://www.youtube.com/embed/'+u.pathname.split('/')[2];
+    }
+    if(u.hostname.includes('streamable.com')) return 'https://streamable.com/e/'+u.pathname.slice(1);
+    return null;
+  }catch(e){ return null; }
+}
+function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
+function openModal(html){ document.getElementById('modalRoot').innerHTML = html; }
+
+/* ============================= RENDER: ACCOUNT AREA ============================= */
+function renderAccountArea(){
+  const el = document.getElementById('accountArea');
+  if(!APP.currentUser){
+    el.innerHTML = `<button class="btn" style="padding:4px 10px; font-size:12px;" onclick="openLoginModal()">Login</button>`;
+    return;
   }
-
-  await syncDemons();
-  closePortal();
-  renderGlobalViews();
+  const u = APP.currentUser;
+  const roleLabel = u.role === 'admin' ? 'admin' : 'member';
+  const roleClass = u.role === 'admin' ? 'admin' : '';
+  
+  el.innerHTML = `
+    <div class="account-chip">
+      ${u.role === 'admin' ? `<button class="btn small ghost" onclick="openAdminSettingsModal()">Settings</button>` : ''}
+      <span class="name">${escapeHtml(u.username)}</span>
+      <span class="role-tag ${roleClass}">${roleLabel}</span>
+      <button class="btn small" onclick="logout()">Log Out</button>
+    </div>`;
 }
 
-/* ============================= VIEW: LEADERBOARDS ============================= */
-function renderLeaderboardsView(container) {
-  const playerRankings = calculatePlayerPoints();
-  const countryRankings = calculateCountryPoints(playerRankings);
-
-  const playerRows = playerRankings.map((p, index) => `
-    <tr>
-      <td class="rank-col ${index===0?'gold':index===1?'silver':index===2?'bronze':''}">${index+1}</td>
-      <td><strong>${escapeHtml(p.name)}</strong></td>
-      <td>${getFlag(p.country)} ${p.country || 'US'}</td>
-      <td style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--gold);">${p.totalPoints}pt</td>
-    </tr>
-  `).join('');
-
-  const countryRows = countryRankings.map((c, index) => `
-    <tr>
-      <td class="rank-col ${index===0?'gold':index===1?'silver':index===2?'bronze':''}">${index+1}</td>
-      <td>${getFlag(c.code)} <strong>${escapeHtml(c.name)}</strong></td>
-      <td style="font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--cyan);">${c.points}pt</td>
-    </tr>
-  `).join('');
-
-  let staffAwardPanel = '';
-  if (isStaff()) {
-    const pOptions = playerRankings.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
-    const dOptions = DB.demons.map(d => `<option value="${d.id}">${escapeHtml(d.name)} (${d.points}pt)</option>`).join('');
-    staffAwardPanel = `
-      <div class="panel" style="margin-top:20px; border-color: var(--spike);">
-        <div class="panel-head" style="background:var(--spike-dim);"><h3 style="color:var(--text);">⚡ Direct Staff Level Insertion</h3></div>
-        <div style="padding:15px;">
-          <div id="quickAwardToast"></div>
-          <div class="field"><label>Target Player Profile</label><select id="qa_player">${pOptions}</select></div>
-          <div class="field"><label>Demon Reference</label><select id="qa_demon">${dOptions}</select></div>
-          <div class="field"><label>Percent Realized</label><input type="number" id="qa_pct" value="100" min="1" max="100"></div>
-          <div class="field"><label>Evidence Link</label><input type="text" id="qa_link" value="https://youtube.com"></div>
-          <button class="btn primary small" style="width:100%;margin-top:5px;" onclick="executeQuickStaffInsertion()">Force Inject Record</button>
-        </div>
-      </div>
-    `;
-  }
-
-  container.innerHTML = `
-    <div class="lb-grid">
-      <div class="panel">
-        <div class="panel-head"><h3>Individual Ledger Standings (Pointercrate / AREDL Framework)</h3></div>
-        <div class="table-wrapper">
-          <table class="list-table">
-            <thead><tr><th>Rank</th><th>Player Name</th><th>Region</th><th>Score Total</th></tr></thead>
-            <tbody>${playerRows}</tbody>
-          </table>
-        </div>
-      </div>
-      <div>
-        <div class="panel">
-          <div class="panel-head"><h3>Regional Macro Standings</h3></div>
-          <div class="table-wrapper">
-            <table class="list-table">
-              <thead><tr><th>Rank</th><th>Country Group</th><th>Combined Point Value</th></tr></thead>
-              <tbody>${countryRows}</tbody>
-            </table>
+function openLoginModal(){
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3 id="authModalTitle">Sign In</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div id="authMsg"></div>
+        <div id="loginForm">
+          <div class="field"><label>Username</label><input id="li-user" autocomplete="username" placeholder="Username"></div>
+          <div class="field"><label>Password</label><input id="li-pass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+          
+          <div style="margin-top: 15px; display:flex; flex-direction:column; gap:10px;">
+            <button id="authSubmitBtn" class="btn primary" style="width:100%;" onclick="handleLoginSubmit()">Sign In</button>
+            <div id="authSwitchLink" style="font-size:12px; text-align:center; color:var(--text-muted);">
+              Don't have an account? <a href="#" onclick="event.preventDefault(); toggleAuthModalMode('register')" style="color:var(--spike); font-weight:600;">Register here</a>
+            </div>
           </div>
         </div>
-        ${staffAwardPanel}
       </div>
     </div>
-  `;
+  </div>`);
+  document.getElementById('loginForm').dataset.mode = 'login';
 }
 
-async function executeQuickStaffInsertion() {
-  const name = document.getElementById('qa_player').value;
-  const dId = document.getElementById('qa_demon').value;
-  const pct = parseInt(document.getElementById('qa_pct').value) || 100;
-  const vid = document.getElementById('qa_link').value;
+function toggleAuthModalMode(targetMode) {
+  const form = document.getElementById('loginForm');
+  const title = document.getElementById('authModalTitle');
+  const btn = document.getElementById('authSubmitBtn');
+  const link = document.getElementById('authSwitchLink');
+  document.getElementById('authMsg').innerHTML = '';
 
-  if(!name || !dId) return;
-
-  DB.records.push({
-    id: 'rec_' + Date.now(),
-    demonId: dId,
-    playerName: name,
-    country: 'US',
-    percent: pct,
-    video: vid,
-    status: 'approved'
-  });
-
-  await syncRecords();
-  document.getElementById('quickAwardToast').innerHTML = `<div class="msg ok">Record forced into production baseline cleanly.</div>`;
-  setTimeout(renderGlobalViews, 800);
+  if (targetMode === 'register') {
+    form.dataset.mode = 'register';
+    title.textContent = 'Create Account';
+    btn.textContent = 'Register';
+    btn.setAttribute('onclick', 'handleRegisterSubmit()');
+    link.innerHTML = `Already have an account? <a href="#" onclick="event.preventDefault(); toggleAuthModalMode('login')" style="color:var(--spike); font-weight:600;">Sign in here</a>`;
+  } else {
+    form.dataset.mode = 'login';
+    title.textContent = 'Sign In';
+    btn.textContent = 'Sign In';
+    btn.setAttribute('onclick', 'handleLoginSubmit()');
+    link.innerHTML = `Don't have an account? <a href="#" onclick="event.preventDefault(); toggleAuthModalMode('register')" style="color:var(--spike); font-weight:600;">Register here</a>`;
+  }
 }
 
-/* ============================= VIEW: SUBMISSIONS ============================= */
-function renderSubmissionsView(container) {
-  const dOptions = DB.demons.map(d => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('');
-  const activeQueue = DB.records.filter(r => isStaff() ? true : r.status === 'pending');
+function authMsg(text, type='error'){ document.getElementById('authMsg').innerHTML = `<div class="msg ${type}">${escapeHtml(text)}</div>`; }
 
-  const queueRows = activeQueue.map(r => {
-    const d = DB.demons.find(dm => dm.id === r.demonId);
+async function handleLoginSubmit(){
+  const u = document.getElementById('li-user').value;
+  const p = document.getElementById('li-pass').value;
+  try{
+    await loginAccount(u,p);
+    closeModal(); renderAccountArea(); renderAll();
+  }catch(e){ authMsg(e.message); }
+}
+
+async function handleRegisterSubmit(){
+  const u = document.getElementById('li-user').value;
+  const p = document.getElementById('li-pass').value;
+  try{
+    await registerAccount(u,p);
+    closeModal(); renderAccountArea(); renderAll();
+  }catch(e){ authMsg(e.message); }
+}
+
+/* ============================= GLOBAL SETTINGS MODAL ============================= */
+function openAdminSettingsModal() {
+  if(!isAdmin()) return;
+  const colorOptions = Object.keys(ACCENT_PALETTES).map(c => 
+    `<option value="${c}" ${APP.settings.accentColor === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`
+  ).join('');
+
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>Site Settings</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Site Name</label><input id="st-name" value="${escapeHtml(APP.settings.siteName)}"></div>
+        <div class="field"><label>Tagline</label><textarea id="st-tagline">${escapeHtml(APP.settings.siteTagline)}</textarea></div>
+        <div class="field">
+          <label>Accent Color</label>
+          <select id="st-color">${colorOptions}</select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="handleSaveSettings()">Save</button>
+      </div>
+    </div>
+  </div>`);
+}
+
+async function handleSaveSettings(){
+  const name = document.getElementById('st-name').value.trim();
+  const tagline = document.getElementById('st-tagline').value.trim();
+  const accent = document.getElementById('st-color').value;
+
+  if(!name) return;
+  APP.settings.siteName = name;
+  APP.settings.siteTagline = tagline;
+  APP.settings.accentColor = accent;
+
+  await saveSettings();
+  applySystemTheme();
+  closeModal();
+  renderAll();
+}
+
+/* ============================= TABS ============================= */
+function switchTab(tab){
+  APP.activeTab = tab;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  renderAll();
+}
+document.getElementById('tabs').addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-tab]');
+  if(btn) switchTab(btn.dataset.tab);
+});
+
+function renderAll(){
+  applySystemTheme();
+  renderListTab();
+  renderRouletteTab();
+  renderLeaderboardTab();
+  renderSubmitTab();
+}
+
+/* ============================= LIST TAB ============================= */
+function renderListTab(){
+  const el = document.getElementById('panel-list');
+  const demons = APP.demons;
+  if(!APP.selectedDemonId && demons.length) APP.selectedDemonId = demons[0].id;
+  const selected = demons.find(d => d.id === APP.selectedDemonId);
+
+  const rows = demons.length ? demons.map((d, i) => {
+    const tagsHtml = (d.tags || []).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('');
     return `
-      <tr>
-        <td><strong>${escapeHtml(r.playerName)}</strong></td>
-        <td>${d ? escapeHtml(d.name) : 'Unknown'}</td>
-        <td><span class="percent-tag" style="font-weight:700;">${r.percent}%</span></td>
-        <td><a href="${escapeHtml(r.video)}" target="_blank" style="color:var(--spike);">Review Video ↗</a></td>
-        <td><span class="role-tag" style="color: ${r.status==='approved'?'var(--green)':'var(--text-muted)'}">${r.status}</span></td>
-        ${isStaff() && r.status === 'pending' ? `
-          <td>
-            <button class="btn small primary" onclick="resolveSubmission('${r.id}', 'approved')">Accept</button>
-            <button class="btn small danger" onclick="resolveSubmission('${r.id}', 'rejected')">Deny</button>
-          </td>
-        ` : '<td>-</td>'}
-      </tr>
-    `;
-  }).join('');
+    <div class="demon-row ${d.id===APP.selectedDemonId?'selected':''}" onclick="selectDemon('${d.id}')">
+      <div class="rank-badge ${i<3?'top':''}">${i+1}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(d.name)}</div>
+        <div class="creator">by ${escapeHtml(d.creator||'Unknown')}</div>
+        ${tagsHtml ? `<div class="tag-container">${tagsHtml}</div>` : ''}
+      </div>
+      <div class="pts">${d.points}pt</div>
+      ${isMod() ? `
+      <div class="reorder">
+        <button onclick="event.stopPropagation();moveDemon('${d.id}',-1)" ${i===0?'disabled':''}>&#9650;</button>
+        <button onclick="event.stopPropagation();moveDemon('${d.id}',1)" ${i===demons.length-1?'disabled':''}>&#9660;</button>
+      </div>` : ''}
+    </div>
+  `;
+  }).join('') : `<div class="empty-state"><div class="big">No demons yet</div>${isMod() ? 'Add one to get started.' : 'Check back soon.'}</div>`;
 
-  container.innerHTML = `
-    <div class="split-view" style="grid-template-columns: 1fr 2fr;">
+  const detail = selected ? renderDemonDetail(selected, demons.findIndex(d=>d.id===selected.id)) :
+    `<div class="empty-state"><div class="big">Nothing selected</div>Pick a level from the list.</div>`;
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title site-name-text">${escapeHtml(APP.settings.siteName)}</h1>
+      <p class="page-desc site-tagline-text">${escapeHtml(APP.settings.siteTagline)}</p>
+    </div>
+    <div class="list-layout">
       <div class="panel">
-        <div class="panel-head"><h3>File Verification Submissions Pipeline</h3></div>
-        <div style="padding:15px;">
-          <div id="subToast"></div>
-          <div class="field"><label>Competitor Profile Handle</label><input type="text" id="sub_name"></div>
-          <div class="field"><label>Demon Index Target</label><select id="sub_demon">${dOptions}</select></div>
-          <div class="field"><label>Percent Realized Progression</label><input type="number" id="sub_pct" value="100"></div>
-          <div class="field"><label>Video URL Proof Archive</label><input type="text" id="sub_vid" placeholder="https://youtube.com/..."></div>
-          <button class="btn primary" style="width:100%;margin-top:10px;" onclick="dispatchUserSubmission()">Transmit Record Package</button>
+        <div class="panel-head">
+          <h3>Levels</h3>
+          ${isMod() ? `<button class="btn small primary" onclick="openDemonModal()">+ Add Demon</button>` : ''}
         </div>
+        <div class="demon-rows">${rows}</div>
       </div>
-      
-      <div class="panel">
-        <div class="panel-head"><h3>Real-time Ledger Ingestion Pipeline</h3></div>
-        <div class="table-wrapper">
-          <table class="list-table">
-            <thead><tr><th>Competitor</th><th>Level Target</th><th>Record Pct</th><th>Data URL</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody>${queueRows}</tbody>
-          </table>
-        </div>
-      </div>
+      <div class="panel"><div class="detail">${detail}</div></div>
     </div>
   `;
 }
+function selectDemon(id){ APP.selectedDemonId = id; renderListTab(); }
+function renderDemonDetail(d, index){
+  const embed = getEmbedUrl(d.video);
+  const tagHtml = (d.tags || []).map(t => `<span class="tag-pill" style="font-size:11px; padding:2px 6px;">${escapeHtml(t)}</span>`).join(' ');
+  
+  return `
+    <div class="detail-top">
+      <div>
+        <div class="detail-title">${escapeHtml(d.name)}</div>
+        <div class="detail-sub">by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
+        ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
+      </div>
+      ${isMod() ? `<div>
+        <button class="btn small" onclick="openDemonModal('${d.id}')">Edit</button>
+        <button class="btn small danger" onclick="deleteDemon('${d.id}')">Delete</button>
+      </div>` : ''}
+    </div>
+    <div class="stat-row">
+      <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Placement</div></div>
+      <div class="stat"><div class="val">${d.points}</div><div class="lbl">Points</div></div>
+    </div>
+    <div class="video-wrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
+    ${d.description ? `<div class="detail-desc">${escapeHtml(d.description)}</div>` : ''}
+  `;
+}
 
-async function dispatchUserSubmission() {
-  const name = document.getElementById('sub_name').value.trim();
-  const dId = document.getElementById('sub_demon').value;
-  const pct = parseInt(document.getElementById('sub_pct').value) || 0;
-  const vid = document.getElementById('sub_vid').value.trim();
+function openDemonModal(id){
+  if(!isMod()) return;
+  const editing = id ? APP.demons.find(d=>d.id===id) : null;
+  const currentTagsString = editing && editing.tags ? editing.tags.join(', ') : '';
+  
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>${editing ? 'Edit Demon' : 'Add Demon'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Level Name</label><input id="dm-name" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="form-grid">
+          <div class="field"><label>Creator</label><input id="dm-creator" value="${editing?escapeHtml(editing.creator||''):''}"></div>
+          <div class="field"><label>Verifier</label><input id="dm-verifier" value="${editing?escapeHtml(editing.verifier||''):''}"></div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>Points if beaten</label><input id="dm-points" type="number" min="0" value="${editing?editing.points:100}"></div>
+          <div class="field"><label>Video URL</label><input id="dm-video" value="${editing?escapeHtml(editing.video||''):''}" placeholder="https://youtube.com/..."></div>
+        </div>
+        <div class="field">
+          <label>Tags</label>
+          <input id="dm-tags" value="${escapeHtml(currentTagsString)}" placeholder="e.g. Memory, Timing, XL, Wave, Challenge">
+          <div class="hint">Type whatever tags you want for this level, separated by commas.</div>
+        </div>
+        <div class="field"><label>Description (optional)</label><textarea id="dm-desc">${editing?escapeHtml(editing.description||''):''}</textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveDemonForm(${editing?`'${editing.id}'`:'null'})">${editing?'Save Changes':'Add Demon'}</button>
+      </div>
+    </div>
+  </div>`);
+}
+async function saveDemonForm(id){
+  const name = document.getElementById('dm-name').value.trim();
+  if(!name) return;
 
-  if(!name || !vid) {
-    document.getElementById('subToast').innerHTML = `<div class="msg err">All record properties must be set explicitly.</div>`;
+  const rawTags = document.getElementById('dm-tags').value;
+  const processedTags = rawTags.split(',')
+    .map(t => t.trim())
+    .filter(t => t.length > 0);
+
+  const data = {
+    name,
+    creator: document.getElementById('dm-creator').value.trim(),
+    verifier: document.getElementById('dm-verifier').value.trim(),
+    points: parseInt(document.getElementById('dm-points').value) || 0,
+    video: document.getElementById('dm-video').value.trim(),
+    description: document.getElementById('dm-desc').value.trim(),
+    tags: processedTags
+  };
+  if(id){
+    const d = APP.demons.find(x=>x.id===id);
+    Object.assign(d, data);
+  }else{
+    APP.demons.push({ id: uid(), ...data, addedAt: Date.now() });
+    APP.selectedDemonId = APP.demons[APP.demons.length-1].id;
+  }
+  await saveDemons();
+  closeModal();
+  renderAll();
+}
+async function deleteDemon(id){
+  if(!confirm('Remove this demon from the list?')) return;
+  APP.demons = APP.demons.filter(d=>d.id!==id);
+  if(APP.selectedDemonId===id) APP.selectedDemonId = APP.demons[0]?.id || null;
+  await saveDemons();
+  renderAll();
+}
+async function moveDemon(id, dir){
+  const i = APP.demons.findIndex(d=>d.id===id);
+  const j = i+dir;
+  if(j<0 || j>=APP.demons.length) return;
+  [APP.demons[i], APP.demons[j]] = [APP.demons[j], APP.demons[i]];
+  await saveDemons();
+  renderListTab();
+}
+
+/* ============================= ROULETTE TAB ============================= */
+function renderRouletteTab(){
+  const el = document.getElementById('panel-roulette');
+  const rl = APP.roulette;
+
+  if(!APP.demons.length){
+    el.innerHTML = `
+      <div class="page-head">
+        <h1 class="page-title">Roulette</h1>
+      </div>
+      <div class="empty-state"><div class="big">Add some demons first</div>The roulette pulls random levels from the Demon List tab.</div>`;
     return;
   }
 
-  DB.records.push({
-    id: 'rec_' + Date.now(),
-    demonId: dId,
-    playerName: name,
-    country: 'US',
-    percent: pct,
-    video: vid,
-    status: 'pending'
-  });
-
-  await syncRecords();
-  document.getElementById('subToast').innerHTML = `<div class="msg ok">Record package logged to ledger queue.</div>`;
-  renderGlobalViews();
-}
-
-async function resolveSubmission(id, status) {
-  const r = DB.records.find(x => x.id === id);
-  if(!r) return;
-  r.status = status;
-  
-  // Verify if player configuration is initialized, otherwise materialize profile space
-  const nameMatch = r.playerName.toLowerCase();
-  if (status === 'approved' && !DB.players.some(p => p.name.toLowerCase() === nameMatch)) {
-    DB.players.push({
-      id: 'pl_' + Date.now(),
-      name: r.playerName,
-      country: r.country || 'US'
-    });
-    await syncPlayers();
+  let cardInner;
+  if(!rl.current){
+    cardInner = `
+      <div class="roulette-req">Next requirement: ${rl.required}%</div>
+      <div class="roulette-demon">—</div>
+      <div class="roulette-creator">Spin to get a random level</div>
+      <button class="btn primary" style="padding:8px 20px;" onclick="spinRoulette()">Spin</button>
+    `;
+  }else{
+    cardInner = `
+      <div class="roulette-req">Level ${rl.history.length+1}</div>
+      <div class="roulette-demon">${escapeHtml(rl.current.name)}</div>
+      <div class="roulette-creator">by ${escapeHtml(rl.current.creator||'Unknown')}</div>
+      <div class="roulette-target">${rl.required}%</div>
+      <div class="roulette-input-row">
+        <input type="number" min="1" max="100" id="rl-percent" placeholder="0-100">
+        <button class="btn primary" onclick="submitRoulettePercent()">Submit</button>
+      </div>
+      <div class="roulette-feedback" id="rl-feedback"></div>
+    `;
   }
 
-  await syncRecords();
-  renderGlobalViews();
+  const history = rl.history.slice().reverse().map(h => `
+    <div class="rh-item">
+      <span class="rh-name">${escapeHtml(h.name)} — needed ${h.required}%, got ${h.achieved}%</span>
+      <span class="rh-result ${h.result}">${h.result==='pass'?'PASS':'FAIL'}</span>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Roulette</h1>
+      <p class="page-desc">Get a random demon. Clear the required percent and the next one gets harder — whatever you enter becomes (entered % + 1) for the next level. Fall short and it resets to 1%.</p>
+    </div>
+    <div class="roulette-wrap">
+      <div class="roulette-card">${cardInner}</div>
+      ${rl.history.length ? `<div class="panel roulette-history"><div class="panel-head"><h3>Run History</h3><button class="btn small ghost" onclick="resetRoulette()">Reset Run</button></div><div>${history}</div></div>` : ''}
+    </div>
+  `;
+  const input = document.getElementById('rl-percent');
+  if(input){ input.focus(); input.addEventListener('keydown', e=>{ if(e.key==='Enter') submitRoulettePercent(); }); }
+}
+function spinRoulette(){
+  const rl = APP.roulette;
+  let pool = APP.demons.filter(d => !rl.usedIds.includes(d.id));
+  if(pool.length===0){ rl.usedIds = []; pool = APP.demons; }
+  const pick = pool[Math.floor(Math.random()*pool.length)];
+  rl.current = pick;
+  rl.usedIds.push(pick.id);
+  renderRouletteTab();
+}
+function submitRoulettePercent(){
+  const input = document.getElementById('rl-percent');
+  const val = parseInt(input.value);
+  const rl = APP.roulette;
+  const fb = document.getElementById('rl-feedback');
+  if(isNaN(val) || val<1 || val>100){ fb.textContent = 'Enter a percent between 1 and 100.'; fb.className='roulette-feedback fail'; return; }
+
+  const required = rl.required;
+  const pass = val >= required;
+  rl.history.push({ name: rl.current.name, required, achieved: val, result: pass ? 'pass':'fail' });
+
+  if(pass){
+    if(val >= 100){
+      fb.textContent = 'Roulette cleared! Starting a new run at 1%.';
+      fb.className = 'roulette-feedback pass';
+      rl.required = 1;
+    }else{
+      rl.required = Math.min(100, val+1);
+      fb.textContent = `Cleared! Next requirement: ${rl.required}%.`;
+      fb.className = 'roulette-feedback pass';
+    }
+    rl.current = null;
+  }else{
+    fb.textContent = `Short of ${required}% — run reset to 1%.`;
+    fb.className = 'roulette-feedback fail';
+    rl.required = 1;
+    rl.current = null;
+  }
+  setTimeout(renderRouletteTab, pass ? 300 : 900);
+}
+function resetRoulette(){
+  APP.roulette = { required: 1, current: null, usedIds: [], history: [], done:false };
+  renderRouletteTab();
 }
 
-/* ============================= SYSTEM UI INTERNALS ============================= */
-function openPortal(html) { document.getElementById('modalPortal').innerHTML = html; }
-function closePortal() { document.getElementById('modalPortal').innerHTML = ''; }
-function escapeHtml(s) { return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+/* ============================= LEADERBOARD TAB ============================= */
+function renderLeaderboardTab(){
+  const el = document.getElementById('panel-leaderboard');
+  const sorted = APP.players.slice().sort((a,b)=>b.points-a.points);
+  const rankClass = i => i===0?'r1':i===1?'r2':i===2?'r3':'';
+  const rows = sorted.length ? sorted.map((p,i) => `
+    <tr>
+      <td class="lb-rank ${rankClass(i)}">#${i+1}</td>
+      <td><span class="flag">${flagEmoji(p.country)}</span><strong>${escapeHtml(p.name)}</strong></td>
+      <td style="color:var(--text-dim);font-size:12px;">${countryName(p.country)}</td>
+      <td class="lb-points">${p.points}</td>
+      ${isMod() ? `<td class="lb-actions">
+        <button class="btn small" onclick="openPlayerModal('${p.id}')">Edit</button>
+        <button class="btn small danger" onclick="deletePlayer('${p.id}')">Delete</button>
+      </td>` : '<td></td>'}
+    </tr>`).join('') : `<tr><td colspan="5"><div class="empty-state"><div class="big">No players yet</div>${isMod() ? 'Add a player to start the leaderboard.' : 'Check back soon.'}</div></td></tr>`;
 
-function toggleTheme() {
-  DB.theme = DB.theme === 'dark' ? 'light' : 'dark';
-  if(DB.theme === 'light') document.body.classList.add('light-theme');
-  else document.body.classList.remove('light-theme');
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Leaderboard</h1>
+      <p class="page-desc">${sorted.length} player${sorted.length===1?'':'s'}, ranked by total points earned from beaten demons.</p>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Players</h3>
+        ${isMod() ? `<button class="btn small primary" onclick="openPlayerModal()">+ Add Player</button>` : ''}
+      </div>
+      <div style="overflow-x:auto;">
+      <table class="lb-table">
+        <thead><tr><th>Rank</th><th>Player</th><th>Region</th><th>Points</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>
+    </div>
+  `;
+}
+function openPlayerModal(id){
+  if(!isMod()) return;
+  const editing = id ? APP.players.find(p=>p.id===id) : null;
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>${editing?'Edit Player':'Add Player'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Player Name</label><input id="pl-name" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="form-grid">
+          <div class="field"><label>Region / Country</label><select id="pl-country">${countryOptions(editing?editing.country:'US')}</select></div>
+          <div class="field"><label>Points</label><input id="pl-points" type="number" min="0" value="${editing?editing.points:0}"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="savePlayerForm(${editing?`'${editing.id}'`:'null'})">${editing?'Save Changes':'Add Player'}</button>
+      </div>
+    </div>
+  </div>`);
+}
+async function savePlayerForm(id){
+  const name = document.getElementById('pl-name').value.trim();
+  if(!name) return;
+  const data = {
+    name,
+    country: document.getElementById('pl-country').value,
+    points: parseInt(document.getElementById('pl-points').value) || 0,
+  };
+  if(id){ Object.assign(APP.players.find(p=>p.id===id), data); }
+  else{ APP.players.push({ id: uid(), ...data }); }
+  await savePlayers();
+  closeModal();
+  renderLeaderboardTab();
+}
+async function deletePlayer(id){
+  if(!confirm('Remove this player from the leaderboard?')) return;
+  APP.players = APP.players.filter(p=>p.id!==id);
+  await savePlayers();
+  renderLeaderboardTab();
 }
 
-async function entrypoint() {
-  await loadEcosystem();
-  renderAuthZone();
-  renderGlobalViews();
+/* ============================= SUBMIT TAB ============================= */
+function renderSubmitTab(){
+  const el = document.getElementById('panel-submit');
+  const demonOptions = APP.demons.map(d => `<option value="${d.id}">${escapeHtml(d.name)} (${d.points}pt)</option>`).join('');
+  const queue = APP.submissions.slice().reverse();
+
+  const queueHtml = queue.length ? queue.map(s => {
+    const demon = APP.demons.find(d=>d.id===s.demonId);
+    return `
+    <div class="sub-item">
+      <div class="sub-item-top">
+        <div>
+          <span class="who">${escapeHtml(s.player)}</span>
+          <span class="what"> — ${demon?escapeHtml(demon.name):'(deleted demon)'} · ${s.percent}%</span>
+        </div>
+        <span class="status-pill ${s.status}">${s.status}</span>
+      </div>
+      ${s.note ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px; font-style:italic;">"${escapeHtml(s.note)}"</div>` : ''}
+      <a class="sub-link" href="${escapeHtml(s.video)}" target="_blank">Watch submission ↗</a>
+      ${isMod() && s.status==='pending' ? `
+      <div class="sub-actions">
+        <button class="btn small primary" onclick="reviewSubmission('${s.id}','approved')">Approve</button>
+        <button class="btn small danger" onclick="reviewSubmission('${s.id}','rejected')">Reject</button>
+      </div>` : ''}
+    </div>`;
+  }).join('') : `<div class="empty-state"><div class="big">No submissions yet</div>Plays sent for review will show up here.</div>`;
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Submit a Play</h1>
+      <p class="page-desc">Send a video of your run to the list moderators. Approved plays award the demon's points to your leaderboard total.</p>
+    </div>
+    <div class="list-layout">
+      <div class="panel">
+        <div class="panel-head"><h3>New Submission</h3></div>
+        <div style="padding:14px;">
+          ${APP.demons.length ? `
+          <div class="field"><label>Your Player Name</label><input id="sb-player" ></div>
+          <div class="field"><label>Demon</label><select id="sb-demon">${demonOptions}</select></div>
+          <div class="form-grid">
+            <div class="field"><label>Percent</label><input id="sb-percent" type="number" min="1" max="100" value="100"></div>
+            <div class="field"><label>Region</label><select id="sb-country">${countryOptions('US')}</select></div>
+          </div>
+          <div class="field"><label>Video URL</label><input id="sb-video" placeholder="https://youtube.com/..."></div>
+          <div class="field"><label>Note (optional)</label><textarea id="sb-note" placeholder="Anything moderators should know"></textarea></div>
+          <button class="btn primary" style="width:100%;" onclick="submitPlay()">Send for Review</button>
+          <div id="submitMsg"></div>
+          ` : `<div class="empty-state">Add demons to the list first.</div>`}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Queue</h3></div>
+        <div class="sub-list demon-rows" style="max-height:none;">${queueHtml}</div>
+      </div>
+    </div>
+  `;
 }
-entrypoint();
+async function submitPlay(){
+  const player = document.getElementById('sb-player').value.trim();
+  const demonId = document.getElementById('sb-demon').value;
+  const percent = parseInt(document.getElementById('sb-percent').value);
+  const video = document.getElementById('sb-video').value.trim();
+  const country = document.getElementById('sb-country').value;
+  const note = document.getElementById('sb-note').value.trim();
+  const msgEl = document.getElementById('submitMsg');
+  if(!player || !video || isNaN(percent) || percent<1 || percent>100){
+    msgEl.innerHTML = `<div class="msg error">Fill in your name, a percent (1-100), and a video URL.</div>`;
+    return;
+  }
+  APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, status:'pending', submittedAt: Date.now() });
+  await saveSubmissions();
+  msgEl.innerHTML = `<div class="msg ok">Submitted! A moderator will review it soon.</div>`;
+  renderSubmitTab();
+}
+async function reviewSubmission(id, status){
+  if(!isMod()) return;
+  const s = APP.submissions.find(x=>x.id===id);
+  if(!s) return;
+  s.status = status;
+  if(status==='approved'){
+    const demon = APP.demons.find(d=>d.id===s.demonId);
+    let player = APP.players.find(p=>p.name.toLowerCase()===s.player.toLowerCase());
+    if(!player){
+      player = { id: uid(), name: s.player, country: s.country||'OTHER', points: 0 };
+      APP.players.push(player);
+    }
+    if(demon) player.points += demon.points;
+    await savePlayers();
+  }
+  await saveSubmissions();
+  renderAll();
+}
+
+/* ============================= INIT ============================= */
+async function init(){     
+  await loadAll();
+  restoreSession();      
+  renderAccountArea();
+  renderAll();
+}
+init();
 </script>
 </body>
 </html>
