@@ -372,7 +372,7 @@ const APP = {
 /* ============================= OBFUSCATED CREDENTIALS ============================= */
 const DIRECT_AUTH = {
   "tamari": "NjU0OTg3bmF3ZQ==",
-  "hakku": "NjU0OTg3dWtrYWg="
+  "hakku": "NjU0OTg3dWttYWg="
 };
 
 /* ============================= COUNTRIES ============================= */
@@ -497,7 +497,7 @@ async function registerAccount(username, password){
 
   const newUser = {
     username: cleanUser,
-    password: btoa(password),
+    password: btoa(password), 
     role: 'user'
   };
 
@@ -1123,7 +1123,7 @@ async function reviewSubmission(id, status){
 }
 
 /* ============================= INIT ============================= */
-async function init(){
+async function init(){     
   await loadAll();
   restoreSession();      
   renderAccountArea();
