@@ -685,6 +685,27 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 .lvl-badge.trending{background:rgba(249,115,22,0.12);color:#f97316;border:1px solid rgba(249,115,22,.3);}
 
 /* ---------- QOL: featured banner ---------- */
+.home-hero{
+  position:relative;overflow:hidden;border-radius:var(--radius-lg);border:1px solid var(--line);
+  background:linear-gradient(135deg, var(--bg-raised) 0%, var(--bg-panel) 60%, var(--bg-void) 100%);
+  padding:28px 26px;margin-bottom:16px;
+}
+.home-hero::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(600px 200px at 15% -10%, var(--spike-shadow), transparent 60%);
+  opacity:.55;
+}
+.home-hero .page-title{font-size:32px;background:linear-gradient(90deg,var(--text) 30%,var(--spike) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.home-hero .page-head{border-bottom:none;padding-bottom:0;margin-bottom:6px;}
+.quick-link-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:14px;position:relative;}
+.quick-link-card{
+  display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--radius);
+  border:1px solid var(--line);background:var(--bg-raised);transition:transform .16s ease, border-color .16s ease, background .16s ease;
+  text-align:left;color:var(--text);
+}
+.quick-link-card:hover{transform:translateY(-2px);border-color:var(--spike);background:var(--bg-raised-2);}
+.quick-link-card .ql-icon{font-size:20px;flex:none;}
+.quick-link-card .ql-label{font-size:12.5px;font-weight:600;}
 .featured-banner{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   background:linear-gradient(90deg, var(--spike-dim), transparent);border:1px solid var(--line);
@@ -757,6 +778,8 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
     <div class="side-nav-label">Info</div>
     <button data-tab="faq"><span class="si">❓</span>FAQ</button>
     <button data-tab="guidelines"><span class="si">📋</span>Guidelines</button>
+    <div id="customNavLabelSlot"></div>
+    <div id="customTabsSlot"></div>
     <button data-tab="admin" id="adminNavBtn" style="display:none;"><span class="si">🛠️</span>Admin</button>
   </nav>
   <div class="sidebar-foot">
@@ -790,8 +813,10 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
   <div class="tab-panel" id="panel-faq"></div>
   <div class="tab-panel" id="panel-guidelines"></div>
   <div class="tab-panel" id="panel-admin"></div>
+  <div id="customPanelsSlot"></div>
 </main>
 
+<button id="backToTopBtn" class="btn ghost small" title="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="position:fixed;right:20px;bottom:20px;z-index:30;border-radius:50%;width:38px;height:38px;padding:0;display:none;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 14px rgba(0,0,0,0.35);background:var(--bg-raised-2);">↑</button>
 <div class="footer-note">Lightweight client-side data architecture. Verified ecosystem engine. Admin access strictly curated.</div>
 
 <div id="modalRoot"></div>
@@ -836,7 +861,8 @@ const APP = {
     faqContent: "Q: How do I get on the list?\nA: Submit a video of your completion via the Submit Play tab once it's been verified.\n\nQ: How are points calculated?\nA: Each level has a fixed point value based on its placement. Beating it awards those points to your profile.\n\nQ: What's the Extended and Legacy list?\nA: The Main List is the current hardest levels. Extended and Legacy hold older or lower-ranked demons that still count for points.",
     guidelinesContent: "1. Records must show clean, unedited gameplay from start to finish.\n2. Cheats, hacks, or macros of any kind are not allowed.\n3. Mods reserve the right to reject low-quality or suspicious footage.\n4. Be respectful to other members in Chat and Submissions.\n5. Repeated rule violations may result in a ban.",
     discordUrl: "",
-    featuredDemonId: null
+    featuredDemonId: null,
+    customTabs: [] // staff-created tabs: { id, label, icon, preset: 'list'|'text', items:[], text:'' }
   },
   listFilter: { search: '', tags: [], sort: 'rank', section: 'main', favoritesOnly: false, creator: '', verifier: '', minReq: '', maxReq: '', dateFrom: '', dateTo: '' }, // section: main | extended | legacy | all
   upcomingFilter: { search: '', tags: [] },
@@ -1400,6 +1426,7 @@ function renderAdminTab(){
       <button class="btn small ghost" onclick="openAdminSettingsModal()">Site Settings</button>
       <button class="btn small ghost" onclick="openEditStaticPage('faqContent','FAQ')">Edit FAQ</button>
       <button class="btn small ghost" onclick="openEditStaticPage('guidelinesContent','Guidelines')">Edit Guidelines</button>
+      <button class="btn small ghost" onclick="openManageTabsModal()">🗂️ Manage Tabs${customTabs().length?` (${customTabs().length})`:''}</button>
     </div>
     <div class="list-layout">
       <div class="panel">
@@ -1413,6 +1440,181 @@ function renderAdminTab(){
       </div>
     </div>
   `;
+}
+
+/* ============================= CUSTOM STAFF TABS ============================= */
+function customTabs(){ return APP.settings.customTabs || (APP.settings.customTabs = []); }
+function renderCustomTabsNav(){
+  const labelSlot = document.getElementById('customNavLabelSlot');
+  const slot = document.getElementById('customTabsSlot');
+  if(!slot) return;
+  const tabs = customTabs();
+  if(labelSlot) labelSlot.innerHTML = tabs.length ? `<div class="side-nav-label">Custom</div>` : '';
+  slot.innerHTML = tabs.map(t => `<button data-tab="custom-${t.id}" class="${APP.activeTab==='custom-'+t.id?'active':''}"><span class="si">${escapeHtml(t.icon||'📁')}</span>${escapeHtml(t.label)}</button>`).join('');
+}
+function renderCustomTabPanels(){
+  const host = document.getElementById('customPanelsSlot');
+  if(!host) return;
+  const tabs = customTabs();
+  // remove panels for deleted tabs
+  Array.from(host.children).forEach(child => {
+    const id = child.id.replace('panel-custom-','');
+    if(!tabs.find(t=>t.id===id)) child.remove();
+  });
+  tabs.forEach(t => {
+    let panel = document.getElementById('panel-custom-'+t.id);
+    if(!panel){
+      panel = document.createElement('div');
+      panel.className = 'tab-panel';
+      panel.id = 'panel-custom-'+t.id;
+      host.appendChild(panel);
+    }
+    panel.classList.toggle('active', APP.activeTab === 'custom-'+t.id);
+    panel.innerHTML = renderCustomTabContent(t);
+  });
+}
+function renderCustomTabContent(t){
+  const mod = isMod();
+  if(t.preset === 'list'){
+    const items = t.items || [];
+    const rows = items.length ? items.map((it,i) => `
+      <div class="demon-row" style="cursor:default;">
+        <div class="info"><div class="name">${escapeHtml(it)}</div></div>
+        ${mod ? `<button class="btn small ghost" onclick="removeCustomTabItem('${t.id}',${i})">Remove</button>` : ''}
+      </div>`).join('') : `<div class="empty-state"><div class="big">Nothing here yet</div>${mod?'Add the first item below.':'Check back later.'}</div>`;
+    return `
+      <div class="page-head">
+        <h1 class="page-title">${escapeHtml(t.icon||'📁')} ${escapeHtml(t.label)}</h1>
+        ${t.desc ? `<p class="page-desc">${escapeHtml(t.desc)}</p>` : ''}
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>${escapeHtml(t.label)} (${items.length})</h3>${mod ? `<button class="btn small ghost" onclick="deleteCustomTab('${t.id}')">Delete Tab</button>` : ''}</div>
+        <div class="demon-rows" style="max-height:none;">${rows}</div>
+        ${mod ? `
+        <div style="display:flex;gap:6px;padding:12px;">
+          <input id="ct-item-${t.id}" placeholder="Add a list item..." style="flex:1;" onkeydown="if(event.key==='Enter') addCustomTabItem('${t.id}')">
+          <button class="btn small primary" onclick="addCustomTabItem('${t.id}')">Add</button>
+        </div>` : ''}
+      </div>`;
+  }
+  // 'text' preset (freeform staff-editable page, like a mini FAQ)
+  return `
+    <div class="page-head">
+      <h1 class="page-title">${escapeHtml(t.icon||'📁')} ${escapeHtml(t.label)}</h1>
+      ${t.desc ? `<p class="page-desc">${escapeHtml(t.desc)}</p>` : ''}
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>${escapeHtml(t.label)}</h3>${mod ? `<span style="display:flex;gap:6px;"><button class="btn small ghost" onclick="editCustomTabText('${t.id}')">Edit</button><button class="btn small ghost" onclick="deleteCustomTab('${t.id}')">Delete Tab</button></span>` : ''}</div>
+      <div style="padding:14px;white-space:pre-wrap;line-height:1.6;">${t.text ? escapeHtml(t.text) : `<span class="hint">${mod?'Nothing written yet — click Edit to add content.':'Nothing here yet.'}</span>`}</div>
+    </div>`;
+}
+async function addCustomTabItem(tabId){
+  if(!isMod()) return;
+  const input = document.getElementById('ct-item-'+tabId);
+  const val = input && input.value.trim();
+  if(!val) return;
+  const t = customTabs().find(x=>x.id===tabId);
+  if(!t) return;
+  if(!t.items) t.items = [];
+  t.items.push(val);
+  await saveSettings();
+  logChange(`Added "${val}" to the "${t.label}" tab`, true);
+  renderCustomTabPanels();
+}
+async function removeCustomTabItem(tabId, index){
+  if(!isMod()) return;
+  const t = customTabs().find(x=>x.id===tabId);
+  if(!t || !t.items) return;
+  t.items.splice(index,1);
+  await saveSettings();
+  renderCustomTabPanels();
+}
+function editCustomTabText(tabId){
+  if(!isMod()) return;
+  const t = customTabs().find(x=>x.id===tabId);
+  if(!t) return;
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>Edit "${escapeHtml(t.label)}"</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><textarea id="ct-text-${t.id}" style="min-height:220px;">${escapeHtml(t.text||'')}</textarea></div>
+      </div>
+      <div class="modal-foot"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveCustomTabText('${t.id}')">Save</button></div>
+    </div>
+  </div>`);
+}
+async function saveCustomTabText(tabId){
+  const t = customTabs().find(x=>x.id===tabId);
+  const ta = document.getElementById('ct-text-'+tabId);
+  if(!t || !ta) return;
+  t.text = ta.value;
+  await saveSettings();
+  closeModal();
+  logChange(`Updated content of the "${t.label}" tab`, true);
+  renderCustomTabPanels();
+  showToast('Tab updated');
+}
+async function deleteCustomTab(tabId){
+  if(!isMod()) return;
+  const t = customTabs().find(x=>x.id===tabId);
+  if(!t) return;
+  if(!confirm(`Delete the "${t.label}" tab? This cannot be undone.`)) return;
+  APP.settings.customTabs = customTabs().filter(x=>x.id!==tabId);
+  if(APP.activeTab === 'custom-'+tabId) switchTab('home');
+  await saveSettings();
+  logChange(`Deleted the "${t.label}" tab`, true);
+  renderCustomTabsNav();
+  renderCustomTabPanels();
+  showToast('Tab deleted');
+}
+function openManageTabsModal(){
+  if(!isAdmin()) return;
+  const tabs = customTabs();
+  const rows = tabs.length ? tabs.map(t => `
+    <div class="user-row"><span>${escapeHtml(t.icon||'📁')} ${escapeHtml(t.label)} <span class="hint">(${t.preset})</span></span>
+      <span style="display:flex;gap:6px;">
+        <button class="btn small ghost" onclick="switchTab('custom-${t.id}');closeModal();">View</button>
+        <button class="btn small danger" onclick="deleteCustomTab('${t.id}')">Delete</button>
+      </span>
+    </div>`).join('') : `<div class="completion-item" style="color:var(--text-dim);">No custom tabs yet.</div>`;
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>Manage Tabs</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="sub-list" style="max-height:220px;overflow:auto;margin-bottom:12px;">${rows}</div>
+        <div class="panel-head"><h3>Add New Tab</h3></div>
+        <div class="field"><label>Label</label><input id="nt-label" placeholder="e.g. Resources"></div>
+        <div class="form-grid">
+          <div class="field"><label>Icon (emoji)</label><input id="nt-icon" placeholder="📁" maxlength="4"></div>
+          <div class="field"><label>Preset</label>
+            <select id="nt-preset">
+              <option value="list">List (staff-managed items)</option>
+              <option value="text">Text Page (freeform content)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Description (optional)</label><input id="nt-desc" placeholder="Shown under the title"></div>
+      </div>
+      <div class="modal-foot"><button class="btn ghost" onclick="closeModal()">Close</button><button class="btn primary" onclick="createCustomTab()">Create Tab</button></div>
+    </div>
+  </div>`);
+}
+async function createCustomTab(){
+  const label = document.getElementById('nt-label').value.trim();
+  const icon = document.getElementById('nt-icon').value.trim();
+  const preset = document.getElementById('nt-preset').value;
+  const desc = document.getElementById('nt-desc').value.trim();
+  if(!label){ showToast('Give the tab a label', 'error'); return; }
+  const t = { id: uid(), label, icon: icon||'📁', preset, desc, items: [], text: '' };
+  customTabs().push(t);
+  await saveSettings();
+  logChange(`Created a new "${label}" tab`, true);
+  closeModal();
+  renderCustomTabsNav();
+  renderCustomTabPanels();
+  showToast('Tab created');
 }
 
 /* ============================= HELPERS ============================= */
@@ -1917,15 +2119,21 @@ function switchTab(tab){
   document.querySelectorAll('nav.side-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.bottom-nav button[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel-'+tab).classList.add('active');
+  const panelEl = document.getElementById('panel-'+tab);
+  if(panelEl) panelEl.classList.add('active');
   if(tab === 'chat') startChatPolling(); else stopChatPolling();
   if(window.matchMedia && window.matchMedia('(max-width:880px)').matches) setSidebarCollapsed(true);
+  window.scrollTo(0,0);
   renderAll();
 }
 document.getElementById('tabs').addEventListener('click', e=>{
   const btn = e.target.closest('button[data-tab]');
   if(btn) switchTab(btn.dataset.tab);
 });
+window.addEventListener('scroll', () => {
+  const b = document.getElementById('backToTopBtn');
+  if(b) b.style.display = window.scrollY > 400 ? 'flex' : 'none';
+}, { passive: true });
 
 function renderAll(){
   applySystemTheme();
@@ -1945,6 +2153,8 @@ function renderAll(){
   renderGuidelinesTab();
   renderAdminTab();
   renderProfileTab();
+  renderCustomTabsNav();
+  renderCustomTabPanels();
   updateNavBadges();
   const adminBtn = document.getElementById('adminNavBtn');
   if(adminBtn) adminBtn.style.display = isAdmin() ? '' : 'none';
@@ -2018,22 +2228,24 @@ function renderHomeTab(){
     ['stats','📊','Stats'],
   ];
   const quickLinksHtml = quickLinks.map(([tab,icon,label]) => `
-    <button class="btn small ghost" style="flex:1;min-width:120px;" onclick="switchTab('${tab}')">${icon} ${label}</button>
+    <button class="quick-link-card" onclick="switchTab('${tab}')"><span class="ql-icon">${icon}</span><span class="ql-label">${label}</span></button>
   `).join('');
 
   el.innerHTML = `
-    <div class="page-head">
-      <h1 class="page-title site-name-text">${escapeHtml(APP.settings.siteName)}</h1>
-      <p class="page-desc site-tagline-text">${escapeHtml(APP.settings.siteTagline)}</p>
+    <div class="home-hero">
+      <div class="page-head">
+        <h1 class="page-title site-name-text">${escapeHtml(APP.settings.siteName)}</h1>
+        <p class="page-desc site-tagline-text">${escapeHtml(APP.settings.siteTagline)}</p>
+      </div>
+      <div class="stat-cards" style="margin-top:4px;">
+        <div class="stat-card"><div class="sc-val">${demons.length}</div><div class="sc-lbl">Demons</div></div>
+        <div class="stat-card"><div class="sc-val">${APP.players.length}</div><div class="sc-lbl">Players</div></div>
+        <div class="stat-card"><div class="sc-val">${totalPoints}</div><div class="sc-lbl">Points Available</div></div>
+        <div class="stat-card"><div class="sc-val">${totalEarned}</div><div class="sc-lbl">Points Earned</div></div>
+      </div>
+      <div class="quick-link-grid">${quickLinksHtml}</div>
     </div>
     ${featuredHtml}
-    <div class="stat-cards" style="margin-top:12px;">
-      <div class="stat-card"><div class="sc-val">${demons.length}</div><div class="sc-lbl">Demons</div></div>
-      <div class="stat-card"><div class="sc-val">${APP.players.length}</div><div class="sc-lbl">Players</div></div>
-      <div class="stat-card"><div class="sc-val">${totalPoints}</div><div class="sc-lbl">Points Available</div></div>
-      <div class="stat-card"><div class="sc-val">${totalEarned}</div><div class="sc-lbl">Points Earned</div></div>
-    </div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">${quickLinksHtml}</div>
     <div class="list-layout" style="margin-top:12px;">
       ${trendingHtml}
       <div class="panel">
@@ -2530,10 +2742,11 @@ function renderDemonDetail(d, index){
     <div class="demon-rows" style="max-height:160px;">
       ${progressAttempts.map(s => `<div class="demon-row" style="cursor:default;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)} · below requirement</div></div><div class="pts">${s.percent}%</div></div>`).join('')}
     </div>` : '';
+  const ratingTag = (label,val) => val ? `<span class="tag-pill" style="font-size:10px;padding:1px 5px;" title="${label} rating">${label} ${val}/10</span>` : '';
   const recordsHtml = records.length ? `
     <div class="panel-head" style="margin-top:16px;"><h3>Records (${records.length})</h3></div>
-    <div class="demon-rows" style="max-height:220px;">
-      ${records.map(s => `<div class="demon-row" style="cursor:default;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)}${s.attempts?` · ${s.attempts} attempts`:''}</div></div><div class="pts">${s.percent}%</div></div>`).join('')}
+    <div class="demon-rows" style="max-height:260px;">
+      ${records.map(s => `<div class="demon-row" style="cursor:default;height:auto;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)}${s.attempts?` · ${s.attempts} attempts`:''}</div>${(s.enjoymentRating||s.decoRating||s.gameplayRating) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${ratingTag('Enjoy',s.enjoymentRating)}${ratingTag('Deco',s.decoRating)}${ratingTag('Gameplay',s.gameplayRating)}</div>` : ''}</div><div class="pts">${s.percent}%</div></div>`).join('')}
     </div>` : '';
 
   const changelogEntries = (d.levelChangelog||[]).slice().reverse();
@@ -3998,6 +4211,13 @@ function renderSubmitTab(preserveFocus){
             <div class="field"><label>Raw Footage URL <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label><input id="sb-rawfootage" placeholder="Google Drive / Dropbox link"></div>
           </div>
           <div class="field"><label>Note (optional)</label><textarea id="sb-note" placeholder="Anything moderators should know"></textarea></div>
+          <div class="panel-head" style="margin:10px 0 4px;padding:0;border:none;"><h3>Rate the Level</h3></div>
+          <p class="hint" style="margin-bottom:6px;">Optional — these ratings show up next to your record on the level's page.</p>
+          <div class="form-grid" style="grid-template-columns:repeat(3,1fr);">
+            <div class="field"><label>Enjoyment (1-10)</label><input id="sb-enjoyment" type="number" min="1" max="10" placeholder="e.g. 8"></div>
+            <div class="field"><label>Deco (1-10)</label><input id="sb-deco" type="number" min="1" max="10" placeholder="e.g. 9"></div>
+            <div class="field"><label>Gameplay (1-10)</label><input id="sb-gameplay" type="number" min="1" max="10" placeholder="e.g. 7"></div>
+          </div>
           <button class="btn primary" style="width:100%;" onclick="submitPlay()">Send for Review</button>
           <div id="submitMsg"></div>
           ` : `<div class="empty-state">Add demons to the list first.</div>`}
@@ -4052,6 +4272,10 @@ async function submitPlay(){
   const attemptsRaw = parseInt(document.getElementById('sb-attempts').value);
   const attempts = isNaN(attemptsRaw) ? null : Math.max(1, attemptsRaw);
   const rawFootage = document.getElementById('sb-rawfootage').value.trim();
+  const clampRating = v => (isNaN(v) || v<1 || v>10) ? null : v;
+  const enjoymentRating = clampRating(parseInt(document.getElementById('sb-enjoyment').value));
+  const decoRating = clampRating(parseInt(document.getElementById('sb-deco').value));
+  const gameplayRating = clampRating(parseInt(document.getElementById('sb-gameplay').value));
   const msgEl = document.getElementById('submitMsg');
   if(!player || !video || isNaN(percent) || percent<1 || percent>100){
     msgEl.innerHTML = `<div class="msg error">Fill in your name, a percent (1-100), and a video URL.</div>`;
@@ -4061,7 +4285,7 @@ async function submitPlay(){
   const req = demon && demon.requirement ? demon.requirement : 100;
   const floor = (demon && demon.requirement2) ? demon.requirement2 : req;
   const type = percent < floor ? 'progress' : 'completion';
-  APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, attempts, rawFootage, status:'pending', type, submittedAt: Date.now(), modNote:'' });
+  APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, attempts, rawFootage, enjoymentRating, decoRating, gameplayRating, status:'pending', type, submittedAt: Date.now(), modNote:'' });
   await saveSubmissions();
   msgEl.innerHTML = type==='progress'
     ? `<div class="msg ok">Submitted as a progress record (below the ${floor}% requirement, so it won't award points, but it'll be tracked on your profile once approved). A moderator will review it soon.</div>`
@@ -4099,6 +4323,11 @@ async function reviewSubmission(id, status, silent){
       player.points += awarded;
     }
     if(!silent) await savePlayers();
+    if(demon && s.enjoymentRating){
+      if(!demon.enjoymentRatings) demon.enjoymentRatings = {};
+      demon.enjoymentRatings[s.player.toLowerCase()] = s.enjoymentRating;
+      if(!silent) await saveDemons();
+    }
   }
   logChange(`${s.player}'s ${s.type==='progress'?'progress ':''}submission on "${demon?demon.name:'a deleted demon'}" (${s.percent}%) was ${status}`, true);
   if(!silent){
