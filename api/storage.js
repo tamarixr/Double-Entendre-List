@@ -12,7 +12,10 @@ const ALLOWED_KEYS = new Set([
   'profiles',
   'chat_messages',
   'changelog',
-  'snapshots'
+  'snapshots',
+  'challenges',
+  'platformers',
+  'level_submissions'
 ]);
 
 export default async function handler(req, res) {

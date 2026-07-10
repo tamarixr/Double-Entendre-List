@@ -765,12 +765,15 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
     <div class="side-nav-label">List</div>
     <button data-tab="home"><span class="si">🏠</span>Home</button>
     <button data-tab="list" class="active"><span class="si">📜</span>Demon List</button>
+    <button data-tab="challengelist"><span class="si">🧩</span>Challenge List</button>
+    <button data-tab="platformerlist"><span class="si">🕹️</span>Platformer List</button>
     <button data-tab="upcoming"><span class="si">🕓</span>Upcoming<span id="upcomingBadgeSlot"></span></button>
     <button data-tab="timemachine"><span class="si">🕰️</span>Time Machine</button>
     <div id="catSlot-list"></div>
     <div class="side-nav-label">Play</div>
     <button data-tab="roulette"><span class="si">🎲</span>Roulette</button>
     <button data-tab="submit"><span class="si">🎬</span>Submit Play<span id="pendingBadgeSlot"></span></button>
+    <button data-tab="submitlevel"><span class="si">📩</span>Submit Level<span id="levelSubBadgeSlot"></span></button>
     <div id="catSlot-play"></div>
     <div class="side-nav-label">Community</div>
     <button data-tab="profile" id="profileNavBtn" style="display:none;"><span class="si">👤</span>My Profile</button>
@@ -805,6 +808,8 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
   <div id="announcementSlot"></div>
   <div class="tab-panel" id="panel-home"></div>
   <div class="tab-panel active" id="panel-list"></div>
+  <div class="tab-panel" id="panel-challengelist"></div>
+  <div class="tab-panel" id="panel-platformerlist"></div>
   <div class="tab-panel" id="panel-upcoming"></div>
   <div class="tab-panel" id="panel-timemachine"></div>
   <div class="tab-panel" id="panel-roulette"></div>
@@ -812,6 +817,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
   <div class="tab-panel" id="panel-leaderboard"></div>
   <div class="tab-panel" id="panel-halloffame"></div>
   <div class="tab-panel" id="panel-submit"></div>
+  <div class="tab-panel" id="panel-submitlevel"></div>
   <div class="tab-panel" id="panel-stats"></div>
   <div class="tab-panel" id="panel-chat"></div>
   <div class="tab-panel" id="panel-changelog"></div>
@@ -842,6 +848,9 @@ const ACCENT_PALETTES = {
 /* ============================= STATE ============================= */
 const APP = {
   demons: [],
+  challenges: [], // Challenge List — same layout/engine as the demon list, separate ranked pool
+  platformers: [], // Platformer Demon List — same layout/engine as the demon list, separate ranked pool
+  levelSubmissions: [], // Levels submitted by the community for possible addition to a list
   upcoming: [],
   players: [],
   submissions: [],
@@ -853,6 +862,8 @@ const APP = {
   currentUser: null,
   activeTab: 'list',
   selectedDemonId: null,
+  selectedChallengeId: null,
+  selectedPlatformerId: null,
   timeMachineDate: 'now',
   roulette: { required: 1, current: null, usedIds: [], history: [], done:false, streak:0, bestStreak:0 },
   settings: {
@@ -862,6 +873,10 @@ const APP = {
     themeMode: "dark", // "dark" or "light"
     mainListSize: 50, // demons ranked beyond this fall into the Extended List
     extendedListSize: 100, // demons ranked beyond this fall into the Legacy List
+    challengeMainListSize: 50,
+    challengeExtendedListSize: 100,
+    platformerMainListSize: 50,
+    platformerExtendedListSize: 100,
     announcement: { text: '', active: false },
     faqContent: "Q: How do I get on the list?\nA: Submit a video of your completion via the Submit Play tab once it's been verified.\n\nQ: How are points calculated?\nA: Each level has a fixed point value based on its placement. Beating it awards those points to your profile.\n\nQ: What's the Extended and Legacy list?\nA: The Main List is the current hardest levels. Extended and Legacy hold older or lower-ranked demons that still count for points.",
     guidelinesContent: "1. Records must show clean, unedited gameplay from start to finish.\n2. Cheats, hacks, or macros of any kind are not allowed.\n3. Mods reserve the right to reject low-quality or suspicious footage.\n4. Be respectful to other members in Chat and Submissions.\n5. Repeated rule violations may result in a ban.",
@@ -870,9 +885,12 @@ const APP = {
     customTabs: [] // staff-created tabs: { id, label, icon, preset: 'list'|'text', items:[], text:'' }
   },
   listFilter: { search: '', tags: [], sort: 'rank', section: 'main', favoritesOnly: false, creator: '', verifier: '', minReq: '', maxReq: '', dateFrom: '', dateTo: '' }, // section: main | extended | legacy | all
+  challengeFilter: { search: '', tags: [], sort: 'rank', section: 'main' },
+  platformerFilter: { search: '', tags: [], sort: 'rank', section: 'main' },
   upcomingFilter: { search: '', tags: [] },
   lbFilter: { search: '', sort: 'points', view: 'players', period: 'month' }, // view: players | nations | records | period
-  subFilter: { status: 'all', search: '' }
+  subFilter: { status: 'all', search: '' },
+  levelSubFilter: { status: 'all', search: '' }
 };
 
 /* ============================= OBFUSCATED CREDENTIALS ============================= */
@@ -927,6 +945,9 @@ async function storageSet(key, value){
 }
 async function loadAll(){
   APP.demons = (await storageGet('demons')) || [];
+  APP.challenges = (await storageGet('challenges')) || [];
+  APP.platformers = (await storageGet('platformers')) || [];
+  APP.levelSubmissions = (await storageGet('level_submissions')) || [];
   APP.upcoming = (await storageGet('upcoming')) || [];
   APP.players = (await storageGet('players')) || [];
   APP.submissions = (await storageGet('submissions')) || [];
@@ -942,6 +963,9 @@ async function loadAll(){
   applySystemTheme();
 }
 function saveDemons(){ takeSnapshot(); return storageSet('demons', APP.demons); }
+function saveChallenges(){ return storageSet('challenges', APP.challenges); }
+function savePlatformers(){ return storageSet('platformers', APP.platformers); }
+function saveLevelSubmissions(){ return storageSet('level_submissions', APP.levelSubmissions); }
 function saveUpcoming(){ return storageSet('upcoming', APP.upcoming); }
 function savePlayers(){ return storageSet('players', APP.players); }
 function saveSubmissions(){ return storageSet('submissions', APP.submissions); }
@@ -1392,6 +1416,7 @@ function renderAdminTab(){
 
   const pendingCount = APP.submissions.filter(s=>s.status==='pending').length;
   const upcomingCount = APP.upcoming.length;
+  const pendingLevelCount = APP.levelSubmissions.filter(s=>s.status==='pending').length;
 
   const q = ADMIN_USER_FILTER.trim().toLowerCase();
   const users = APP.registeredUsers
@@ -1422,12 +1447,16 @@ function renderAdminTab(){
       <div class="stat-card"><div class="sc-val">${APP.registeredUsers.length}</div><div class="sc-lbl">Registered Users</div></div>
       <div class="stat-card"><div class="sc-val">${pendingCount}</div><div class="sc-lbl">Pending Submissions</div></div>
       <div class="stat-card"><div class="sc-val">${upcomingCount}</div><div class="sc-lbl">Upcoming Levels</div></div>
+      <div class="stat-card"><div class="sc-val">${pendingLevelCount}</div><div class="sc-lbl">Pending Level Submissions</div></div>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;">
       <button class="btn small primary" onclick="openDemonModal()">+ Add Demon</button>
+      <button class="btn small primary" onclick="openGenericModal('challenge')">+ Add Challenge</button>
+      <button class="btn small primary" onclick="openGenericModal('platformer')">+ Add Platformer Demon</button>
       <button class="btn small primary" onclick="openPlayerModal()">+ Add Player</button>
       <button class="btn small primary" onclick="openUpcomingModal()">+ Add Upcoming</button>
       <button class="btn small ghost" onclick="switchTab('submit')">Review Submissions${pendingCount?` (${pendingCount})`:''}</button>
+      <button class="btn small ghost" onclick="switchTab('submitlevel')">Review Level Submissions${pendingLevelCount?` (${pendingLevelCount})`:''}</button>
       <button class="btn small ghost" onclick="openAdminSettingsModal()">Site Settings</button>
       <button class="btn small ghost" onclick="openEditStaticPage('faqContent','FAQ')">Edit FAQ</button>
       <button class="btn small ghost" onclick="openEditStaticPage('guidelinesContent','Guidelines')">Edit Guidelines</button>
@@ -2168,8 +2197,9 @@ async function handleSaveSettings(){
 
 /* ============================= TABS ============================= */
 const TAB_ROUTES = {
-  home:'/', list:'/list', upcoming:'/upcoming', timemachine:'/time-machine',
-  roulette:'/roulette', submit:'/submit', profile:'/profile', leaderboard:'/leaderboard',
+  home:'/', list:'/list', challengelist:'/challenge-list', platformerlist:'/platformer-list',
+  upcoming:'/upcoming', timemachine:'/time-machine',
+  roulette:'/roulette', submit:'/submit', submitlevel:'/submit-level', profile:'/profile', leaderboard:'/leaderboard',
   halloffame:'/hall-of-fame', stats:'/stats', chat:'/chat', changelog:'/changelog',
   faq:'/faq', guidelines:'/guidelines', admin:'/admin'
 };
@@ -2224,8 +2254,9 @@ function switchTab(tab, skipPush){
   renderAll();
 }
 const TAB_TITLES = {
-  home:'Home', list:'Demon List', upcoming:'Upcoming', timemachine:'Time Machine', roulette:'Roulette',
-  submit:'Submit Play', profile:'My Profile', leaderboard:'Leaderboard', halloffame:'Hall of Fame',
+  home:'Home', list:'Demon List', challengelist:'Challenge List', platformerlist:'Platformer List',
+  upcoming:'Upcoming', timemachine:'Time Machine', roulette:'Roulette',
+  submit:'Submit Play', submitlevel:'Submit Level', profile:'My Profile', leaderboard:'Leaderboard', halloffame:'Hall of Fame',
   stats:'Stats', chat:'Chat', changelog:'Changelog', faq:'FAQ', guidelines:'Guidelines', admin:'Admin'
 };
 function updateDocumentTitle(tab){
@@ -2250,12 +2281,15 @@ function renderAll(){
   renderAnnouncement();
   renderHomeTab();
   renderListTab();
+  renderGenericListTab('challenge');
+  renderGenericListTab('platformer');
   renderUpcomingTab();
   renderTimeMachineTab();
   renderRouletteTab();
   renderLeaderboardTab();
   renderHallOfFameTab();
   renderSubmitTab();
+  renderSubmitLevelTab();
   renderStatsTab();
   renderChatTab();
   renderChangelogTab();
@@ -2282,6 +2316,11 @@ function updateNavBadges(){
   const upSlot = document.getElementById('upcomingBadgeSlot');
   if(upSlot){
     upSlot.innerHTML = APP.upcoming.length ? `<span class="nav-badge">${APP.upcoming.length}</span>` : '';
+  }
+  const lvlSlot = document.getElementById('levelSubBadgeSlot');
+  if(lvlSlot){
+    const pendingLvl = APP.levelSubmissions.filter(s=>s.status==='pending').length;
+    lvlSlot.innerHTML = (isMod() && pendingLvl) ? `<span class="nav-badge">${pendingLvl}</span>` : '';
   }
 }
 
@@ -2331,8 +2370,11 @@ function renderHomeTab(){
 
   const quickLinks = [
     ['list','📜','Demon List'],
+    ['challengelist','🧩','Challenge List'],
+    ['platformerlist','🕹️','Platformer List'],
     ['leaderboard','🏆','Leaderboard'],
     ['submit','🎬','Submit Play'],
+    ['submitlevel','📩','Submit Level'],
     ['timemachine','🕰️','Time Machine'],
     ['halloffame','🏛️','Hall of Fame'],
     ['stats','📊','Stats'],
@@ -3156,6 +3198,343 @@ async function moveDemon(id, dir){
   await saveDemons();
   logChange(`"${d.name}" moved from #${i+1} to #${j+1}`, true);
   renderListTab();
+}
+
+/* ============================= GENERIC RANKED LIST ENGINE (Challenge List / Platformer Demon List) ============================= */
+/* Powers the Challenge List and Platformer Demon List tabs using the same visual layout as the main Demon List,
+   but as fully separate ranked pools with their own data, filters and admin CRUD. */
+const LIST_KINDS = {
+  challenge: {
+    dataKey: 'challenges', filterKey: 'challengeFilter', selKey: 'selectedChallengeId',
+    panelId: 'panel-challengelist', searchId: 'clg-search',
+    saveFn: 'saveChallenges', mainSizeKey: 'challengeMainListSize', extSizeKey: 'challengeExtendedListSize',
+    tab: 'challengelist', noun: 'Challenge', nounPlural: 'Challenges', title: 'Challenge List',
+    tagline: 'Community-curated challenge levels — tricky, gimmicky, or just plain evil.'
+  },
+  platformer: {
+    dataKey: 'platformers', filterKey: 'platformerFilter', selKey: 'selectedPlatformerId',
+    panelId: 'panel-platformerlist', searchId: 'plt-search',
+    saveFn: 'savePlatformers', mainSizeKey: 'platformerMainListSize', extSizeKey: 'platformerExtendedListSize',
+    tab: 'platformerlist', noun: 'Platformer Demon', nounPlural: 'Platformer Demons', title: 'Platformer Demon List',
+    tagline: 'The hardest platformer-mode levels, ranked by difficulty.'
+  }
+};
+function glData(kind){ return APP[LIST_KINDS[kind].dataKey]; }
+function glFilter(kind){ return APP[LIST_KINDS[kind].filterKey]; }
+function glSelId(kind){ return APP[LIST_KINDS[kind].selKey]; }
+function glSetSelId(kind, id){ APP[LIST_KINDS[kind].selKey] = id; }
+function glSave(kind){ return window[LIST_KINDS[kind].saveFn](); }
+function glSizes(kind){
+  const cfg = LIST_KINDS[kind];
+  const mainSize = APP.settings[cfg.mainSizeKey] || 50;
+  const extSize = Math.max(mainSize, APP.settings[cfg.extSizeKey] || mainSize);
+  return [mainSize, extSize];
+}
+function glTags(kind){
+  const set = new Set();
+  glData(kind).forEach(d => (d.tags||[]).forEach(t => set.add(t)));
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+function glFilteredSorted(kind){
+  const data = glData(kind);
+  const { search, tags, sort, section } = glFilter(kind);
+  const [mainSize, extSize] = glSizes(kind);
+  const q = search.trim().toLowerCase();
+  let list = data.map((d,i) => ({ d, rank: i }));
+  if(section === 'main') list = list.filter(({rank}) => rank < mainSize);
+  else if(section === 'extended') list = list.filter(({rank}) => rank >= mainSize && rank < extSize);
+  else if(section === 'legacy') list = list.filter(({rank}) => rank >= extSize);
+  if(q){
+    list = list.filter(({d}) => d.name.toLowerCase().includes(q) || (d.creator||'').toLowerCase().includes(q) || (d.verifier||'').toLowerCase().includes(q));
+  }
+  if(tags.length) list = list.filter(({d}) => tags.every(t => (d.tags||[]).includes(t)));
+  const sorted = list.slice();
+  if(sort === 'points-desc') sorted.sort((a,b)=>(b.d.points||0)-(a.d.points||0));
+  else if(sort === 'points-asc') sorted.sort((a,b)=>(a.d.points||0)-(b.d.points||0));
+  else if(sort === 'az') sorted.sort((a,b)=>a.d.name.localeCompare(b.d.name));
+  else if(sort === 'newest') sorted.sort((a,b)=>(b.d.addedAt||0)-(a.d.addedAt||0));
+  else sorted.sort((a,b)=>a.rank-b.rank);
+  return sorted;
+}
+function glSetSearch(kind, v){ glFilter(kind).search = v; renderGenericListTab(kind, true); }
+function glSetSort(kind, v){ glFilter(kind).sort = v; renderGenericListTab(kind); }
+function glSetSection(kind, v){ glFilter(kind).section = v; renderGenericListTab(kind); }
+function glToggleTag(kind, t){
+  const f = glFilter(kind);
+  const i = f.tags.indexOf(t);
+  if(i===-1) f.tags.push(t); else f.tags.splice(i,1);
+  renderGenericListTab(kind);
+}
+function glClearFilters(kind){
+  const f = glFilter(kind);
+  f.search = ''; f.tags = [];
+  renderGenericListTab(kind);
+}
+function glCopyLink(kind, id, ev){
+  if(ev) ev.stopPropagation();
+  const url = location.origin + tabToPath(LIST_KINDS[kind].tab);
+  copyToClipboard(url, 'List link copied');
+}
+function selectGenericItem(kind, id){
+  glSetSelId(kind, id);
+  renderGenericListTab(kind);
+}
+function renderGenericListTab(kind, preserveFocus){
+  const cfg = LIST_KINDS[kind];
+  const el = document.getElementById(cfg.panelId);
+  if(!el) return;
+  const data = glData(kind);
+  const f = glFilter(kind);
+  if(!glSelId(kind) && data.length) glSetSelId(kind, data[0].id);
+  const selected = data.find(d => d.id === glSelId(kind));
+  const filtered = glFilteredSorted(kind);
+  const [mainSize, extSize] = glSizes(kind);
+  const hasExtended = data.length > mainSize && extSize > mainSize;
+  const hasLegacy = data.length > extSize;
+  const totalPoints = data.reduce((s,d)=>s+(d.points||0),0);
+  const hardest = data[0];
+
+  const statCards = data.length ? `
+    <div class="stat-cards">
+      <div class="stat-card"><div class="sc-val" data-count="${Math.min(data.length,mainSize)}">0</div><div class="sc-lbl">Main List</div></div>
+      <div class="stat-card"><div class="sc-val" data-count="${totalPoints}">0</div><div class="sc-lbl">Total Points</div></div>
+      <div class="stat-card"><div class="sc-val" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${hardest?escapeHtml(hardest.name):'—'}</div><div class="sc-lbl">#1 Hardest</div></div>
+    </div>` : '';
+
+  const tags = glTags(kind);
+  const tagChips = tags.length ? `
+    <div class="tag-filter-row-live">
+      <span class="lbl">Tags</span>
+      ${tags.map(t => `<button class="tag-chip ${f.tags.includes(t)?'active':''}" onclick="glToggleTag('${kind}','${escapeHtml(t).replace(/'/g,"\\'")}')">${escapeHtml(t)}</button>`).join('')}
+      ${f.tags.length ? `<button class="clear-filters-chip" onclick="glFilter('${kind}').tags=[];renderGenericListTab('${kind}');">Clear tags ×</button>` : ''}
+    </div>` : '';
+
+  const sectionToggle = (hasExtended || hasLegacy) ? `
+    <div class="status-filter-row" style="padding:10px 12px 0;">
+      <button class="status-filter-btn ${f.section==='main'?'active':''}" onclick="glSetSection('${kind}','main')">Main List</button>
+      ${hasExtended ? `<button class="status-filter-btn ${f.section==='extended'?'active':''}" onclick="glSetSection('${kind}','extended')">Extended List</button>` : ''}
+      <button class="status-filter-btn ${f.section==='legacy'?'active':''}" onclick="glSetSection('${kind}','legacy')">Legacy List</button>
+      <button class="status-filter-btn ${f.section==='all'?'active':''}" onclick="glSetSection('${kind}','all')">All</button>
+    </div>` : '';
+
+  const toolbar = `
+    ${sectionToggle}
+    <div class="list-toolbar">
+      <div class="list-toolbar-row">
+        <div class="search-input-wrap">
+          <span class="si-icon">⌕</span>
+          <input id="${cfg.searchId}" placeholder="Search by name, creator, verifier..." value="${escapeHtml(f.search)}" oninput="glSetSearch('${kind}', this.value)">
+        </div>
+        <select class="sort-select" onchange="glSetSort('${kind}', this.value)">
+          <option value="rank" ${f.sort==='rank'?'selected':''}>List Order</option>
+          <option value="points-desc" ${f.sort==='points-desc'?'selected':''}>Points: High to Low</option>
+          <option value="points-asc" ${f.sort==='points-asc'?'selected':''}>Points: Low to High</option>
+          <option value="az" ${f.sort==='az'?'selected':''}>Name: A-Z</option>
+          <option value="newest" ${f.sort==='newest'?'selected':''}>Newest Added</option>
+        </select>
+      </div>
+      ${tagChips}
+    </div>
+    ${filtered.length !== data.length ? `<div class="result-count" style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span>${filtered.length} of ${data.length} levels match</span>
+      <button class="clear-filters-chip" onclick="glClearFilters('${kind}')">Clear all filters ×</button>
+    </div>` : ''}
+  `;
+
+  const rowsArr = filtered.map(({d, rank}, idx) => {
+    const i = rank;
+    const tagsHtml = (d.tags || []).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('');
+    const delay = Math.min(idx, 12) * 18;
+    const rowHtml = `
+    <div class="demon-row ${d.id===glSelId(kind)?'selected':''}" style="animation-delay:${delay}ms" onclick="selectGenericItem('${kind}','${d.id}')">
+      <div class="rank-badge ${i<3?'top':''}">${i+1}</div>
+      ${getThumbnailUrl(d) ? `<img class="demon-thumb" src="${escapeHtml(getThumbnailUrl(d))}" alt="" loading="lazy" onerror="this.remove()">` : ''}
+      <div class="info">
+        <div class="name">${escapeHtml(d.name)}</div>
+        <div class="creator">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}</div>
+        ${tagsHtml ? `<div class="tag-container">${tagsHtml}</div>` : ''}
+      </div>
+      <div class="pts">${d.points||0}pt</div>
+      <button class="row-link-btn" onclick="glCopyLink('${kind}','${d.id}', event)" title="Copy link to this level">🔗</button>
+      ${isMod() ? `
+      <div class="reorder">
+        <button onclick="event.stopPropagation();moveGenericItem('${kind}','${d.id}',-1)" ${i===0?'disabled':''}>&#9650;</button>
+        <button onclick="event.stopPropagation();moveGenericItem('${kind}','${d.id}',1)" ${i===data.length-1?'disabled':''}>&#9660;</button>
+      </div>` : ''}
+    </div>`;
+    const showExtDivider = f.section==='all' && f.sort==='rank' && i===mainSize && hasExtended && !f.search && !f.tags.length;
+    const showLegDivider = f.section==='all' && f.sort==='rank' && i===extSize && hasLegacy && !f.search && !f.tags.length;
+    let divider = '';
+    if(showExtDivider) divider = `<div class="legacy-divider"><span class="line"></span>Extended List<span class="line"></span></div>`;
+    else if(showLegDivider) divider = `<div class="legacy-divider"><span class="line"></span>Legacy List<span class="line"></span></div>`;
+    return divider + rowHtml;
+  });
+
+  const rows = data.length ? (filtered.length ? rowsArr.join('') : `<div class="empty-state"><div class="big">No matches</div>Try a different search or clear your tag filters.</div>`)
+   : `<div class="empty-state"><div class="big">No ${cfg.nounPlural.toLowerCase()} yet</div>${isMod() ? 'Add one to get started.' : 'Check back soon.'}</div>`;
+
+  const detail = selected ? renderGenericDetail(kind, selected, data.findIndex(d=>d.id===selected.id)) :
+    `<div class="empty-state"><div class="big">Nothing selected</div>Pick a level from the list.</div>`;
+
+  el.innerHTML = `
+    <div class="page-head">
+      <div class="page-head-row">
+        <div>
+          <h1 class="page-title">${escapeHtml(cfg.title)}</h1>
+          <p class="page-desc">${escapeHtml(cfg.tagline)}</p>
+        </div>
+        ${tabShareButton(cfg.tab)}
+      </div>
+    </div>
+    ${statCards}
+    <div class="list-layout-3">
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Levels</h3>
+          ${isMod() ? `<button class="btn small primary" onclick="openGenericModal('${kind}')">+ Add ${escapeHtml(cfg.noun)}</button>` : ''}
+        </div>
+        ${data.length ? toolbar : ''}
+        <div class="demon-rows">${rows}</div>
+      </div>
+      <div class="panel"><div class="detail">${detail}</div></div>
+    </div>
+  `;
+  if(preserveFocus){
+    const s = document.getElementById(cfg.searchId);
+    if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
+  }
+  animateCounters(el);
+}
+function renderGenericDetail(kind, d, index){
+  const cfg = LIST_KINDS[kind];
+  const embed = getEmbedUrl(d.video);
+  const tagHtml = (d.tags || []).map(t => `<span class="tag-pill" style="font-size:11px; padding:2px 6px;">${escapeHtml(t)}</span>`).join(' ');
+  const banner = getThumbnailUrl(d);
+  const songLabel = [d.songArtist, d.songName].filter(Boolean).join(' - ');
+  const publishLabel = formatPublishDate(d);
+  const metaParts = [];
+  if(d.levelId) metaParts.push(`<span><b>Level ID:</b> ${escapeHtml(String(d.levelId))}</span>`);
+  if(songLabel) metaParts.push(`<span><b>Song:</b> ${escapeHtml(songLabel)}</span>`);
+  if(publishLabel) metaParts.push(`<span><b>Published:</b> ${escapeHtml(publishLabel)}</span>`);
+
+  return `
+    ${banner ? `<div class="detail-banner"><img src="${escapeHtml(banner)}" alt="${escapeHtml(d.name)} thumbnail" onerror="this.parentElement.style.display='none'"></div>` : ''}
+    <div class="detail-top">
+      <div>
+        <div class="detail-title">${escapeHtml(d.name)}</div>
+        <div class="detail-sub">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
+        ${metaParts.length ? `<div class="detail-meta">${metaParts.join('')}</div>` : ''}
+        ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
+      </div>
+      <div>
+        <button class="icon-btn" onclick="glCopyLink('${kind}','${d.id}', event)" title="Copy shareable link">🔗 Copy Link</button>
+        ${isMod() ? `
+        <button class="btn small" onclick="openGenericModal('${kind}','${d.id}')">Edit</button>
+        <button class="btn small danger" onclick="deleteGenericItem('${kind}','${d.id}')">Delete</button>` : ''}
+      </div>
+    </div>
+    <div class="stat-row">
+      <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Placement</div></div>
+      <div class="stat"><div class="val">${d.points||0}</div><div class="lbl">Points</div></div>
+    </div>
+    <div class="video-wrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
+    ${d.description ? `<div class="detail-desc">${escapeHtml(d.description)}</div>` : ''}
+  `;
+}
+function openGenericModal(kind, id){
+  if(!isMod()) return;
+  const cfg = LIST_KINDS[kind];
+  const editing = id ? glData(kind).find(d=>d.id===id) : null;
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>${editing ? `Edit ${escapeHtml(cfg.noun)}` : `Add ${escapeHtml(cfg.noun)}`}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Level Name</label><input id="gl-name" value="${editing?escapeHtml(editing.name):''}"></div>
+        <div class="form-grid">
+          <div class="field"><label>Creator</label><input id="gl-creator" value="${editing?escapeHtml(editing.creator||''):''}"></div>
+          <div class="field"><label>Verifier</label><input id="gl-verifier" value="${editing?escapeHtml(editing.verifier||''):''}"></div>
+        </div>
+        <div class="field"><label>Creator's Country</label><select id="gl-country">${countryOptions(editing?editing.country:'OTHER')}</select></div>
+        <div class="form-grid">
+          <div class="field"><label>Level ID</label><input id="gl-levelid" value="${editing?escapeHtml(editing.levelId||''):''}" placeholder="e.g. 98765432"></div>
+          <div class="field"><label>Publish Date</label><input id="gl-publishdate" type="date" value="${editing?escapeHtml(editing.publishDate||''):''}"></div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>Points</label><input id="gl-points" type="number" min="0" value="${editing?editing.points||0:100}"></div>
+          <div class="field"><label>Gameplay Video URL</label><input id="gl-video" value="${editing?escapeHtml(editing.video||''):''}" placeholder="https://youtube.com/..."></div>
+        </div>
+        <div class="field">
+          <label>Tags</label>
+          <input id="gl-tags" value="${editing&&editing.tags?escapeHtml(editing.tags.join(', ')):''}" placeholder="e.g. Timing, Gimmick, Trick">
+        </div>
+        <div class="field"><label>Description (optional)</label><textarea id="gl-desc">${editing?escapeHtml(editing.description||''):''}</textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveGenericForm('${kind}'${editing?`,'${editing.id}'`:''})">${editing?'Save Changes':`Add ${escapeHtml(cfg.noun)}`}</button>
+      </div>
+    </div>
+  </div>`);
+}
+async function saveGenericForm(kind, id){
+  const cfg = LIST_KINDS[kind];
+  const name = document.getElementById('gl-name').value.trim();
+  if(!name) return;
+  const rawTags = document.getElementById('gl-tags').value;
+  const tags = rawTags.split(',').map(t=>t.trim()).filter(Boolean);
+  const points = parseInt(document.getElementById('gl-points').value) || 0;
+  const data = {
+    name,
+    creator: document.getElementById('gl-creator').value.trim(),
+    verifier: document.getElementById('gl-verifier').value.trim(),
+    country: document.getElementById('gl-country').value,
+    points,
+    video: document.getElementById('gl-video').value.trim(),
+    levelId: document.getElementById('gl-levelid').value.trim(),
+    publishDate: document.getElementById('gl-publishdate').value,
+    description: document.getElementById('gl-desc').value.trim(),
+    tags
+  };
+  const data2 = glData(kind);
+  if(id){
+    const d = data2.find(x=>x.id===id);
+    Object.assign(d, data);
+    logChange(`"${data.name}" (${cfg.noun}) was edited`, true);
+  }else{
+    data2.push({ id: uid(), ...data, addedAt: Date.now() });
+    glSetSelId(kind, data2[data2.length-1].id);
+    logChange(`"${data.name}" was added to the ${cfg.title} at #${data2.length}`);
+  }
+  await glSave(kind);
+  closeModal();
+  renderAll();
+  showToast(id ? `${cfg.noun} updated` : `${cfg.noun} added`);
+}
+async function deleteGenericItem(kind, id){
+  const cfg = LIST_KINDS[kind];
+  const data = glData(kind);
+  const d = data.find(x=>x.id===id);
+  const ok = await customConfirm(`Remove "${d?d.name:'this level'}" from the ${cfg.title}? This cannot be undone.`, `Delete ${cfg.noun}`);
+  if(!ok) return;
+  const remaining = data.filter(x=>x.id!==id);
+  APP[cfg.dataKey] = remaining;
+  if(glSelId(kind)===id) glSetSelId(kind, remaining[0]?.id || null);
+  await glSave(kind);
+  if(d) logChange(`"${d.name}" was removed from the ${cfg.title}`, true);
+  renderAll();
+  showToast(`${cfg.noun} deleted`);
+}
+async function moveGenericItem(kind, id, dir){
+  const data = glData(kind);
+  const i = data.findIndex(d=>d.id===id);
+  const j = i+dir;
+  if(j<0 || j>=data.length) return;
+  const d = data[i];
+  [data[i], data[j]] = [data[j], data[i]];
+  await glSave(kind);
+  logChange(`"${d.name}" moved from #${i+1} to #${j+1} on the ${LIST_KINDS[kind].title}`, true);
+  renderGenericListTab(kind);
 }
 
 /* ============================= UPCOMING LEVELS TAB ============================= */
@@ -4448,6 +4827,164 @@ async function reviewSubmission(id, status, silent){
     renderAll();
     showToast(status==='approved' ? 'Submission approved' : 'Submission rejected', status==='approved'?'ok':'error');
   }
+}
+
+/* ============================= SUBMIT LEVEL TAB (community level submissions for any list) ============================= */
+const LEVEL_SUB_TARGETS = { main: 'Demon List', challenge: 'Challenge List', platformer: 'Platformer Demon List' };
+function setLevelSubStatusFilter(status){ APP.levelSubFilter.status = status; renderSubmitLevelTab(); }
+function setLevelSubSearch(v){ APP.levelSubFilter.search = v; renderSubmitLevelTab(true); }
+function renderSubmitLevelTab(preserveFocus){
+  const el = document.getElementById('panel-submitlevel');
+  if(!el) return;
+  let queue = APP.levelSubmissions.slice().reverse();
+  const { status, search } = APP.levelSubFilter;
+  if(status !== 'all') queue = queue.filter(s => s.status === status);
+  const q = search.trim().toLowerCase();
+  if(q) queue = queue.filter(s => s.levelName.toLowerCase().includes(q) || (s.creator||'').toLowerCase().includes(q) || (s.submitter||'').toLowerCase().includes(q));
+  const counts = {
+    all: APP.levelSubmissions.length,
+    pending: APP.levelSubmissions.filter(s=>s.status==='pending').length,
+    approved: APP.levelSubmissions.filter(s=>s.status==='approved').length,
+    rejected: APP.levelSubmissions.filter(s=>s.status==='rejected').length
+  };
+  const queueHtml = queue.length ? queue.map(s => {
+    const embed = getEmbedUrl(s.video);
+    return `
+    <div class="sub-item">
+      <div class="sub-item-top">
+        <div>
+          <span class="who">${escapeHtml(s.levelName)}</span>
+          <span class="what"> — by ${escapeHtml(s.creator||'Unknown')} · for ${escapeHtml(LEVEL_SUB_TARGETS[s.target]||'Demon List')}</span>
+        </div>
+        <span class="status-pill ${s.status}">${s.status}</span>
+      </div>
+      <div style="font-size:11.5px;color:var(--text-dim);margin-bottom:2px;">Submitted by ${escapeHtml(s.submitter||'Anonymous')}</div>
+      ${s.notes ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px; font-style:italic;">"${escapeHtml(s.notes)}"</div>` : ''}
+      ${s.video ? `<a class="sub-link" href="${escapeHtml(s.video)}" target="_blank">Watch level ↗</a>` : ''}
+      ${embed ? ` · <a class="sub-link" href="javascript:void(0)" onclick="this.closest('.sub-item').querySelector('.sub-embed-wrap').classList.toggle('open')">▶ Preview inline</a>` : ''}
+      ${embed ? `<div class="sub-embed-wrap"><div class="video-wrap"><iframe src="${embed}" allowfullscreen loading="lazy"></iframe></div></div>` : ''}
+      ${isMod() && s.status==='pending' ? `
+      <div class="sub-actions">
+        <button class="btn small primary" onclick="approveLevelSubmission('${s.id}')">Approve &amp; Add to List</button>
+        <button class="btn small danger" onclick="rejectLevelSubmission('${s.id}')">Reject</button>
+      </div>` : ''}
+    </div>`;
+  }).join('') : `<div class="empty-state"><div class="big">No submissions${status!=='all'||q?' match':' yet'}</div>${status!=='all'||q ? 'Try clearing the filters.' : 'Levels submitted for consideration will show up here.'}</div>`;
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Submit a Level</h1>
+      <p class="page-desc">Think your level (or someone else's) deserves a spot on the Demon List, Challenge List, or Platformer Demon List? Send it in for review.</p>
+    </div>
+    <div class="list-layout" ${isMod() ? '' : 'style="grid-template-columns:1fr;"'}>
+      <div class="panel">
+        <div class="panel-head"><h3>New Level Submission</h3></div>
+        <div style="padding:14px;">
+          <div class="field"><label>Level Name</label><input id="ls-name" placeholder="e.g. Tartarus"></div>
+          <div class="form-grid">
+            <div class="field"><label>Creator</label><input id="ls-creator" placeholder="Level creator"></div>
+            <div class="field"><label>Target List</label>
+              <select id="ls-target">
+                <option value="main">Demon List</option>
+                <option value="challenge">Challenge List</option>
+                <option value="platformer">Platformer Demon List</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>Your Name</label><input id="ls-submitter" value="${APP.currentUser?escapeHtml(APP.currentUser.username):''}" placeholder="Who's submitting this?"></div>
+          <div class="field"><label>Video URL <span style="color:var(--text-dim);font-weight:400;">(gameplay or showcase)</span></label><input id="ls-video" placeholder="https://youtube.com/..."></div>
+          <div class="field"><label>Level ID <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label><input id="ls-levelid" placeholder="e.g. 98765432"></div>
+          <div class="field"><label>Why should it be added? <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label><textarea id="ls-notes" placeholder="Difficulty, standout features, anything moderators should know"></textarea></div>
+          <button class="btn primary" style="width:100%;" onclick="submitLevelForm()">Send for Review</button>
+          <div id="submitLevelMsg"></div>
+        </div>
+      </div>
+      ${isMod() ? `
+      <div class="panel">
+        <div class="panel-head"><h3>Queue</h3></div>
+        ${APP.levelSubmissions.length ? `
+        <div class="status-filter-row">
+          <button class="status-filter-btn ${status==='all'?'active':''}" onclick="setLevelSubStatusFilter('all')">All (${counts.all})</button>
+          <button class="status-filter-btn ${status==='pending'?'active':''}" onclick="setLevelSubStatusFilter('pending')">Pending (${counts.pending})</button>
+          <button class="status-filter-btn ${status==='approved'?'active':''}" onclick="setLevelSubStatusFilter('approved')">Approved (${counts.approved})</button>
+          <button class="status-filter-btn ${status==='rejected'?'active':''}" onclick="setLevelSubStatusFilter('rejected')">Rejected (${counts.rejected})</button>
+        </div>
+        <div class="list-toolbar" style="border-bottom:none;">
+          <div class="search-input-wrap">
+            <span class="si-icon">⌕</span>
+            <input id="lvlsub-search" placeholder="Search level, creator, submitter..." value="${escapeHtml(search)}" oninput="setLevelSubSearch(this.value)">
+          </div>
+        </div>` : ''}
+        <div class="sub-list demon-rows" style="max-height:none;">${queueHtml}</div>
+      </div>` : ''}
+    </div>
+  `;
+  if(preserveFocus){
+    const s = document.getElementById('lvlsub-search');
+    if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
+  }
+}
+async function submitLevelForm(){
+  const levelName = document.getElementById('ls-name').value.trim();
+  const creator = document.getElementById('ls-creator').value.trim();
+  const target = document.getElementById('ls-target').value;
+  const submitter = document.getElementById('ls-submitter').value.trim();
+  const video = document.getElementById('ls-video').value.trim();
+  const levelId = document.getElementById('ls-levelid').value.trim();
+  const notes = document.getElementById('ls-notes').value.trim();
+  const msgEl = document.getElementById('submitLevelMsg');
+  if(!levelName || !submitter){
+    msgEl.innerHTML = `<div class="msg error">Fill in at least the level name and your name.</div>`;
+    return;
+  }
+  APP.levelSubmissions.push({
+    id: uid(), levelName, creator, target, submitter, video, levelId, notes,
+    status: 'pending', submittedAt: Date.now()
+  });
+  await saveLevelSubmissions();
+  document.getElementById('ls-name').value = '';
+  document.getElementById('ls-creator').value = '';
+  document.getElementById('ls-video').value = '';
+  document.getElementById('ls-levelid').value = '';
+  document.getElementById('ls-notes').value = '';
+  msgEl.innerHTML = `<div class="msg ok">Submitted! A moderator will review it soon.</div>`;
+  renderAll();
+}
+async function approveLevelSubmission(id){
+  if(!isMod()) return;
+  const s = APP.levelSubmissions.find(x=>x.id===id);
+  if(!s) return;
+  const entry = {
+    id: uid(), name: s.levelName, creator: s.creator, video: s.video, levelId: s.levelId||'',
+    description: s.notes||'', tags: [], country: 'OTHER', points: 0, addedAt: Date.now()
+  };
+  if(s.target === 'challenge'){
+    APP.challenges.push(entry);
+    await saveChallenges();
+  }else if(s.target === 'platformer'){
+    APP.platformers.push(entry);
+    await savePlatformers();
+  }else{
+    APP.demons.push({ ...entry, requirement: 100, likes:{}, enjoymentRatings:{}, levelChangelog:[] });
+    await saveDemons();
+  }
+  s.status = 'approved';
+  s.reviewedAt = Date.now();
+  await saveLevelSubmissions();
+  logChange(`"${s.levelName}" was approved and added to the ${LEVEL_SUB_TARGETS[s.target]||'Demon List'}`, true);
+  renderAll();
+  showToast('Submission approved and added to the list. You can now edit its details.');
+}
+async function rejectLevelSubmission(id){
+  if(!isMod()) return;
+  const s = APP.levelSubmissions.find(x=>x.id===id);
+  if(!s) return;
+  s.status = 'rejected';
+  s.reviewedAt = Date.now();
+  await saveLevelSubmissions();
+  logChange(`"${s.levelName}" submission was rejected`, true);
+  renderAll();
+  showToast('Submission rejected', 'error');
 }
 
 /* ============================= INIT ============================= */
