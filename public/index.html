@@ -180,9 +180,22 @@ body.light-theme .role-tag.admin { background: var(--spike-dim); color: var(--sp
 /* ---------- layout ---------- */
 main{max-width:1640px;padding:20px 24px 60px;}
 @media(min-width:1900px){main{max-width:1840px;}}
-.page-head{margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:15px;}
-.page-title{font-size:26px;font-weight:700;margin-bottom:4px;}
-.page-desc{color:var(--text-muted);font-size:13px;max-width:720px;line-height:1.4;}
+.page-head{
+  margin-bottom:20px;border:1px solid var(--line);border-radius:var(--radius-lg);
+  padding:20px 22px;position:relative;overflow:hidden;
+  background:linear-gradient(135deg, var(--bg-raised) 0%, var(--bg-panel) 60%, var(--bg-void) 100%);
+}
+.page-head::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(560px 180px at 12% -10%, var(--spike-shadow), transparent 60%);
+  opacity:.5;
+}
+.page-head > *{position:relative;}
+.page-title{font-size:26px;font-weight:700;margin-bottom:4px;background:linear-gradient(90deg,var(--text) 40%,var(--spike) 130%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.page-desc{color:var(--text-muted);font-size:13px;max-width:720px;line-height:1.4;position:relative;}
+.page-head-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;position:relative;}
+.tab-link-copy{background:none;border:1px solid var(--line);color:var(--text-dim);border-radius:var(--radius-sm);padding:4px 8px;font-size:11px;display:inline-flex;align-items:center;gap:4px;transition:all .15s ease;}
+.tab-link-copy:hover{color:var(--text);border-color:var(--text-dim);}
 
 .tab-panel{display:none;}
 .tab-panel.active{display:block;}
@@ -685,18 +698,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 .lvl-badge.trending{background:rgba(249,115,22,0.12);color:#f97316;border:1px solid rgba(249,115,22,.3);}
 
 /* ---------- QOL: featured banner ---------- */
-.home-hero{
-  position:relative;overflow:hidden;border-radius:var(--radius-lg);border:1px solid var(--line);
-  background:linear-gradient(135deg, var(--bg-raised) 0%, var(--bg-panel) 60%, var(--bg-void) 100%);
-  padding:28px 26px;margin-bottom:16px;
-}
-.home-hero::before{
-  content:'';position:absolute;inset:0;pointer-events:none;
-  background:radial-gradient(600px 200px at 15% -10%, var(--spike-shadow), transparent 60%);
-  opacity:.55;
-}
-.home-hero .page-title{font-size:32px;background:linear-gradient(90deg,var(--text) 30%,var(--spike) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;}
-.home-hero .page-head{border-bottom:none;padding-bottom:0;margin-bottom:6px;}
+.home-hero .page-title{font-size:32px;}
 .quick-link-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:14px;position:relative;}
 .quick-link-card{
   display:flex;align-items:center;gap:10px;padding:12px;border-radius:var(--radius);
@@ -765,9 +767,11 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
     <button data-tab="list" class="active"><span class="si">📜</span>Demon List</button>
     <button data-tab="upcoming"><span class="si">🕓</span>Upcoming<span id="upcomingBadgeSlot"></span></button>
     <button data-tab="timemachine"><span class="si">🕰️</span>Time Machine</button>
+    <div id="catSlot-list"></div>
     <div class="side-nav-label">Play</div>
     <button data-tab="roulette"><span class="si">🎲</span>Roulette</button>
     <button data-tab="submit"><span class="si">🎬</span>Submit Play<span id="pendingBadgeSlot"></span></button>
+    <div id="catSlot-play"></div>
     <div class="side-nav-label">Community</div>
     <button data-tab="profile" id="profileNavBtn" style="display:none;"><span class="si">👤</span>My Profile</button>
     <button data-tab="leaderboard"><span class="si">🏆</span>Leaderboard</button>
@@ -775,11 +779,11 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
     <button data-tab="stats"><span class="si">📊</span>Stats</button>
     <button data-tab="chat"><span class="si">💬</span>Chat<span id="chatBadgeSlot"></span></button>
     <button data-tab="changelog"><span class="si">🕘</span>Changelog</button>
+    <div id="catSlot-community"></div>
     <div class="side-nav-label">Info</div>
     <button data-tab="faq"><span class="si">❓</span>FAQ</button>
     <button data-tab="guidelines"><span class="si">📋</span>Guidelines</button>
-    <div id="customNavLabelSlot"></div>
-    <div id="customTabsSlot"></div>
+    <div id="catSlot-info"></div>
     <button data-tab="admin" id="adminNavBtn" style="display:none;"><span class="si">🛠️</span>Admin</button>
   </nav>
   <div class="sidebar-foot">
@@ -787,6 +791,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
       <button class="btn ghost small search-trigger-btn" onclick="openCommandPalette()" style="padding:4px 8px;font-size:12px;" title="Search (Ctrl+K)">⌕ <span class="kbd-hint" style="margin-left:2px;">Ctrl K</span></button>
       <button class="btn ghost small" onclick="toggleThemeMode()" style="padding: 4px 6px; font-size: 13px;" title="Toggle Light/Dark Theme">🌓</button>
       <button class="btn ghost small" onclick="goToRandomDemon()" style="padding: 4px 6px; font-size: 13px;" title="Random Level">🎯</button>
+      <button class="btn ghost small" onclick="copyTabLink(APP.activeTab)" style="padding: 4px 6px; font-size: 13px;" title="Copy link to current page">🔗</button>
       <button class="btn ghost small" onclick="openShortcutsModal()" style="padding: 4px 6px; font-size: 13px;" title="Keyboard Shortcuts">⌨️</button>
       <span id="discordLinkSlot"></span>
     </div>
@@ -1445,12 +1450,14 @@ function renderAdminTab(){
 /* ============================= CUSTOM STAFF TABS ============================= */
 function customTabs(){ return APP.settings.customTabs || (APP.settings.customTabs = []); }
 function renderCustomTabsNav(){
-  const labelSlot = document.getElementById('customNavLabelSlot');
-  const slot = document.getElementById('customTabsSlot');
-  if(!slot) return;
+  const cats = ['list','play','community','info'];
   const tabs = customTabs();
-  if(labelSlot) labelSlot.innerHTML = tabs.length ? `<div class="side-nav-label">Custom</div>` : '';
-  slot.innerHTML = tabs.map(t => `<button data-tab="custom-${t.id}" class="${APP.activeTab==='custom-'+t.id?'active':''}"><span class="si">${escapeHtml(t.icon||'📁')}</span>${escapeHtml(t.label)}</button>`).join('');
+  cats.forEach(cat => {
+    const slot = document.getElementById('catSlot-'+cat);
+    if(!slot) return;
+    const inCat = tabs.filter(t => (t.category||'community') === cat);
+    slot.innerHTML = inCat.map(t => `<button data-tab="custom-${t.id}" class="${APP.activeTab==='custom-'+t.id?'active':''}"><span class="si">${escapeHtml(t.icon||'📁')}</span>${escapeHtml(t.label)}</button>`).join('');
+  });
 }
 function renderCustomTabPanels(){
   const host = document.getElementById('customPanelsSlot');
@@ -1475,6 +1482,29 @@ function renderCustomTabPanels(){
 }
 function renderCustomTabContent(t){
   const mod = isMod();
+  const head = `<div class="page-head"><div class="page-head-row"><div><h1 class="page-title">${escapeHtml(t.icon||'📁')} ${escapeHtml(t.label)}</h1>${t.desc ? `<p class="page-desc">${escapeHtml(t.desc)}</p>` : ''}</div>${tabShareButton('custom-'+t.id)}</div></div>`;
+  if(t.preset === 'demonlist'){
+    const ids = t.demonIds || [];
+    const demons = ids.map(id => APP.demons.find(d=>d.id===id)).filter(Boolean);
+    const rows = demons.length ? demons.map(d => `
+      <div class="demon-row" onclick="switchTab('list');selectDemon('${d.id}');">
+        ${getThumbnailUrl(d) ? `<img class="demon-thumb" src="${escapeHtml(getThumbnailUrl(d))}" alt="" onerror="this.remove()">` : ''}
+        <div class="info"><div class="name">${escapeHtml(d.name)}</div><div class="creator">by ${escapeHtml(d.creator||'Unknown')}</div></div>
+        <div class="pts">${d.points}pt</div>
+        ${mod ? `<button class="btn small ghost" onclick="event.stopPropagation();removeCustomTabDemon('${t.id}','${d.id}')">Remove</button>` : ''}
+      </div>`).join('') : `<div class="empty-state"><div class="big">No levels added yet</div>${mod?'Add levels below.':'Check back later.'}</div>`;
+    return `${head}
+      <div class="panel">
+        <div class="panel-head"><h3>${escapeHtml(t.label)} (${demons.length})</h3>${mod ? `<button class="btn small ghost" onclick="deleteCustomTab('${t.id}')">Delete Tab</button>` : ''}</div>
+        <div class="demon-rows" style="max-height:none;">${rows}</div>
+        ${mod ? `
+        <div style="display:flex;gap:6px;padding:12px;">
+          <input id="ct-demon-${t.id}" list="allDemonNamesList" placeholder="Add a level by name..." style="flex:1;" onkeydown="if(event.key==='Enter') addCustomTabDemon('${t.id}')">
+          <button class="btn small primary" onclick="addCustomTabDemon('${t.id}')">Add</button>
+        </div>
+        <datalist id="allDemonNamesList">${APP.demons.map(d=>`<option value="${escapeHtml(d.name)}">`).join('')}</datalist>` : ''}
+      </div>`;
+  }
   if(t.preset === 'list'){
     const items = t.items || [];
     const rows = items.length ? items.map((it,i) => `
@@ -1482,11 +1512,7 @@ function renderCustomTabContent(t){
         <div class="info"><div class="name">${escapeHtml(it)}</div></div>
         ${mod ? `<button class="btn small ghost" onclick="removeCustomTabItem('${t.id}',${i})">Remove</button>` : ''}
       </div>`).join('') : `<div class="empty-state"><div class="big">Nothing here yet</div>${mod?'Add the first item below.':'Check back later.'}</div>`;
-    return `
-      <div class="page-head">
-        <h1 class="page-title">${escapeHtml(t.icon||'📁')} ${escapeHtml(t.label)}</h1>
-        ${t.desc ? `<p class="page-desc">${escapeHtml(t.desc)}</p>` : ''}
-      </div>
+    return `${head}
       <div class="panel">
         <div class="panel-head"><h3>${escapeHtml(t.label)} (${items.length})</h3>${mod ? `<button class="btn small ghost" onclick="deleteCustomTab('${t.id}')">Delete Tab</button>` : ''}</div>
         <div class="demon-rows" style="max-height:none;">${rows}</div>
@@ -1498,15 +1524,36 @@ function renderCustomTabContent(t){
       </div>`;
   }
   // 'text' preset (freeform staff-editable page, like a mini FAQ)
-  return `
-    <div class="page-head">
-      <h1 class="page-title">${escapeHtml(t.icon||'📁')} ${escapeHtml(t.label)}</h1>
-      ${t.desc ? `<p class="page-desc">${escapeHtml(t.desc)}</p>` : ''}
-    </div>
+  return `${head}
     <div class="panel">
       <div class="panel-head"><h3>${escapeHtml(t.label)}</h3>${mod ? `<span style="display:flex;gap:6px;"><button class="btn small ghost" onclick="editCustomTabText('${t.id}')">Edit</button><button class="btn small ghost" onclick="deleteCustomTab('${t.id}')">Delete Tab</button></span>` : ''}</div>
       <div style="padding:14px;white-space:pre-wrap;line-height:1.6;">${t.text ? escapeHtml(t.text) : `<span class="hint">${mod?'Nothing written yet — click Edit to add content.':'Nothing here yet.'}</span>`}</div>
     </div>`;
+}
+async function addCustomTabDemon(tabId){
+  if(!isMod()) return;
+  const input = document.getElementById('ct-demon-'+tabId);
+  const name = input && input.value.trim().toLowerCase();
+  if(!name) return;
+  const demon = APP.demons.find(d=>d.name.toLowerCase()===name);
+  if(!demon){ showToast('No level with that name', 'error'); return; }
+  const t = customTabs().find(x=>x.id===tabId);
+  if(!t) return;
+  if(!t.demonIds) t.demonIds = [];
+  if(t.demonIds.includes(demon.id)){ showToast('Already on this list', 'error'); return; }
+  t.demonIds.push(demon.id);
+  await saveSettings();
+  input.value = '';
+  logChange(`Added "${demon.name}" to the "${t.label}" tab`, true);
+  renderCustomTabPanels();
+}
+async function removeCustomTabDemon(tabId, demonId){
+  if(!isMod()) return;
+  const t = customTabs().find(x=>x.id===tabId);
+  if(!t || !t.demonIds) return;
+  t.demonIds = t.demonIds.filter(id=>id!==demonId);
+  await saveSettings();
+  renderCustomTabPanels();
 }
 async function addCustomTabItem(tabId){
   if(!isMod()) return;
@@ -1572,7 +1619,7 @@ function openManageTabsModal(){
   if(!isAdmin()) return;
   const tabs = customTabs();
   const rows = tabs.length ? tabs.map(t => `
-    <div class="user-row"><span>${escapeHtml(t.icon||'📁')} ${escapeHtml(t.label)} <span class="hint">(${t.preset})</span></span>
+    <div class="user-row"><span>${escapeHtml(t.icon||'📁')} ${escapeHtml(t.label)} <span class="hint">(${t.preset} · ${t.category||'community'})</span></span>
       <span style="display:flex;gap:6px;">
         <button class="btn small ghost" onclick="switchTab('custom-${t.id}');closeModal();">View</button>
         <button class="btn small danger" onclick="deleteCustomTab('${t.id}')">Delete</button>
@@ -1588,12 +1635,21 @@ function openManageTabsModal(){
         <div class="field"><label>Label</label><input id="nt-label" placeholder="e.g. Resources"></div>
         <div class="form-grid">
           <div class="field"><label>Icon (emoji)</label><input id="nt-icon" placeholder="📁" maxlength="4"></div>
-          <div class="field"><label>Preset</label>
-            <select id="nt-preset">
-              <option value="list">List (staff-managed items)</option>
-              <option value="text">Text Page (freeform content)</option>
+          <div class="field"><label>Sidebar Section</label>
+            <select id="nt-category">
+              <option value="list">List</option>
+              <option value="play">Play</option>
+              <option value="community" selected>Community</option>
+              <option value="info">Info</option>
             </select>
           </div>
+        </div>
+        <div class="field"><label>Preset</label>
+          <select id="nt-preset">
+            <option value="list">List — staff-managed line items</option>
+            <option value="demonlist">Demon List — curated levels (uses existing level rows)</option>
+            <option value="text">Text Page — freeform content</option>
+          </select>
         </div>
         <div class="field"><label>Description (optional)</label><input id="nt-desc" placeholder="Shown under the title"></div>
       </div>
@@ -1605,9 +1661,10 @@ async function createCustomTab(){
   const label = document.getElementById('nt-label').value.trim();
   const icon = document.getElementById('nt-icon').value.trim();
   const preset = document.getElementById('nt-preset').value;
+  const category = document.getElementById('nt-category').value;
   const desc = document.getElementById('nt-desc').value.trim();
   if(!label){ showToast('Give the tab a label', 'error'); return; }
-  const t = { id: uid(), label, icon: icon||'📁', preset, desc, items: [], text: '' };
+  const t = { id: uid(), label, icon: icon||'📁', preset, category, desc, items: [], text: '', demonIds: [] };
   customTabs().push(t);
   await saveSettings();
   logChange(`Created a new "${label}" tab`, true);
@@ -2110,11 +2167,50 @@ async function handleSaveSettings(){
 }
 
 /* ============================= TABS ============================= */
-function switchTab(tab){
+const TAB_ROUTES = {
+  home:'/', list:'/list', upcoming:'/upcoming', timemachine:'/time-machine',
+  roulette:'/roulette', submit:'/submit', profile:'/profile', leaderboard:'/leaderboard',
+  halloffame:'/hall-of-fame', stats:'/stats', chat:'/chat', changelog:'/changelog',
+  faq:'/faq', guidelines:'/guidelines', admin:'/admin'
+};
+function slugify(s){ return (s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || 'tab'; }
+function tabToPath(tab){
+  if(TAB_ROUTES[tab]) return TAB_ROUTES[tab];
+  if(tab && tab.startsWith('custom-')){
+    const t = customTabs().find(x=>('custom-'+x.id)===tab);
+    if(t) return '/tab/'+slugify(t.label);
+  }
+  return '/'+(tab||'');
+}
+function pathToTab(path){
+  const clean = (path||'/').replace(/\/+$/,'') || '/';
+  for(const key in TAB_ROUTES){ if(TAB_ROUTES[key]===clean) return key; }
+  if(clean.startsWith('/tab/')){
+    const slug = clean.slice(5);
+    const t = customTabs().find(x=>slugify(x.label)===slug);
+    if(t) return 'custom-'+t.id;
+  }
+  return null;
+}
+function tabShareButton(tab){
+  return `<button class="tab-link-copy" onclick="event.stopPropagation();copyTabLink('${tab}')" title="Copy link to this page">🔗 Copy Link</button>`;
+}
+function copyTabLink(tab){
+  const url = location.origin + tabToPath(tab);
+  copyToClipboard(url, 'Link copied!');
+}
+function switchTab(tab, skipPush){
   APP.activeTab = tab;
   rememberTab(tab);
   if(tab !== 'list' && location.hash.startsWith('#demon-')){
     history.replaceState(null, '', location.pathname + location.search);
+  }
+  if(!skipPush){
+    const path = tabToPath(tab);
+    const keepHash = (tab==='list' && location.hash.startsWith('#demon-')) ? location.hash : '';
+    if(location.pathname !== path || keepHash !== location.hash){
+      history.pushState({tab}, '', path + keepHash);
+    }
   }
   document.querySelectorAll('nav.side-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.bottom-nav button[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
@@ -2124,7 +2220,21 @@ function switchTab(tab){
   if(tab === 'chat') startChatPolling(); else stopChatPolling();
   if(window.matchMedia && window.matchMedia('(max-width:880px)').matches) setSidebarCollapsed(true);
   window.scrollTo(0,0);
+  updateDocumentTitle(tab);
   renderAll();
+}
+const TAB_TITLES = {
+  home:'Home', list:'Demon List', upcoming:'Upcoming', timemachine:'Time Machine', roulette:'Roulette',
+  submit:'Submit Play', profile:'My Profile', leaderboard:'Leaderboard', halloffame:'Hall of Fame',
+  stats:'Stats', chat:'Chat', changelog:'Changelog', faq:'FAQ', guidelines:'Guidelines', admin:'Admin'
+};
+function updateDocumentTitle(tab){
+  let label = TAB_TITLES[tab];
+  if(!label && tab && tab.startsWith('custom-')){
+    const t = customTabs().find(x=>('custom-'+x.id)===tab);
+    if(t) label = t.label;
+  }
+  document.title = label ? `${label} · ${APP.settings.siteName}` : APP.settings.siteName;
 }
 document.getElementById('tabs').addEventListener('click', e=>{
   const btn = e.target.closest('button[data-tab]');
@@ -2232,12 +2342,15 @@ function renderHomeTab(){
   `).join('');
 
   el.innerHTML = `
-    <div class="home-hero">
-      <div class="page-head">
-        <h1 class="page-title site-name-text">${escapeHtml(APP.settings.siteName)}</h1>
-        <p class="page-desc site-tagline-text">${escapeHtml(APP.settings.siteTagline)}</p>
+    <div class="page-head home-hero">
+      <div class="page-head-row">
+        <div>
+          <h1 class="page-title site-name-text">${escapeHtml(APP.settings.siteName)}</h1>
+          <p class="page-desc site-tagline-text">${escapeHtml(APP.settings.siteTagline)}</p>
+        </div>
+        ${tabShareButton('home')}
       </div>
-      <div class="stat-cards" style="margin-top:4px;">
+      <div class="stat-cards" style="margin-top:14px;">
         <div class="stat-card"><div class="sc-val">${demons.length}</div><div class="sc-lbl">Demons</div></div>
         <div class="stat-card"><div class="sc-val">${APP.players.length}</div><div class="sc-lbl">Players</div></div>
         <div class="stat-card"><div class="sc-val">${totalPoints}</div><div class="sc-lbl">Points Available</div></div>
@@ -4344,21 +4457,33 @@ async function init(){
   restoreSession();
   loadRouletteLocal();
 
+  const pathTab = pathToTab(location.pathname);
+  if(pathTab) APP.activeTab = pathTab;
   applyHashRoute();
-  if(!location.hash){
+  if(!location.hash && !pathTab){
     const lastTab = recallTab();
     if(lastTab && document.getElementById('panel-'+lastTab)) APP.activeTab = lastTab;
   }
+  history.replaceState({tab:APP.activeTab}, '', tabToPath(APP.activeTab) + (location.hash.startsWith('#demon-') ? location.hash : ''));
   document.querySelectorAll('nav.side-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===APP.activeTab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+APP.activeTab));
 
   renderAccountArea();
   renderAll();
+  updateDocumentTitle(APP.activeTab);
 
   const loader = document.getElementById('initLoader');
   if(loader) loader.classList.add('hidden');
 }
-window.addEventListener('hashchange', () => { applyHashRoute(); renderAll(); document.querySelectorAll('nav.side-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===APP.activeTab)); document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+APP.activeTab)); });
+window.addEventListener('popstate', () => {
+  const pathTab = pathToTab(location.pathname);
+  applyHashRoute();
+  if(pathTab) APP.activeTab = pathTab;
+  renderAll();
+  updateDocumentTitle(APP.activeTab);
+  document.querySelectorAll('nav.side-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===APP.activeTab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+APP.activeTab));
+});
 init();
 </script>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
