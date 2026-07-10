@@ -446,6 +446,9 @@ body.light-theme .tag-pill.new{color:var(--spike);}
 .demon-row{transition:background .15s ease, transform .15s ease;}
 .demon-row:hover{transform:translateX(2px);}
 .rank-badge.top{animation:rankPulse 2.6s ease-in-out infinite;}
+.rank-badge{transition:transform .15s ease;}
+.rank-badge.pop{animation:badgePop .35s ease;}
+@keyframes badgePop{0%{transform:scale(1);}45%{transform:scale(1.3);}100%{transform:scale(1);}}
 .stat-card{transition:transform .15s ease, border-color .15s ease;}
 .stat-card:hover{transform:translateY(-2px);border-color:var(--text-dim);}
 .btn{transition:transform .1s ease, background .1s ease, border-color .1s ease;}
@@ -460,9 +463,98 @@ nav.tabs button.active{transition:background .15s ease;}
   .tab-panel.active,.demon-row,.upcoming-card,.rank-badge.top,.modal-backdrop,.modal,.toast,.lb-table tr{animation:none !important;}
   .demon-row:hover,.stat-card:hover,.upcoming-card:hover{transform:none;}
 }
+
+/* ---------- theme transition ---------- */
+body,.topbar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
+  transition:background-color .25s ease, border-color .25s ease, color .25s ease;
+}
+
+/* ---------- QOL: init loader ---------- */
+#initLoader{
+  position:fixed;inset:0;z-index:500;background:var(--bg-void);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  transition:opacity .3s ease, visibility .3s ease;
+}
+#initLoader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.loader-mark{width:22px;height:22px;background:var(--spike);border-radius:4px;animation:loaderPulse 1s ease-in-out infinite;}
+@keyframes loaderPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(0.75);opacity:0.6;}}
+.loader-skeleton{width:280px;display:flex;flex-direction:column;gap:8px;}
+.skel-row{height:14px;border-radius:3px;background:linear-gradient(90deg,var(--bg-raised) 25%,var(--bg-raised-2) 37%,var(--bg-raised) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;}
+@keyframes shimmer{0%{background-position:100% 0;}100%{background-position:0 0;}}
+
+/* ---------- QOL: scroll to top ---------- */
+#scrollTopBtn{
+  position:fixed;right:18px;bottom:18px;z-index:60;
+  width:36px;height:36px;border-radius:50%;
+  background:var(--bg-raised-2);border:1px solid var(--line);color:var(--text-muted);
+  display:flex;align-items:center;justify-content:center;font-size:15px;
+  opacity:0;visibility:hidden;transform:translateY(8px);
+  transition:opacity .2s ease, transform .2s ease, visibility .2s ease, background .15s ease, color .15s ease;
+  box-shadow:0 4px 14px rgba(0,0,0,0.3);
+}
+#scrollTopBtn.show{opacity:1;visibility:visible;transform:translateY(0);}
+#scrollTopBtn:hover{color:var(--text);background:var(--bg-raised);border-color:var(--spike);}
+
+/* ---------- QOL: topbar scroll shadow ---------- */
+.topbar{transition:box-shadow .2s ease;}
+.topbar.scrolled{box-shadow:0 4px 14px rgba(0,0,0,0.35);}
+
+/* ---------- QOL: favorite star ---------- */
+.fav-star{
+  background:none;border:none;font-size:14px;line-height:1;flex:none;
+  color:var(--text-dim);padding:2px;transition:transform .15s ease, color .15s ease;
+}
+.fav-star:hover{color:var(--gold);}
+.fav-star.active{color:var(--gold);}
+.fav-star.pop{animation:starPop .35s ease;}
+@keyframes starPop{0%{transform:scale(1);}40%{transform:scale(1.5);}100%{transform:scale(1);}}
+.demon-row.favorited{border-left:3px solid var(--gold);padding-left:9px;}
+
+/* ---------- QOL: personal progress ---------- */
+.progress-bar-wrap{background:var(--bg-raised);border:1px solid var(--line);border-radius:20px;height:8px;overflow:hidden;margin-top:6px;}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--spike),var(--spike-hover));border-radius:20px;width:0;transition:width .6s cubic-bezier(.22,1,.36,1);}
+.complete-check{
+  background:none;border:1px solid var(--line);color:var(--text-muted);border-radius:var(--radius);
+  padding:6px 12px;font-size:12.5px;font-weight:600;transition:all .15s ease;
+}
+.complete-check.done{background:rgba(74,222,128,0.1);border-color:var(--green);color:var(--green);}
+.complete-check.done:active{animation:starPop .3s ease;}
+
+/* ---------- QOL: leaderboard top3 shine ---------- */
+.lb-rank.r1,.lb-rank.r2,.lb-rank.r3{position:relative;}
+.lb-table tr:hover .lb-rank.r1,.lb-table tr:hover .lb-rank.r2,.lb-table tr:hover .lb-rank.r3{
+  text-shadow:0 0 8px currentColor;
+}
+
+/* ---------- QOL: roulette spin + feedback animation ---------- */
+@keyframes spinKick{0%{transform:rotate(0deg) scale(1);}50%{transform:rotate(180deg) scale(0.92);}100%{transform:rotate(360deg) scale(1);}}
+.btn.spinning{animation:spinKick .5s ease;}
+@keyframes feedbackPop{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
+.roulette-feedback.pass,.roulette-feedback.fail{animation:feedbackPop .25s ease both;}
+.roulette-target{transition:color .15s ease;}
+.roulette-streak-row{display:flex;gap:10px;justify-content:center;margin-top:10px;font-size:11.5px;color:var(--text-dim);}
+.roulette-streak-row b{color:var(--text);font-family:'JetBrains Mono',monospace;}
+
+/* ---------- QOL: copy feedback ---------- */
+.icon-btn.copied{color:var(--green);border-color:var(--green);}
+
+/* ---------- QOL: tag chip press ---------- */
+.tag-chip,.status-filter-btn{transition:transform .1s ease, background .12s ease, border-color .12s ease;}
+.tag-chip:active,.status-filter-btn:active{transform:scale(.94);}
 </style>
 </head>
 <body>
+
+<div id="initLoader">
+  <div class="loader-mark"></div>
+  <div class="loader-skeleton">
+    <div class="skel-row" style="width:60%;"></div>
+    <div class="skel-row" style="width:100%;"></div>
+    <div class="skel-row" style="width:85%;"></div>
+  </div>
+</div>
+
+<button id="scrollTopBtn" title="Back to top" onclick="scrollToTop()">&#8593;</button>
 
 <div class="topbar">
   <div class="topbar-inner">
@@ -519,7 +611,7 @@ const APP = {
   currentUser: null,
   activeTab: 'list',
   selectedDemonId: null,
-  roulette: { required: 1, current: null, usedIds: [], history: [], done:false },
+  roulette: { required: 1, current: null, usedIds: [], history: [], done:false, streak:0, bestStreak:0 },
   settings: {
     siteName: "Double Entendre",
     siteTagline: "The hardest levels, ranked by difficulty.",
@@ -527,8 +619,8 @@ const APP = {
     themeMode: "dark", // "dark" or "light"
     mainListSize: 50 // demons ranked beyond this fall into the Legacy List
   },
-  listFilter: { search: '', tags: [], sort: 'rank', section: 'main' }, // section: main | legacy | all
-  upcomingFilter: { search: '' },
+  listFilter: { search: '', tags: [], sort: 'rank', section: 'main', favoritesOnly: false }, // section: main | legacy | all
+  upcomingFilter: { search: '', tags: [] },
   lbFilter: { search: '', sort: 'points', view: 'players' }, // view: players | nations | records
   subFilter: { status: 'all', search: '' }
 };
@@ -725,16 +817,17 @@ function animateCounters(container){
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   nodes.forEach(el => {
     const target = parseInt(el.dataset.count, 10);
+    const suffix = el.dataset.suffix || '';
     if(isNaN(target)){ return; }
-    if(reduce || target === 0){ el.textContent = target; return; }
+    if(reduce || target === 0){ el.textContent = target + suffix; return; }
     const dur = 500;
     const start = performance.now();
     function step(now){
       const p = Math.min(1, (now - start) / dur);
       const eased = 1 - Math.pow(1 - p, 3);
-      el.textContent = Math.round(target * eased);
+      el.textContent = Math.round(target * eased) + suffix;
       if(p < 1) requestAnimationFrame(step);
-      else el.textContent = target;
+      else el.textContent = target + suffix;
     }
     requestAnimationFrame(step);
   });
@@ -777,9 +870,44 @@ async function copyToClipboard(text, successMsg='Copied to clipboard'){
     showToast('Could not copy — copy manually: ' + text, 'error');
   }
 }
-function copyDemonLink(id){
+function copyDemonLink(id, btn){
   const url = location.origin + location.pathname + '#demon-' + id;
   copyToClipboard(url, 'Link copied!');
+  if(btn){
+    const original = btn.innerHTML;
+    btn.innerHTML = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.innerHTML = original; btn.classList.remove('copied'); }, 1400);
+  }
+}
+
+/* ============================= QOL: FAVORITES (local, per-browser) ============================= */
+function getFavorites(){
+  try{ return new Set(JSON.parse(localStorage.getItem('demonlist_favorites')||'[]')); }catch(e){ return new Set(); }
+}
+function isFavorite(id){ return getFavorites().has(id); }
+function toggleFavorite(id, btn){
+  const favs = getFavorites();
+  if(favs.has(id)) favs.delete(id); else favs.add(id);
+  try{ localStorage.setItem('demonlist_favorites', JSON.stringify(Array.from(favs))); }catch(e){}
+  if(btn){
+    btn.classList.toggle('active', favs.has(id));
+    btn.textContent = favs.has(id) ? '★' : '☆';
+    btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
+  }
+  if(APP.listFilter.favoritesOnly) renderListTab();
+}
+
+/* ============================= QOL: PERSONAL PROGRESS (local, per-browser) ============================= */
+function getCompleted(){
+  try{ return new Set(JSON.parse(localStorage.getItem('demonlist_completed')||'[]')); }catch(e){ return new Set(); }
+}
+function isCompleted(id){ return getCompleted().has(id); }
+function toggleCompleted(id){
+  const done = getCompleted();
+  if(done.has(id)) done.delete(id); else done.add(id);
+  try{ localStorage.setItem('demonlist_completed', JSON.stringify(Array.from(done))); }catch(e){}
+  renderListTab();
 }
 
 /* ============================= QOL: DEEP LINKING ============================= */
@@ -797,6 +925,16 @@ function applyHashRoute(){
 /* ============================= QOL: TAB MEMORY ============================= */
 function rememberTab(tab){ try{ localStorage.setItem('demonlist_last_tab', tab); }catch(e){} }
 function recallTab(){ try{ return localStorage.getItem('demonlist_last_tab'); }catch(e){ return null; } }
+
+/* ============================= QOL: SCROLL TO TOP + TOPBAR SHADOW ============================= */
+function scrollToTop(){ window.scrollTo({ top:0, behavior: (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth' }); }
+window.addEventListener('scroll', () => {
+  const y = window.scrollY || document.documentElement.scrollTop;
+  const topbar = document.querySelector('.topbar');
+  if(topbar) topbar.classList.toggle('scrolled', y > 4);
+  const btn = document.getElementById('scrollTopBtn');
+  if(btn) btn.classList.toggle('show', y > 400);
+}, { passive: true });
 
 /* ============================= QOL: LIST KEYBOARD NAVIGATION ============================= */
 function moveListSelection(dir){
@@ -923,6 +1061,11 @@ document.addEventListener('keydown', e => {
   if(!typing && APP.activeTab === 'list' && (e.key === 'ArrowDown' || e.key === 'ArrowUp')){
     e.preventDefault();
     moveListSelection(e.key === 'ArrowDown' ? 1 : -1);
+  }
+  if(!typing && !e.ctrlKey && !e.metaKey && !e.altKey && '123456'.includes(e.key)){
+    const order = ['list','upcoming','roulette','leaderboard','submit','stats'];
+    const tab = order[parseInt(e.key,10)-1];
+    if(tab && document.getElementById('panel-'+tab)){ e.preventDefault(); switchTab(tab); }
   }
 });
 
@@ -1112,12 +1255,16 @@ function allDemonTags(){
 }
 function getFilteredSortedDemons(){
   const demons = APP.demons;
-  const { search, tags, sort, section } = APP.listFilter;
+  const { search, tags, sort, section, favoritesOnly } = APP.listFilter;
   const mainSize = APP.settings.mainListSize || 50;
   const q = search.trim().toLowerCase();
   let list = demons.map((d,i) => ({ d, rank: i }));
   if(section === 'main') list = list.filter(({rank}) => rank < mainSize);
   else if(section === 'legacy') list = list.filter(({rank}) => rank >= mainSize);
+  if(favoritesOnly){
+    const favs = getFavorites();
+    list = list.filter(({d}) => favs.has(d.id));
+  }
   if(q){
     list = list.filter(({d}) =>
       d.name.toLowerCase().includes(q) ||
@@ -1140,10 +1287,23 @@ function getFilteredSortedDemons(){
 function setListSearch(v){ APP.listFilter.search = v; renderListTab(true); }
 function setListSort(v){ APP.listFilter.sort = v; renderListTab(); }
 function setListSection(v){ APP.listFilter.section = v; renderListTab(); }
+function toggleFavoritesOnly(){ APP.listFilter.favoritesOnly = !APP.listFilter.favoritesOnly; renderListTab(); }
 function toggleListTagFilter(t){
   const i = APP.listFilter.tags.indexOf(t);
   if(i===-1) APP.listFilter.tags.push(t); else APP.listFilter.tags.splice(i,1);
   renderListTab();
+}
+function exportDemonListCsv(){
+  const demons = APP.demons;
+  if(!demons.length){ showToast('No demons to export', 'error'); return; }
+  const header = 'Rank,Name,Creator,Verifier,Country,Points,Requirement\n';
+  const rows = demons.map((d,i) => `${i+1},"${(d.name||'').replace(/"/g,'""')}","${(d.creator||'').replace(/"/g,'""')}","${(d.verifier||'').replace(/"/g,'""')}",${countryName(d.country)},${d.points},${d.requirement||100}`).join('\n');
+  const blob = new Blob([header+rows], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'demon-list.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported');
 }
 function renderListTab(preserveFocus){
   const el = document.getElementById('panel-list');
@@ -1156,12 +1316,20 @@ function renderListTab(preserveFocus){
   const hardest = demons[0];
   const mainSize = APP.settings.mainListSize || 50;
   const hasLegacy = demons.length > mainSize;
+  const mainListDemons = demons.slice(0, mainSize);
+  const completed = getCompleted();
+  const completedCount = mainListDemons.filter(d => completed.has(d.id)).length;
+  const progressPct = mainListDemons.length ? Math.round((completedCount / mainListDemons.length) * 100) : 0;
   const statCards = demons.length ? `
     <div class="stat-cards">
       <div class="stat-card"><div class="sc-val" data-count="${Math.min(demons.length,mainSize)}">0</div><div class="sc-lbl">Main List</div></div>
       <div class="stat-card"><div class="sc-val" data-count="${totalPoints}">0</div><div class="sc-lbl">Total Points</div></div>
       <div class="stat-card"><div class="sc-val" data-count="${APP.players.length}">0</div><div class="sc-lbl">Players</div></div>
       <div class="stat-card"><div class="sc-val" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${hardest?escapeHtml(hardest.name):'—'}</div><div class="sc-lbl">#1 Hardest</div></div>
+      <div class="stat-card" style="grid-column:span 2;min-width:180px;">
+        <div class="sc-val" data-count="${progressPct}" data-suffix="%">0</div><div class="sc-lbl">Your Progress (${completedCount}/${mainListDemons.length})</div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="personalProgressFill" style="width:0%;"></div></div>
+      </div>
     </div>` : '';
 
   const tags = allDemonTags();
@@ -1192,6 +1360,7 @@ function renderListTab(preserveFocus){
           <option value="az" ${APP.listFilter.sort==='az'?'selected':''}>Name: A-Z</option>
           <option value="newest" ${APP.listFilter.sort==='newest'?'selected':''}>Newest Added</option>
         </select>
+        <button class="btn small ${APP.listFilter.favoritesOnly?'primary':'ghost'}" onclick="toggleFavoritesOnly()" title="Show only your favorited levels">★ Favorites</button>
       </div>
       ${tagChips}
     </div>
@@ -1205,11 +1374,14 @@ function renderListTab(preserveFocus){
     const tagsHtml = (d.tags || []).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('');
     const isNew = d.addedAt && (now - d.addedAt) < WEEK;
     const delay = Math.min(idx, 12) * 18;
+    const fav = isFavorite(d.id);
+    const done = isCompleted(d.id);
     const rowHtml = `
-    <div class="demon-row ${d.id===APP.selectedDemonId?'selected':''}" style="animation-delay:${delay}ms" onclick="selectDemon('${d.id}')">
+    <div class="demon-row ${d.id===APP.selectedDemonId?'selected':''} ${fav?'favorited':''}" style="animation-delay:${delay}ms" onclick="selectDemon('${d.id}')">
+      <button class="fav-star ${fav?'active':''}" onclick="event.stopPropagation();toggleFavorite('${d.id}', this)" title="${fav?'Remove from favorites':'Add to favorites'}">${fav?'★':'☆'}</button>
       <div class="rank-badge ${i<3?'top':''}">${i+1}</div>
       <div class="info">
-        <div class="name">${escapeHtml(d.name)}</div>
+        <div class="name">${escapeHtml(d.name)}${done?' ✓':''}</div>
         <div class="creator">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}</div>
         ${tagsHtml || isNew ? `<div class="tag-container">${isNew ? `<span class="tag-pill new">New</span>` : ''}${tagsHtml}</div>` : ''}
       </div>
@@ -1240,7 +1412,10 @@ function renderListTab(preserveFocus){
       <div class="panel">
         <div class="panel-head">
           <h3>Levels <span class="kbd-hint">/</span></h3>
-          ${isMod() ? `<button class="btn small primary" onclick="openDemonModal()">+ Add Demon</button>` : ''}
+          <div style="display:flex;gap:6px;">
+            ${demons.length ? `<button class="btn small ghost" onclick="exportDemonListCsv()">Export CSV</button>` : ''}
+            ${isMod() ? `<button class="btn small primary" onclick="openDemonModal()">+ Add Demon</button>` : ''}
+          </div>
         </div>
         ${demons.length ? toolbar : ''}
         <div class="demon-rows">${rows}</div>
@@ -1253,29 +1428,39 @@ function renderListTab(preserveFocus){
     if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
   }
   animateCounters(el);
+  const fill = document.getElementById('personalProgressFill');
+  if(fill) requestAnimationFrame(() => { fill.style.width = progressPct + '%'; });
 }
 function selectDemon(id){
   APP.selectedDemonId = id;
   history.replaceState(null, '', location.pathname + location.search + '#demon-' + id);
   renderListTab();
+  const badge = document.querySelector('.demon-row.selected .rank-badge');
+  if(badge){ badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop'); }
 }
 function renderDemonDetail(d, index){
   const embed = getEmbedUrl(d.video);
   const tagHtml = (d.tags || []).map(t => `<span class="tag-pill" style="font-size:11px; padding:2px 6px;">${escapeHtml(t)}</span>`).join(' ');
+  const fav = isFavorite(d.id);
+  const done = isCompleted(d.id);
   
   return `
     <div class="detail-top">
       <div>
-        <div class="detail-title">${escapeHtml(d.name)}</div>
+        <div class="detail-title">${fav?'★ ':''}${escapeHtml(d.name)}</div>
         <div class="detail-sub">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
         ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
       </div>
       <div>
-        <button class="icon-btn" onclick="copyDemonLink('${d.id}')" title="Copy shareable link">🔗 Copy Link</button>
+        <button class="icon-btn" onclick="copyDemonLink('${d.id}', this)" title="Copy shareable link">🔗 Copy Link</button>
         ${isMod() ? `
         <button class="btn small" onclick="openDemonModal('${d.id}')">Edit</button>
         <button class="btn small danger" onclick="deleteDemon('${d.id}')">Delete</button>` : ''}
       </div>
+    </div>
+    <div class="detail-actions" style="margin-top:0;margin-bottom:12px;">
+      <button class="btn small ${fav?'primary':''}" onclick="toggleFavorite('${d.id}', null); renderListTab();">${fav?'★ Favorited':'☆ Favorite'}</button>
+      <button class="complete-check ${done?'done':''}" onclick="toggleCompleted('${d.id}')">${done?'✓ Completed':'Mark as Completed'}</button>
     </div>
     <div class="stat-row">
       <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Placement</div></div>
@@ -1408,8 +1593,19 @@ async function moveDemon(id, dir){
 
 /* ============================= UPCOMING LEVELS TAB ============================= */
 function setUpcomingSearch(v){ APP.upcomingFilter.search = v; renderUpcomingTab(true); }
+function allUpcomingTags(){
+  const set = new Set();
+  APP.upcoming.forEach(u => (u.tags||[]).forEach(t => set.add(t)));
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+function toggleUpcomingTagFilter(t){
+  const i = APP.upcomingFilter.tags.indexOf(t);
+  if(i===-1) APP.upcomingFilter.tags.push(t); else APP.upcomingFilter.tags.splice(i,1);
+  renderUpcomingTab();
+}
 function getFilteredUpcoming(){
   const q = APP.upcomingFilter.search.trim().toLowerCase();
+  const tags = APP.upcomingFilter.tags;
   let list = APP.upcoming.map((u,i) => ({ u, rank: i }));
   if(q){
     list = list.filter(({u}) =>
@@ -1418,12 +1614,32 @@ function getFilteredUpcoming(){
       (u.verifier||'').toLowerCase().includes(q)
     );
   }
+  if(tags.length){
+    list = list.filter(({u}) => tags.every(t => (u.tags||[]).includes(t)));
+  }
   return list;
+}
+function exportUpcomingCsv(){
+  if(!APP.upcoming.length){ showToast('No upcoming levels to export', 'error'); return; }
+  const header = 'Queue Position,Name,Creator,Verifier,Country\n';
+  const rows = APP.upcoming.map((u,i) => `${i+1},"${(u.name||'').replace(/"/g,'""')}","${(u.creator||'').replace(/"/g,'""')}","${(u.verifier||'').replace(/"/g,'""')}",${countryName(u.country)}`).join('\n');
+  const blob = new Blob([header+rows], { type:'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'upcoming-levels.csv'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported');
 }
 function renderUpcomingTab(preserveFocus){
   const el = document.getElementById('panel-upcoming');
   if(!el) return;
   const filtered = getFilteredUpcoming();
+
+  const upTags = allUpcomingTags();
+  const upTagChips = upTags.length ? `
+    <div class="tag-filter-row">
+      ${upTags.map(t => `<button class="tag-chip ${APP.upcomingFilter.tags.includes(t)?'active':''}" onclick="toggleUpcomingTagFilter('${escapeHtml(t).replace(/'/g,"\\'")}')">${escapeHtml(t)}</button>`).join('')}
+    </div>` : '';
 
   const toolbar = APP.upcoming.length ? `
     <div class="list-toolbar">
@@ -1432,7 +1648,9 @@ function renderUpcomingTab(preserveFocus){
           <span class="si-icon">⌕</span>
           <input id="upcoming-search" placeholder="Search upcoming levels..." value="${escapeHtml(APP.upcomingFilter.search)}" oninput="setUpcomingSearch(this.value)">
         </div>
+        <button class="btn small ghost" onclick="exportUpcomingCsv()">Export CSV</button>
       </div>
+      ${upTagChips}
     </div>
     ${filtered.length !== APP.upcoming.length ? `<div class="result-count">${filtered.length} of ${APP.upcoming.length} levels match</div>` : ''}
   ` : '';
@@ -1585,7 +1803,7 @@ function renderRouletteTab(){
       <div class="roulette-req">Next requirement: ${rl.required}%</div>
       <div class="roulette-demon">—</div>
       <div class="roulette-creator">Spin to get a random level</div>
-      <button class="btn primary" style="padding:8px 20px;" onclick="spinRoulette()">Spin</button>
+      <button class="btn primary" style="padding:8px 20px;" id="rl-spin-btn" onclick="spinRoulette(this)">Spin</button>
     `;
   }else{
     cardInner = `
@@ -1613,7 +1831,10 @@ function renderRouletteTab(){
       <p class="page-desc">Get a random demon. Clear the required percent and the next one gets harder — whatever you enter becomes (entered % + 1) for the next level. Fall short and it resets to 1%.</p>
     </div>
     <div class="roulette-wrap">
-      <div class="roulette-card">${cardInner}</div>
+      <div class="roulette-card">
+        ${cardInner}
+        <div class="roulette-streak-row"><span>Streak: <b>${rl.streak||0}</b></span><span>Best: <b>${rl.bestStreak||0}</b></span></div>
+      </div>
       ${rl.history.length ? `<div class="panel roulette-history"><div class="panel-head"><h3>Run History</h3><button class="btn small ghost" onclick="resetRoulette()">Reset Run</button></div><div>${history}</div></div>` : ''}
     </div>
   `;
@@ -1626,11 +1847,11 @@ function loadRouletteLocal(){
     const raw = localStorage.getItem('demonlist_roulette');
     if(raw){
       const parsed = JSON.parse(raw);
-      if(parsed && typeof parsed === 'object') APP.roulette = Object.assign({ required:1, current:null, usedIds:[], history:[], done:false }, parsed);
+      if(parsed && typeof parsed === 'object') APP.roulette = Object.assign({ required:1, current:null, usedIds:[], history:[], done:false, streak:0, bestStreak:0 }, parsed);
     }
   }catch(e){}
 }
-function spinRoulette(){
+function spinRoulette(btn){
   const rl = APP.roulette;
   let pool = APP.demons.filter(d => !rl.usedIds.includes(d.id));
   if(pool.length===0){ rl.usedIds = []; pool = APP.demons; }
@@ -1638,7 +1859,8 @@ function spinRoulette(){
   rl.current = pick;
   rl.usedIds.push(pick.id);
   saveRouletteLocal();
-  renderRouletteTab();
+  if(btn) btn.classList.add('spinning');
+  setTimeout(renderRouletteTab, btn ? 220 : 0);
 }
 function submitRoulettePercent(){
   const input = document.getElementById('rl-percent');
@@ -1652,6 +1874,8 @@ function submitRoulettePercent(){
   rl.history.push({ name: rl.current.name, required, achieved: val, result: pass ? 'pass':'fail' });
 
   if(pass){
+    rl.streak = (rl.streak||0) + 1;
+    rl.bestStreak = Math.max(rl.bestStreak||0, rl.streak);
     if(val >= 100){
       fb.textContent = 'Roulette cleared! Starting a new run at 1%.';
       fb.className = 'roulette-feedback pass';
@@ -1663,6 +1887,7 @@ function submitRoulettePercent(){
     }
     rl.current = null;
   }else{
+    rl.streak = 0;
     fb.textContent = `Short of ${required}% — run reset to 1%.`;
     fb.className = 'roulette-feedback fail';
     rl.required = 1;
@@ -1672,7 +1897,7 @@ function submitRoulettePercent(){
   setTimeout(renderRouletteTab, pass ? 300 : 900);
 }
 function resetRoulette(){
-  APP.roulette = { required: 1, current: null, usedIds: [], history: [], done:false };
+  APP.roulette = { required: 1, current: null, usedIds: [], history: [], done:false, streak:0, bestStreak: APP.roulette.bestStreak||0 };
   saveRouletteLocal();
   renderRouletteTab();
 }
@@ -2144,6 +2369,9 @@ async function init(){
 
   renderAccountArea();
   renderAll();
+
+  const loader = document.getElementById('initLoader');
+  if(loader) loader.classList.add('hidden');
 }
 window.addEventListener('hashchange', () => { applyHashRoute(); renderAll(); document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===APP.activeTab)); document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+APP.activeTab)); });
 init();
