@@ -600,6 +600,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 .lvl-badge.buffed{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,.25);}
 .lvl-badge.nerfed{background:rgba(255,84,112,0.1);color:var(--red);border:1px solid rgba(255,84,112,.25);}
 .lvl-badge.featured{background:rgba(255,184,69,0.12);color:var(--gold);border:1px solid rgba(255,184,69,.3);}
+.lvl-badge.trending{background:rgba(249,115,22,0.12);color:#f97316;border:1px solid rgba(249,115,22,.3);}
 
 /* ---------- QOL: featured banner ---------- */
 .featured-banner{
@@ -649,6 +650,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
   </div>
   <nav class="side-tabs" id="tabs">
     <div class="side-nav-label">List</div>
+    <button data-tab="home"><span class="si">🏠</span>Home</button>
     <button data-tab="list" class="active"><span class="si">📜</span>Demon List</button>
     <button data-tab="upcoming"><span class="si">🕓</span>Upcoming<span id="upcomingBadgeSlot"></span></button>
     <button data-tab="timemachine"><span class="si">🕰️</span>Time Machine</button>
@@ -664,6 +666,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
     <div class="side-nav-label">Info</div>
     <button data-tab="faq"><span class="si">❓</span>FAQ</button>
     <button data-tab="guidelines"><span class="si">📋</span>Guidelines</button>
+    <button data-tab="admin" id="adminNavBtn" style="display:none;"><span class="si">🛠️</span>Admin</button>
   </nav>
   <div class="sidebar-foot">
     <div class="sidebar-quickrow">
@@ -681,6 +684,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 
 <main>
   <div id="announcementSlot"></div>
+  <div class="tab-panel" id="panel-home"></div>
   <div class="tab-panel active" id="panel-list"></div>
   <div class="tab-panel" id="panel-upcoming"></div>
   <div class="tab-panel" id="panel-timemachine"></div>
@@ -693,6 +697,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
   <div class="tab-panel" id="panel-changelog"></div>
   <div class="tab-panel" id="panel-faq"></div>
   <div class="tab-panel" id="panel-guidelines"></div>
+  <div class="tab-panel" id="panel-admin"></div>
 </main>
 
 <div class="footer-note">Lightweight client-side data architecture. Verified ecosystem engine. Admin access strictly curated.</div>
@@ -741,9 +746,9 @@ const APP = {
     discordUrl: "",
     featuredDemonId: null
   },
-  listFilter: { search: '', tags: [], sort: 'rank', section: 'main', favoritesOnly: false }, // section: main | extended | legacy | all
+  listFilter: { search: '', tags: [], sort: 'rank', section: 'main', favoritesOnly: false, creator: '', verifier: '' }, // section: main | extended | legacy | all
   upcomingFilter: { search: '', tags: [] },
-  lbFilter: { search: '', sort: 'points', view: 'players' }, // view: players | nations | records
+  lbFilter: { search: '', sort: 'points', view: 'players', period: 'month' }, // view: players | nations | records | period
   subFilter: { status: 'all', search: '' }
 };
 
@@ -1096,6 +1101,7 @@ function openEditStaticPage(field, label){
 async function saveStaticPage(field){
   APP.settings[field] = document.getElementById('static-page-content').value;
   await saveSettings();
+  logChange(`${field==='faqContent'?'FAQ':'Guidelines'} page was updated`, true);
   closeModal();
   renderAll();
   showToast('Saved');
@@ -1169,7 +1175,9 @@ async function registerAccount(username, password){
   const newUser = {
     username: cleanUser,
     password: btoa(password), 
-    role: 'user'
+    role: 'user',
+    createdAt: Date.now(),
+    banned: false
   };
 
   APP.registeredUsers.push(newUser);
@@ -1196,8 +1204,95 @@ function logout(){
   localStorage.removeItem('demonlist_session');
   renderAccountArea(); renderAll();
 }
+async function toggleBanUser(username){
+  if(!isAdmin()) return;
+  const u = APP.registeredUsers.find(x=>x.username.toLowerCase()===username.toLowerCase());
+  if(!u) return;
+  u.banned = !u.banned;
+  await saveUsers();
+  logChange(`${u.username} was ${u.banned?'banned':'unbanned'}`, true);
+  renderAdminTab();
+  showToast(u.banned ? `${u.username} banned` : `${u.username} unbanned`);
+}
+async function toggleUserModRole(username){
+  if(!isAdmin()) return;
+  const u = APP.registeredUsers.find(x=>x.username.toLowerCase()===username.toLowerCase());
+  if(!u) return;
+  u.role = u.role === 'admin' ? 'user' : 'admin';
+  await saveUsers();
+  logChange(`${u.username} role changed to ${u.role}`, true);
+  renderAdminTab();
+  showToast(`${u.username} is now ${u.role}`);
+}
 function isMod(){ return APP.currentUser !== null && APP.currentUser.role === 'admin'; }
 function isAdmin(){ return APP.currentUser !== null && APP.currentUser.role === 'admin'; }
+
+/* ============================= ADMIN TAB ============================= */
+let ADMIN_USER_FILTER = '';
+function setAdminUserFilter(v){ ADMIN_USER_FILTER = v; renderAdminTab(); }
+function renderAdminTab(){
+  const el = document.getElementById('panel-admin');
+  if(!el) return;
+  if(!isAdmin()){
+    el.innerHTML = `<div class="empty-state"><div class="big">Admins only</div>Sign in with an admin account to view this page.</div>`;
+    return;
+  }
+
+  const pendingCount = APP.submissions.filter(s=>s.status==='pending').length;
+  const upcomingCount = APP.upcoming.length;
+
+  const q = ADMIN_USER_FILTER.trim().toLowerCase();
+  const users = APP.registeredUsers
+    .filter(u => !q || u.username.toLowerCase().includes(q))
+    .slice().sort((a,b)=>a.username.localeCompare(b.username));
+  const usersHtml = users.length ? users.map(u => `
+    <div class="user-row">
+      <span>${escapeHtml(u.username)}${u.role==='admin'?' <span class="role-tag admin">admin</span>':''}${u.banned?' <span class="status-pill rejected">banned</span>':''}</span>
+      <span style="display:flex;gap:6px;">
+        <button class="btn small ghost" onclick="toggleUserModRole('${escapeHtml(u.username)}')">${u.role==='admin'?'Revoke admin':'Make admin'}</button>
+        <button class="btn small ${u.banned?'':'ghost'}" onclick="toggleBanUser('${escapeHtml(u.username)}')">${u.banned?'Unban':'Ban'}</button>
+      </span>
+    </div>`).join('') : `<div class="completion-item" style="color:var(--text-dim);">No users found.</div>`;
+
+  const modLog = APP.changelog.slice().reverse().filter(c=>c.mod).slice(0,40);
+  const modLogHtml = modLog.length ? modLog.map(c => `
+    <div class="completion-item"><span style="font-size:12.5px;">${escapeHtml(c.text)}</span><span style="color:var(--text-dim);white-space:nowrap;">${new Date(c.ts).toLocaleString()} · ${escapeHtml(c.actor||'system')}</span></div>
+  `).join('') : `<div class="completion-item" style="color:var(--text-dim);">No moderator actions logged yet.</div>`;
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Admin Panel</h1>
+      <p class="page-desc">Manage the list, players, and site from one place.</p>
+    </div>
+    <div class="stat-cards">
+      <div class="stat-card"><div class="sc-val">${APP.demons.length}</div><div class="sc-lbl">Demons</div></div>
+      <div class="stat-card"><div class="sc-val">${APP.players.length}</div><div class="sc-lbl">Players</div></div>
+      <div class="stat-card"><div class="sc-val">${APP.registeredUsers.length}</div><div class="sc-lbl">Registered Users</div></div>
+      <div class="stat-card"><div class="sc-val">${pendingCount}</div><div class="sc-lbl">Pending Submissions</div></div>
+      <div class="stat-card"><div class="sc-val">${upcomingCount}</div><div class="sc-lbl">Upcoming Levels</div></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;">
+      <button class="btn small primary" onclick="openDemonModal()">+ Add Demon</button>
+      <button class="btn small primary" onclick="openPlayerModal()">+ Add Player</button>
+      <button class="btn small primary" onclick="openUpcomingModal()">+ Add Upcoming</button>
+      <button class="btn small ghost" onclick="switchTab('submit')">Review Submissions${pendingCount?` (${pendingCount})`:''}</button>
+      <button class="btn small ghost" onclick="openAdminSettingsModal()">Site Settings</button>
+      <button class="btn small ghost" onclick="openEditStaticPage('faqContent','FAQ')">Edit FAQ</button>
+      <button class="btn small ghost" onclick="openEditStaticPage('guidelinesContent','Guidelines')">Edit Guidelines</button>
+    </div>
+    <div class="list-layout">
+      <div class="panel">
+        <div class="panel-head"><h3>Manage Users</h3></div>
+        <div style="padding:8px 12px;"><input type="text" placeholder="Search users..." value="${escapeHtml(ADMIN_USER_FILTER)}" oninput="setAdminUserFilter(this.value)" style="width:100%;"></div>
+        <div class="sub-list" style="max-height:340px;overflow:auto;">${usersHtml}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Moderation Log</h3></div>
+        <div class="sub-list" style="max-height:340px;overflow:auto;">${modLogHtml}</div>
+      </div>
+    </div>
+  `;
+}
 
 /* ============================= HELPERS ============================= */
 function uid(){ return 'id-'+Date.now()+'-'+Math.random().toString(16).slice(2, 10); }
@@ -1680,6 +1775,7 @@ async function handleSaveSettings(){
 
   await saveSettings();
   applySystemTheme();
+  logChange('Site settings were updated', true);
   closeModal();
   renderAll();
   showToast('Settings saved');
@@ -1707,6 +1803,7 @@ document.getElementById('tabs').addEventListener('click', e=>{
 function renderAll(){
   applySystemTheme();
   renderAnnouncement();
+  renderHomeTab();
   renderListTab();
   renderUpcomingTab();
   renderTimeMachineTab();
@@ -1719,7 +1816,10 @@ function renderAll(){
   renderChangelogTab();
   renderFaqTab();
   renderGuidelinesTab();
+  renderAdminTab();
   updateNavBadges();
+  const adminBtn = document.getElementById('adminNavBtn');
+  if(adminBtn) adminBtn.style.display = isAdmin() ? '' : 'none';
 }
 
 /* ============================= QOL: NAV BADGES ============================= */
@@ -1735,11 +1835,115 @@ function updateNavBadges(){
   }
 }
 
+/* ============================= HOME TAB ============================= */
+function renderHomeTab(){
+  const el = document.getElementById('panel-home');
+  if(!el) return;
+
+  const demons = APP.demons;
+  const totalPoints = demons.reduce((s,d)=>s+(d.points||0),0);
+  const totalEarned = APP.players.reduce((s,p)=>s+(p.points||0),0);
+
+  const featured = APP.settings.featuredDemonId ? demons.find(d=>d.id===APP.settings.featuredDemonId) : null;
+  const featuredHtml = featured ? `
+    <div class="featured-banner" style="height:auto;padding:14px;cursor:pointer;" onclick="switchTab('list');selectDemon('${featured.id}');">
+      ${getThumbnailUrl(featured) ? `<img class="demon-thumb" style="width:64px;height:42px;" src="${escapeHtml(getThumbnailUrl(featured))}" alt="" onerror="this.remove()">` : ''}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;">Featured Level</div>
+        <div style="font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">#${demons.findIndex(d=>d.id===featured.id)+1} ${escapeHtml(featured.name)}</div>
+        <div style="font-size:12px;color:var(--text-dim);">by ${escapeHtml(featured.creator||'Unknown')}</div>
+      </div>
+      <span class="lvl-badge featured">Featured</span>
+    </div>` : '';
+
+  const trendingIds = getTrendingDemonIds();
+  const trendingDemons = demons.filter(d => trendingIds.has(d.id)).slice(0,5);
+  const trendingHtml = trendingDemons.length ? `
+    <div class="panel">
+      <div class="panel-head"><h3>🔥 Trending</h3></div>
+      <div>${trendingDemons.map(d => `
+        <div class="completion-item" style="cursor:pointer;" onclick="switchTab('list');selectDemon('${d.id}');">
+          <span>#${demons.findIndex(x=>x.id===d.id)+1} ${escapeHtml(d.name)}</span>
+          <span style="color:var(--text-dim);">${d.points}pt</span>
+        </div>`).join('')}</div>
+    </div>` : '';
+
+  const recentRecords = getRecentRecords(6);
+  const recentRecordsHtml = recentRecords.length ? recentRecords.map(s => {
+    const demon = demons.find(d=>d.id===s.demonId);
+    return `<div class="completion-item"><span>${flagEmoji(s.country)} ${escapeHtml(s.player)}</span><span style="color:var(--text-dim);">${demon?escapeHtml(demon.name):'Unknown'} · ${s.percent}%</span></div>`;
+  }).join('') : `<div class="completion-item" style="color:var(--text-dim);">No records yet.</div>`;
+
+  const recentChanges = APP.changelog.slice().reverse().filter(c => isMod() || !c.mod).slice(0,6);
+  const recentChangesHtml = recentChanges.length ? recentChanges.map(c => `
+    <div class="completion-item"><span style="font-size:12.5px;">${escapeHtml(c.text)}</span><span style="color:var(--text-dim);white-space:nowrap;">${new Date(c.ts).toLocaleDateString()}</span></div>
+  `).join('') : `<div class="completion-item" style="color:var(--text-dim);">No recent activity.</div>`;
+
+  const quickLinks = [
+    ['list','📜','Demon List'],
+    ['leaderboard','🏆','Leaderboard'],
+    ['submit','🎬','Submit Play'],
+    ['timemachine','🕰️','Time Machine'],
+    ['halloffame','🏛️','Hall of Fame'],
+    ['stats','📊','Stats'],
+  ];
+  const quickLinksHtml = quickLinks.map(([tab,icon,label]) => `
+    <button class="btn small ghost" style="flex:1;min-width:120px;" onclick="switchTab('${tab}')">${icon} ${label}</button>
+  `).join('');
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title site-name-text">${escapeHtml(APP.settings.siteName)}</h1>
+      <p class="page-desc site-tagline-text">${escapeHtml(APP.settings.siteTagline)}</p>
+    </div>
+    ${featuredHtml}
+    <div class="stat-cards" style="margin-top:12px;">
+      <div class="stat-card"><div class="sc-val">${demons.length}</div><div class="sc-lbl">Demons</div></div>
+      <div class="stat-card"><div class="sc-val">${APP.players.length}</div><div class="sc-lbl">Players</div></div>
+      <div class="stat-card"><div class="sc-val">${totalPoints}</div><div class="sc-lbl">Points Available</div></div>
+      <div class="stat-card"><div class="sc-val">${totalEarned}</div><div class="sc-lbl">Points Earned</div></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">${quickLinksHtml}</div>
+    <div class="list-layout" style="margin-top:12px;">
+      ${trendingHtml}
+      <div class="panel">
+        <div class="panel-head"><h3>Recent Records</h3></div>
+        <div>${recentRecordsHtml}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Recent Activity</h3></div>
+        <div>${recentChangesHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
 /* ============================= LIST TAB ============================= */
 function allDemonTags(){
   const set = new Set();
   APP.demons.forEach(d => (d.tags||[]).forEach(t => set.add(t)));
   return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+function allCreators(){
+  const set = new Set();
+  APP.demons.forEach(d => { if(d.creator) set.add(d.creator); });
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+function allVerifiers(){
+  const set = new Set();
+  APP.demons.forEach(d => { if(d.verifier) set.add(d.verifier); });
+  return Array.from(set).sort((a,b)=>a.localeCompare(b));
+}
+function getTrendingDemonIds(){
+  const cutoff = Date.now() - 14*24*60*60*1000;
+  const counts = {};
+  APP.submissions.forEach(s => {
+    if(s.status==='approved' && s.type!=='progress' && s.submittedAt >= cutoff){
+      counts[s.demonId] = (counts[s.demonId]||0) + 1;
+    }
+  });
+  const ranked = Object.entries(counts).filter(([,c])=>c>=2).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  return new Set(ranked.map(([id])=>id));
 }
 function getListStatus(rank){
   const mainSize = APP.settings.mainListSize || 50;
@@ -1750,7 +1954,7 @@ function getListStatus(rank){
 }
 function getFilteredSortedDemons(){
   const demons = APP.demons;
-  const { search, tags, sort, section, favoritesOnly } = APP.listFilter;
+  const { search, tags, sort, section, favoritesOnly, creator, verifier } = APP.listFilter;
   const mainSize = APP.settings.mainListSize || 50;
   const extSize = Math.max(mainSize, APP.settings.extendedListSize || mainSize);
   const q = search.trim().toLowerCase();
@@ -1762,6 +1966,8 @@ function getFilteredSortedDemons(){
     const favs = getFavorites();
     list = list.filter(({d}) => favs.has(d.id));
   }
+  if(creator) list = list.filter(({d}) => d.creator === creator);
+  if(verifier) list = list.filter(({d}) => d.verifier === verifier);
   if(q){
     list = list.filter(({d}) =>
       d.name.toLowerCase().includes(q) ||
@@ -1778,12 +1984,16 @@ function getFilteredSortedDemons(){
   else if(sort === 'points-asc') sorted.sort((a,b)=>a.d.points-b.d.points);
   else if(sort === 'az') sorted.sort((a,b)=>a.d.name.localeCompare(b.d.name));
   else if(sort === 'newest') sorted.sort((a,b)=>(b.d.addedAt||0)-(a.d.addedAt||0));
+  else if(sort === 'creator') sorted.sort((a,b)=>(a.d.creator||'').localeCompare(b.d.creator||''));
+  else if(sort === 'publishdate') sorted.sort((a,b)=>(b.d.publishDate||'').localeCompare(a.d.publishDate||''));
   else sorted.sort((a,b)=>a.rank-b.rank); // rank = default list order
   return sorted;
 }
 function setListSearch(v){ APP.listFilter.search = v; renderListTab(true); }
 function setListSort(v){ APP.listFilter.sort = v; renderListTab(); }
 function setListSection(v){ APP.listFilter.section = v; renderListTab(); }
+function setListCreatorFilter(v){ APP.listFilter.creator = v; renderListTab(); }
+function setListVerifierFilter(v){ APP.listFilter.verifier = v; renderListTab(); }
 function toggleFavoritesOnly(){ APP.listFilter.favoritesOnly = !APP.listFilter.favoritesOnly; renderListTab(); }
 function toggleListTagFilter(t){
   const i = APP.listFilter.tags.indexOf(t);
@@ -1801,6 +2011,50 @@ function exportDemonListCsv(){
   a.href = url; a.download = 'demon-list.csv'; a.click();
   URL.revokeObjectURL(url);
   showToast('CSV exported');
+}
+
+/* ============================= COMPARE LEVELS ============================= */
+function openCompareModal(idA, idB){
+  const a = idA ? APP.demons.find(d=>d.id===idA) : APP.demons[0];
+  const b = idB ? APP.demons.find(d=>d.id===idB) : (APP.demons[1]||APP.demons[0]);
+  const options = sel => APP.demons.map((d,i) => `<option value="${d.id}" ${sel&&sel.id===d.id?'selected':''}>#${i+1} ${escapeHtml(d.name)}</option>`).join('');
+  const rankOf = d => d ? APP.demons.findIndex(x=>x.id===d.id)+1 : null;
+  const recordsCount = d => d ? APP.submissions.filter(s=>s.demonId===d.id && s.status==='approved' && s.type!=='progress').length : 0;
+  const row = (label, va, vb) => `<tr><td style="color:var(--text-dim);">${label}</td><td>${va}</td><td>${vb}</td></tr>`;
+  const body = (a && b) ? `
+    <div style="overflow-x:auto;">
+    <table class="lb-table">
+      <thead><tr><th></th><th>${escapeHtml(a.name)}</th><th>${escapeHtml(b.name)}</th></tr></thead>
+      <tbody>
+        ${row('Placement', '#'+rankOf(a), '#'+rankOf(b))}
+        ${row('Points', a.points, b.points)}
+        ${row('Requirement', (a.requirement||100)+'%', (b.requirement||100)+'%')}
+        ${row('Creator', escapeHtml(a.creator||'—'), escapeHtml(b.creator||'—'))}
+        ${row('Verifier', escapeHtml(a.verifier||'—'), escapeHtml(b.verifier||'—'))}
+        ${row('Length', escapeHtml(a.lengthTag||'—'), escapeHtml(b.lengthTag||'—'))}
+        ${row('Deco Rating', a.decoRating?a.decoRating+'/10':'—', b.decoRating?b.decoRating+'/10':'—')}
+        ${row('Gameplay Rating', a.gameplayRating?a.gameplayRating+'/10':'—', b.gameplayRating?b.gameplayRating+'/10':'—')}
+        ${row('Enjoyment', getEnjoymentAverage(a)?getEnjoymentAverage(a).avg+'/10':'—', getEnjoymentAverage(b)?getEnjoymentAverage(b).avg+'/10':'—')}
+        ${row('Likes', Object.keys(a.likes||{}).length, Object.keys(b.likes||{}).length)}
+        ${row('Approved Records', recordsCount(a), recordsCount(b))}
+        ${row('Downloads', (a.downloadCount||0).toLocaleString(), (b.downloadCount||0).toLocaleString())}
+      </tbody>
+    </table>
+    </div>` : `<div class="empty-state">Add at least two demons to compare them.</div>`;
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-head"><h3>⇄ Compare Levels</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field"><label>Level A</label><select onchange="openCompareModal(this.value, '${b?b.id:''}')">${options(a)}</select></div>
+          <div class="field"><label>Level B</label><select onchange="openCompareModal('${a?a.id:''}', this.value)">${options(b)}</select></div>
+        </div>
+        ${body}
+      </div>
+      <div class="modal-foot"><button class="btn ghost" onclick="closeModal()">Close</button></div>
+    </div>
+  </div>`);
 }
 function renderListTab(preserveFocus){
   const el = document.getElementById('panel-list');
@@ -1870,9 +2124,22 @@ function renderListTab(preserveFocus){
           <option value="points-desc" ${APP.listFilter.sort==='points-desc'?'selected':''}>Points: High to Low</option>
           <option value="points-asc" ${APP.listFilter.sort==='points-asc'?'selected':''}>Points: Low to High</option>
           <option value="az" ${APP.listFilter.sort==='az'?'selected':''}>Name: A-Z</option>
+          <option value="creator" ${APP.listFilter.sort==='creator'?'selected':''}>Creator: A-Z</option>
+          <option value="publishdate" ${APP.listFilter.sort==='publishdate'?'selected':''}>Publish Date: Newest</option>
           <option value="newest" ${APP.listFilter.sort==='newest'?'selected':''}>Newest Added</option>
         </select>
         <button class="btn small ${APP.listFilter.favoritesOnly?'primary':'ghost'}" onclick="toggleFavoritesOnly()" title="Show only your favorited levels">★ Favorites</button>
+        <button class="btn small ghost" onclick="openCompareModal()" title="Compare two levels side-by-side">⇄ Compare</button>
+      </div>
+      <div class="list-toolbar-row">
+        <select class="sort-select" onchange="setListCreatorFilter(this.value)" title="Filter by creator">
+          <option value="">All Creators</option>
+          ${allCreators().map(c=>`<option value="${escapeHtml(c)}" ${APP.listFilter.creator===c?'selected':''}>${escapeHtml(c)}</option>`).join('')}
+        </select>
+        <select class="sort-select" onchange="setListVerifierFilter(this.value)" title="Filter by verifier">
+          <option value="">All Verifiers</option>
+          ${allVerifiers().map(v=>`<option value="${escapeHtml(v)}" ${APP.listFilter.verifier===v?'selected':''}>${escapeHtml(v)}</option>`).join('')}
+        </select>
       </div>
       ${tagChips}
     </div>
@@ -1881,10 +2148,12 @@ function renderListTab(preserveFocus){
 
   const now = Date.now();
   const WEEK = 7*24*60*60*1000;
+  const trendingIds = getTrendingDemonIds();
   const rowsArr = filtered.map(({d, rank}, idx) => {
     const i = rank;
     const tagsHtml = (d.tags || []).map(t => `<span class="tag-pill">${escapeHtml(t)}</span>`).join('');
     const isNew = d.addedAt && (now - d.addedAt) < WEEK;
+    const isTrending = trendingIds.has(d.id);
     const delay = Math.min(idx, 12) * 18;
     const fav = isFavorite(d.id);
     const done = isCompleted(d.id);
@@ -1896,7 +2165,7 @@ function renderListTab(preserveFocus){
       <div class="info">
         <div class="name">${escapeHtml(d.name)}${done?' ✓':''}${d.difficultyChange==='buffed'?' <span class="lvl-badge buffed">Buffed</span>':''}${d.difficultyChange==='nerfed'?' <span class="lvl-badge nerfed">Nerfed</span>':''}${APP.settings.featuredDemonId===d.id?' <span class="lvl-badge featured">★</span>':''}</div>
         <div class="creator">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}</div>
-        ${tagsHtml || isNew ? `<div class="tag-container">${isNew ? `<span class="tag-pill new">New</span>` : ''}${tagsHtml}</div>` : ''}
+        ${tagsHtml || isNew || isTrending ? `<div class="tag-container">${isNew ? `<span class="tag-pill new">New</span>` : ''}${isTrending ? `<span class="lvl-badge trending">🔥 Trending</span>` : ''}${tagsHtml}</div>` : ''}
       </div>
       <div class="pts">${d.points}pt</div>
       ${isMod() ? `
@@ -1956,6 +2225,31 @@ function selectDemon(id){
   const badge = document.querySelector('.demon-row.selected .rank-badge');
   if(badge){ badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop'); }
 }
+function renderRankSparkline(demonId){
+  const points = APP.snapshots
+    .map(s => ({ date: s.date, rank: s.demons.findIndex(d => d.id === demonId) }))
+    .filter(p => p.rank !== -1);
+  if(points.length < 2) return '';
+  const w = 100, h = 28, pad = 3;
+  const maxRank = Math.max(...points.map(p=>p.rank), 1);
+  const minRank = Math.min(...points.map(p=>p.rank), 0);
+  const range = Math.max(1, maxRank - minRank);
+  const stepX = (w - pad*2) / (points.length - 1);
+  const coords = points.map((p,i) => {
+    const x = pad + i*stepX;
+    const y = pad + ((p.rank - minRank) / range) * (h - pad*2); // higher rank number = lower on screen
+    return [x,y];
+  });
+  const path = coords.map((c,i) => (i===0?'M':'L')+c[0].toFixed(1)+','+c[1].toFixed(1)).join(' ');
+  const first = points[0].rank+1, last = points[points.length-1].rank+1;
+  const trend = last < first ? 'var(--green)' : (last > first ? 'var(--red)' : 'var(--text-dim)');
+  return `
+    <div class="rating-row" style="margin-top:8px;align-items:center;">
+      <span style="width:64px;">Placement</span>
+      <svg viewBox="0 0 ${w} ${h}" style="width:100px;height:28px;flex:none;"><path d="${path}" fill="none" stroke="${trend}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span style="font-size:11px;color:var(--text-dim);">#${first} → #${last} over ${points.length} snapshot${points.length===1?'':'s'}</span>
+    </div>`;
+}
 function renderDemonDetail(d, index){
   const embed = getEmbedUrl(d.video);
   const tagHtml = (d.tags || []).map(t => `<span class="tag-pill" style="font-size:11px; padding:2px 6px;">${escapeHtml(t)}</span>`).join(' ');
@@ -1974,9 +2268,11 @@ function renderDemonDetail(d, index){
 
   const badges = [];
   if(d.lengthTag) badges.push(`<span class="lvl-badge" style="background:var(--bg-raised-2);color:var(--text-muted);border:1px solid var(--line);">${escapeHtml(d.lengthTag)}</span>`);
+  if(hasVerify) badges.push(`<span class="lvl-badge verified">✓ Verified</span>`);
   if(d.difficultyChange==='buffed') badges.push(`<span class="lvl-badge buffed">Buffed</span>`);
   if(d.difficultyChange==='nerfed') badges.push(`<span class="lvl-badge nerfed">Nerfed</span>`);
   if(isFeatured) badges.push(`<span class="lvl-badge featured">Featured</span>`);
+  if(getTrendingDemonIds().has(d.id)) badges.push(`<span class="lvl-badge trending">🔥 Trending</span>`);
 
   const likeCount = Object.keys(d.likes||{}).length;
   const liked = APP.currentUser && d.likes && d.likes[APP.currentUser.username.toLowerCase()];
@@ -1995,7 +2291,13 @@ function renderDemonDetail(d, index){
       ${APP.currentUser ? `<div style="display:flex;gap:3px;margin-top:4px;">${Array.from({length:10},(_,n)=>n+1).map(n=>`<button class="btn ghost small" style="padding:2px 6px;font-size:10.5px;${myRating===n?'border-color:var(--gold);color:var(--gold);':''}" onclick="rateEnjoyment('${d.id}',${n})">${n}</button>`).join('')}</div>` : `<div class="hint" style="margin-top:2px;">Log in to rate this level's enjoyment.</div>`}
     </div>`;
 
-  const records = APP.submissions.filter(s=>s.demonId===d.id && s.status==='approved').slice().sort((a,b)=>(b.percent-a.percent) || (a.submittedAt-b.submittedAt));
+  const records = APP.submissions.filter(s=>s.demonId===d.id && s.status==='approved' && s.type!=='progress').slice().sort((a,b)=>(b.percent-a.percent) || (a.submittedAt-b.submittedAt));
+  const progressAttempts = APP.submissions.filter(s=>s.demonId===d.id && s.status==='approved' && s.type==='progress').slice().sort((a,b)=>b.percent-a.percent);
+  const progressHtml = progressAttempts.length ? `
+    <div class="panel-head" style="margin-top:16px;"><h3>Progress (${progressAttempts.length})</h3></div>
+    <div class="demon-rows" style="max-height:160px;">
+      ${progressAttempts.map(s => `<div class="demon-row" style="cursor:default;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)} · below requirement</div></div><div class="pts">${s.percent}%</div></div>`).join('')}
+    </div>` : '';
   const recordsHtml = records.length ? `
     <div class="panel-head" style="margin-top:16px;"><h3>Records (${records.length})</h3></div>
     <div class="demon-rows" style="max-height:220px;">
@@ -2040,13 +2342,16 @@ function renderDemonDetail(d, index){
     </div>
     ${ratingBars}
     ${enjoymentWidget}
+    ${renderRankSparkline(d.id)}
     ${hasVerify ? `<div class="video-tabs">
       <button data-mode="gameplay" class="active" onclick="switchDetailVideo('gameplay','${d.id}')">Gameplay Showcase</button>
       <button data-mode="verify" onclick="switchDetailVideo('verify','${d.id}')">Verification</button>
     </div>` : ''}
     <div class="video-wrap" id="detailVideoWrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
     ${d.description ? `<div class="detail-desc">${escapeHtml(d.description)}</div>` : ''}
+    ${isMod() && d.adminNote ? `<div class="detail-desc" style="border-left:2px solid var(--gold);"><b>🔒 Admin note:</b> ${escapeHtml(d.adminNote)}</div>` : ''}
     ${recordsHtml}
+    ${progressHtml}
     ${changelogHtml}
   `;
 }
@@ -2131,6 +2436,7 @@ function openDemonModal(id, prefill){
           <div class="hint">Type whatever tags you want for this level, separated by commas, or click a quick tag above.</div>
         </div>
         <div class="field"><label>Description (optional)</label><textarea id="dm-desc">${src?escapeHtml(src.description||''):''}</textarea></div>
+        <div class="field"><label>🔒 Admin Notes <span style="color:var(--text-dim);font-weight:400;">(mods only, never shown publicly)</span></label><textarea id="dm-adminnote" placeholder="Internal notes about this level...">${src?escapeHtml(src.adminNote||''):''}</textarea></div>
       </div>
       <div class="modal-foot">
         <button class="btn ghost" onclick="closeModal()">Cancel</button>
@@ -2198,13 +2504,17 @@ async function saveDemonForm(id, promotedFromId){
     gameplayRating,
     downloadCount
   };
+  const adminNoteEl = document.getElementById('dm-adminnote');
+  if(adminNoteEl) data.adminNote = adminNoteEl.value.trim();
   if(id){
     const d = APP.demons.find(x=>x.id===id);
     logLevelHistory(d, data);
     Object.assign(d, data);
+    logChange(`"${data.name}" was edited`, true);
   }else{
     APP.demons.push({ id: uid(), ...data, addedAt: Date.now(), likes:{}, enjoymentRatings:{}, levelChangelog:[] });
     APP.selectedDemonId = APP.demons[APP.demons.length-1].id;
+    logChange(promotedFromId ? `"${data.name}" was promoted to the main list at #${APP.demons.length}` : `"${data.name}" was added to the list at #${APP.demons.length}`);
   }
   await saveDemons();
   if(promotedFromId){
@@ -2261,8 +2571,10 @@ function getEnjoymentAverage(d){
 }
 async function setFeaturedDemon(demonId){
   if(!isAdmin()) return;
+  const d = APP.demons.find(x=>x.id===demonId);
   APP.settings.featuredDemonId = (APP.settings.featuredDemonId === demonId) ? null : demonId;
   await saveSettings();
+  if(d) logChange(APP.settings.featuredDemonId ? `"${d.name}" was set as the featured level` : `"${d.name}" was unfeatured`, true);
   renderListTab();
   showToast(APP.settings.featuredDemonId ? 'Set as featured level' : 'Removed from featured');
 }
@@ -2273,6 +2585,7 @@ async function deleteDemon(id){
   APP.demons = APP.demons.filter(d=>d.id!==id);
   if(APP.selectedDemonId===id) APP.selectedDemonId = APP.demons[0]?.id || null;
   await saveDemons();
+  if(d) logChange(`"${d.name}" was removed from the list`, true);
   renderAll();
   showToast('Demon deleted');
 }
@@ -2280,8 +2593,10 @@ async function moveDemon(id, dir){
   const i = APP.demons.findIndex(d=>d.id===id);
   const j = i+dir;
   if(j<0 || j>=APP.demons.length) return;
+  const d = APP.demons[i];
   [APP.demons[i], APP.demons[j]] = [APP.demons[j], APP.demons[i]];
   await saveDemons();
+  logChange(`"${d.name}" moved from #${i+1} to #${j+1}`, true);
   renderListTab();
 }
 
@@ -2440,8 +2755,10 @@ async function saveUpcomingForm(id){
   if(id){
     const u = APP.upcoming.find(x=>x.id===id);
     Object.assign(u, data);
+    logChange(`Upcoming level "${name}" was edited`, true);
   }else{
     APP.upcoming.push({ id: uid(), ...data, addedAt: Date.now() });
+    logChange(`"${name}" was added to Upcoming`, true);
   }
   await saveUpcoming();
   closeModal();
@@ -2455,6 +2772,7 @@ async function deleteUpcoming(id){
   if(!ok) return;
   APP.upcoming = APP.upcoming.filter(x=>x.id!==id);
   await saveUpcoming();
+  if(u) logChange(`"${u.name}" was removed from Upcoming`, true);
   renderUpcomingTab();
   showToast('Upcoming level deleted');
 }
@@ -2622,6 +2940,24 @@ function exportLeaderboardCsv(){
   showToast('CSV exported');
 }
 function setLbView(v){ APP.lbFilter.view = v; renderLeaderboardTab(); }
+function setLbPeriod(v){ APP.lbFilter.period = v; renderLeaderboardTab(); }
+function getPeriodStandings(period){
+  const now = Date.now();
+  const DAY = 24*60*60*1000;
+  const since = period==='year' ? now - 365*DAY : period==='week' ? now - 7*DAY : now - 30*DAY;
+  const gains = {};
+  APP.submissions.forEach(s => {
+    if(s.status!=='approved' || s.type==='progress' || s.submittedAt < since) return;
+    const demon = APP.demons.find(d=>d.id===s.demonId);
+    if(!demon) return;
+    let awarded = demon.points;
+    if(demon.requirement2 && s.percent < (demon.requirement||100) && s.percent >= demon.requirement2) awarded = demon.points2 || 0;
+    if(!gains[s.player]) gains[s.player] = { player: s.player, country: s.country, points: 0, records: 0 };
+    gains[s.player].points += awarded;
+    gains[s.player].records += 1;
+  });
+  return Object.values(gains).sort((a,b)=>b.points-a.points);
+}
 function getNationStandings(){
   const byCountry = {};
   APP.players.forEach(p => {
@@ -2634,7 +2970,7 @@ function getNationStandings(){
   return Object.values(byCountry).sort((a,b)=>b.points-a.points);
 }
 function getRecentRecords(limit){
-  return APP.submissions.filter(s=>s.status==='approved').slice().reverse().slice(0, limit||25);
+  return APP.submissions.filter(s=>s.status==='approved' && s.type!=='progress').slice().reverse().slice(0, limit||25);
 }
 function renderLeaderboardTab(preserveFocus){
   const el = document.getElementById('panel-leaderboard');
@@ -2648,13 +2984,38 @@ function renderLeaderboardTab(preserveFocus){
     <div class="status-filter-row" style="padding:10px 12px 0;">
       <button class="status-filter-btn ${view==='players'?'active':''}" onclick="setLbView('players')">Players</button>
       <button class="status-filter-btn ${view==='nations'?'active':''}" onclick="setLbView('nations')">Nations</button>
+      <button class="status-filter-btn ${view==='period'?'active':''}" onclick="setLbView('period')">Monthly / Yearly / Gains</button>
       <button class="status-filter-btn ${view==='records'?'active':''}" onclick="setLbView('records')">Recent Records</button>
     </div>`;
 
   let body = '';
   let headActions = `<button class="icon-btn" onclick="exportLeaderboardCsv()">⇩ Export CSV</button>${isMod() ? `<button class="btn small primary" onclick="openPlayerModal()">+ Add Player</button>` : ''}`;
 
-  if(view === 'nations'){
+  if(view === 'period'){
+    const period = APP.lbFilter.period || 'month';
+    const standings = getPeriodStandings(period);
+    const periodLabel = period==='week' ? 'the last 7 days' : period==='year' ? 'the last year' : 'the last 30 days';
+    const rows = standings.length ? standings.slice(0,50).map((p,i) => `
+      <tr>
+        <td class="lb-rank ${rankClass(i)}">#${i+1}</td>
+        <td><span class="flag">${flagEmoji(p.country)}</span><strong>${escapeHtml(p.player)}</strong></td>
+        <td style="color:var(--text-dim);font-size:12px;">${p.records} record${p.records===1?'':'s'}</td>
+        <td class="lb-points">+${p.points}</td>
+      </tr>`).join('') : `<tr><td colspan="4"><div class="empty-state"><div class="big">No point gains yet</div>No approved records fall within ${periodLabel}.</div></td></tr>`;
+    body = `
+      <div class="status-filter-row">
+        <button class="status-filter-btn ${period==='week'?'active':''}" onclick="setLbPeriod('week')">This Week</button>
+        <button class="status-filter-btn ${period==='month'?'active':''}" onclick="setLbPeriod('month')">This Month</button>
+        <button class="status-filter-btn ${period==='year'?'active':''}" onclick="setLbPeriod('year')">This Year</button>
+      </div>
+      <p style="padding:0 12px 8px;font-size:12px;color:var(--text-dim);">Ranked by points earned from approved records within ${periodLabel} — doubles as the monthly/yearly leaderboard and the biggest point gains list.</p>
+      <div style="overflow-x:auto;">
+      <table class="lb-table">
+        <thead><tr><th>Rank</th><th>Player</th><th>Records</th><th>Points Gained</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>`;
+  } else if(view === 'nations'){
     const nations = getNationStandings();
     const rows = nations.length ? nations.map((n,i) => `
       <tr>
@@ -2733,7 +3094,7 @@ function renderLeaderboardTab(preserveFocus){
     </div>
     <div class="panel">
       <div class="panel-head">
-        <h3>${view==='nations'?'Nations':view==='records'?'Recent Records':'Players'}</h3>
+        <h3>${view==='nations'?'Nations':view==='records'?'Recent Records':view==='period'?'Monthly / Yearly / Gains':'Players'}</h3>
         <div style="display:flex;gap:6px;">${headActions}</div>
       </div>
       ${viewToggle}
@@ -2866,13 +3227,59 @@ function openPlayerProfile(id){
   const p = APP.players.find(x=>x.id===id);
   if(!p) return;
   const rank = APP.players.slice().sort((a,b)=>b.points-a.points).findIndex(x=>x.id===id) + 1;
-  const beaten = APP.submissions.filter(s => s.status==='approved' && s.player.toLowerCase()===p.name.toLowerCase());
+  const beaten = APP.submissions.filter(s => s.status==='approved' && s.type!=='progress' && s.player.toLowerCase()===p.name.toLowerCase());
   const totalDemons = APP.demons.length;
   const pct = totalDemons ? Math.round((beaten.length/totalDemons)*100) : 0;
-  const beatenHtml = beaten.length ? beaten.map(s => {
+  const mainSize = APP.settings.mainListSize || 50;
+  const extSize = Math.max(mainSize, APP.settings.extendedListSize || mainSize);
+
+  const beatenWithRank = beaten.map(s => {
     const demon = APP.demons.find(d=>d.id===s.demonId);
-    return `<div class="completion-item"><span>${demon?escapeHtml(demon.name):'(deleted demon)'}</span><span style="color:var(--text-dim);">${s.percent}%${demon?` · ${demon.points}pt`:''}</span></div>`;
+    const rankIdx = demon ? APP.demons.findIndex(d=>d.id===demon.id) : -1;
+    return { s, demon, rankIdx };
+  }).filter(x => x.demon);
+
+  const hardest = beatenWithRank.slice().sort((a,b)=>a.rankIdx-b.rankIdx)[0];
+  const avgPlacement = beatenWithRank.length ? Math.round(beatenWithRank.reduce((sum,x)=>sum+x.rankIdx+1,0) / beatenWithRank.length) : null;
+  const mainCount = beatenWithRank.filter(x=>x.rankIdx < mainSize).length;
+  const extCount = beatenWithRank.filter(x=>x.rankIdx >= mainSize && x.rankIdx < extSize).length;
+  const legacyCount = beatenWithRank.filter(x=>x.rankIdx >= extSize).length;
+
+  const beatenHtml = beatenWithRank.length ? beatenWithRank.slice().sort((a,b)=>a.rankIdx-b.rankIdx).map(({s,demon,rankIdx}) => {
+    const tier = rankIdx<mainSize?'Main':rankIdx<extSize?'Extended':'Legacy';
+    return `<div class="completion-item" style="cursor:pointer;" onclick="closeModal();selectDemon('${demon.id}');switchTab('list');"><span>#${rankIdx+1} ${escapeHtml(demon.name)}</span><span style="color:var(--text-dim);">${s.percent}% · ${demon.points}pt · ${tier}</span></div>`;
   }).join('') : `<div class="completion-item" style="color:var(--text-dim);">No approved completions on record yet.</div>`;
+
+  const progressBests = p.progressBests || {};
+  const progressEntries = Object.entries(progressBests)
+    .map(([demonId, percent]) => ({ demon: APP.demons.find(d=>d.id===demonId), percent }))
+    .filter(x => x.demon && !beaten.some(s=>s.demonId===x.demon.id));
+  const progressHtml = progressEntries.length ? progressEntries.map(x => {
+    const rankIdx = APP.demons.findIndex(d=>d.id===x.demon.id);
+    return `<div class="completion-item" style="cursor:pointer;" onclick="closeModal();selectDemon('${x.demon.id}');switchTab('list');"><span>#${rankIdx+1} ${escapeHtml(x.demon.name)}</span><span style="color:var(--text-dim);">Best: ${x.percent}%</span></div>`;
+  }).join('') : '';
+
+  const account = APP.registeredUsers.find(u => u.username.toLowerCase() === p.name.toLowerCase());
+  const joinedLabel = account && account.createdAt ? new Date(account.createdAt).toLocaleDateString(undefined,{year:'numeric',month:'long'}) : null;
+
+  // Completion graph: completions per month, last 6 months
+  const now = new Date();
+  const months = Array.from({length:6}, (_,i) => {
+    const d = new Date(now.getFullYear(), now.getMonth()-(5-i), 1);
+    return { key: d.getFullYear()+'-'+d.getMonth(), label: d.toLocaleDateString(undefined,{month:'short'}) };
+  });
+  const monthCounts = months.map(m => beaten.filter(s => {
+    const d = new Date(s.submittedAt);
+    return (d.getFullYear()+'-'+d.getMonth()) === m.key;
+  }).length);
+  const maxCount = Math.max(...monthCounts, 1);
+  const graphBars = months.map((m,i) => {
+    const h = Math.round((monthCounts[i]/maxCount) * 32) + (monthCounts[i]>0?4:1);
+    return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;"><div title="${monthCounts[i]} completion(s) in ${m.label}" style="width:70%;height:${h}px;background:${monthCounts[i]>0?'var(--spike)':'var(--line)'};border-radius:2px 2px 0 0;"></div><span style="font-size:9px;color:var(--text-dim);">${m.label}</span></div>`;
+  }).join('');
+  const graphHtml = beaten.length ? `
+    <div class="field"><label>Completion Activity — last 6 months</label></div>
+    <div class="panel" style="padding:10px 12px;display:flex;align-items:flex-end;gap:4px;height:60px;">${graphBars}</div>` : '';
 
   openModal(`
   <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
@@ -2883,13 +3290,24 @@ function openPlayerProfile(id){
           <div class="stat rankstat"><div class="val">#${rank}</div><div class="lbl">Leaderboard Rank</div></div>
           <div class="stat"><div class="val">${p.points}</div><div class="lbl">Points</div></div>
           <div class="stat"><div class="val">${beaten.length}</div><div class="lbl">Demons Beaten</div></div>
+          ${avgPlacement ? `<div class="stat"><div class="val">#${avgPlacement}</div><div class="lbl">Avg. Placement</div></div>` : ''}
         </div>
+        ${hardest ? `<div class="hint" style="margin-top:-4px;">🏆 Hardest completion: <b style="color:var(--text);">#${hardest.rankIdx+1} ${escapeHtml(hardest.demon.name)}</b></div>` : ''}
+        ${joinedLabel ? `<div class="hint">📅 Member since ${joinedLabel}</div>` : ''}
         <div class="field">
           <label>List Completion — ${pct}%</label>
           <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>
         </div>
+        <div class="stat-row">
+          <div class="stat"><div class="val">${mainCount}</div><div class="lbl">Main</div></div>
+          <div class="stat"><div class="val">${extCount}</div><div class="lbl">Extended</div></div>
+          <div class="stat"><div class="val">${legacyCount}</div><div class="lbl">Legacy</div></div>
+        </div>
+        ${graphHtml}
         <div class="field"><label>Approved Completions</label></div>
         <div class="panel">${beatenHtml}</div>
+        ${progressEntries.length ? `<div class="field"><label>Progress on Other Demons</label></div><div class="panel">${progressHtml}</div>` : ''}
+        ${isMod() && p.adminNote ? `<div class="field"><label>🔒 Admin Notes</label></div><div class="panel" style="padding:8px 10px;font-size:12.5px;color:var(--text-muted);">${escapeHtml(p.adminNote)}</div>` : ''}
       </div>
       <div class="modal-foot"><button class="btn ghost" onclick="closeModal()">Close</button></div>
     </div>
@@ -2938,6 +3356,7 @@ function openPlayerModal(id){
           <div class="field"><label>Region / Country</label><select id="pl-country">${countryOptions(editing?editing.country:'US')}</select></div>
           <div class="field"><label>Points</label><input id="pl-points" type="number" min="0" value="${editing?editing.points:0}"></div>
         </div>
+        <div class="field"><label>🔒 Admin Notes <span style="color:var(--text-dim);font-weight:400;">(mods only)</span></label><textarea id="pl-adminnote" placeholder="Internal notes about this player...">${editing?escapeHtml(editing.adminNote||''):''}</textarea></div>
       </div>
       <div class="modal-foot">
         <button class="btn ghost" onclick="closeModal()">Cancel</button>
@@ -2949,13 +3368,15 @@ function openPlayerModal(id){
 async function savePlayerForm(id){
   const name = document.getElementById('pl-name').value.trim();
   if(!name) return;
+  const noteEl = document.getElementById('pl-adminnote');
   const data = {
     name,
     country: document.getElementById('pl-country').value,
     points: parseInt(document.getElementById('pl-points').value) || 0,
   };
-  if(id){ Object.assign(APP.players.find(p=>p.id===id), data); }
-  else{ APP.players.push({ id: uid(), ...data }); }
+  if(noteEl) data.adminNote = noteEl.value.trim();
+  if(id){ Object.assign(APP.players.find(p=>p.id===id), data); logChange(`Player "${name}" was edited`, true); }
+  else{ APP.players.push({ id: uid(), ...data, addedAt: Date.now() }); logChange(`Player "${name}" was added to the leaderboard`, true); }
   await savePlayers();
   closeModal();
   renderLeaderboardTab();
@@ -2967,6 +3388,7 @@ async function deletePlayer(id){
   if(!ok) return;
   APP.players = APP.players.filter(p=>p.id!==id);
   await savePlayers();
+  if(p) logChange(`Player "${p.name}" was removed from the leaderboard`, true);
   renderLeaderboardTab();
   showToast('Player deleted');
 }
@@ -3001,7 +3423,7 @@ function renderSubmitTab(preserveFocus){
       <div class="sub-item-top">
         <div>
           <span class="who">${escapeHtml(s.player)}</span>
-          <span class="what"> — ${demon?escapeHtml(demon.name):'(deleted demon)'} · ${s.percent}%</span>
+          <span class="what"> — ${demon?escapeHtml(demon.name):'(deleted demon)'} · ${s.percent}%${s.type==='progress'?' <span class="status-pill pending">progress</span>':''}</span>
         </div>
         <span class="status-pill ${s.status}">${s.status}</span>
       </div>
@@ -3106,13 +3528,12 @@ async function submitPlay(){
   const demon = APP.demons.find(d=>d.id===demonId);
   const req = demon && demon.requirement ? demon.requirement : 100;
   const floor = (demon && demon.requirement2) ? demon.requirement2 : req;
-  if(percent < floor){
-    msgEl.innerHTML = `<div class="msg error">This demon requires at least ${floor}% to be submitted.</div>`;
-    return;
-  }
-  APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, attempts, rawFootage, status:'pending', submittedAt: Date.now(), modNote:'' });
+  const type = percent < floor ? 'progress' : 'completion';
+  APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, attempts, rawFootage, status:'pending', type, submittedAt: Date.now(), modNote:'' });
   await saveSubmissions();
-  msgEl.innerHTML = `<div class="msg ok">Submitted! A moderator will review it soon.</div>`;
+  msgEl.innerHTML = type==='progress'
+    ? `<div class="msg ok">Submitted as a progress record (below the ${floor}% requirement, so it won't award points, but it'll be tracked on your profile once approved). A moderator will review it soon.</div>`
+    : `<div class="msg ok">Submitted! A moderator will review it soon.</div>`;
   renderSubmitTab();
 }
 async function setModNote(id, value){
@@ -3127,14 +3548,18 @@ async function reviewSubmission(id, status){
   const s = APP.submissions.find(x=>x.id===id);
   if(!s) return;
   s.status = status;
+  const demon = APP.demons.find(d=>d.id===s.demonId);
   if(status==='approved'){
-    const demon = APP.demons.find(d=>d.id===s.demonId);
     let player = APP.players.find(p=>p.name.toLowerCase()===s.player.toLowerCase());
     if(!player){
-      player = { id: uid(), name: s.player, country: s.country||'OTHER', points: 0 };
+      player = { id: uid(), name: s.player, country: s.country||'OTHER', points: 0, addedAt: Date.now() };
       APP.players.push(player);
     }
-    if(demon){
+    if(s.type === 'progress'){
+      if(!player.progressBests) player.progressBests = {};
+      const prev = player.progressBests[s.demonId] || 0;
+      if(s.percent > prev) player.progressBests[s.demonId] = s.percent;
+    } else if(demon){
       let awarded = demon.points;
       if(demon.requirement2 && s.percent < (demon.requirement||100) && s.percent >= demon.requirement2){
         awarded = demon.points2 || 0;
@@ -3144,6 +3569,7 @@ async function reviewSubmission(id, status){
     await savePlayers();
   }
   await saveSubmissions();
+  logChange(`${s.player}'s ${s.type==='progress'?'progress ':''}submission on "${demon?demon.name:'a deleted demon'}" (${s.percent}%) was ${status}`, true);
   renderAll();
   showToast(status==='approved' ? 'Submission approved' : 'Submission rejected', status==='approved'?'ok':'error');
 }
