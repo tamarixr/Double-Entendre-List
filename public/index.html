@@ -25,7 +25,9 @@
   --cyan:#4fd8ff;
   --green:#4ade80;
   --red:#ff5470;
-  --radius:3px;
+  --radius:14px;
+  --radius-sm:8px;
+  --radius-lg:22px;
 }
 
 body.light-theme {
@@ -53,7 +55,7 @@ body{
 ::selection{background:var(--spike);color:#fff;}
 ::-webkit-scrollbar{width:7px;height:7px;}
 ::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:var(--radius-sm);}
 ::-webkit-scrollbar-thumb:hover{background:var(--text-dim);}
 
 a{color:inherit;text-decoration:none;}
@@ -100,13 +102,13 @@ nav.side-tabs button{
   display:flex;align-items:center;gap:9px;text-align:left;
   background:none;border:none;color:var(--text-muted);
   font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
-  padding:8px 10px;border-radius:var(--radius);transition:all .12s ease;position:relative;
+  padding:8px 10px;border-radius:var(--radius-sm);transition:all .15s ease;position:relative;
 }
 nav.side-tabs button .si{ font-size:13px;flex:none;width:16px;text-align:center; }
-nav.side-tabs button:hover{ color:var(--text);background:var(--bg-raised); }
+nav.side-tabs button:hover{ color:var(--text);background:var(--bg-raised);transform:translateX(2px); }
 nav.side-tabs button.active{ color:var(--text);background:var(--bg-raised-2); }
 nav.side-tabs button.active::before{
-  content:'';position:absolute;left:0;top:6px;bottom:6px;width:2.5px;background:var(--spike);border-radius:2px;
+  content:'';position:absolute;left:0;top:6px;bottom:6px;width:2.5px;background:var(--spike);border-radius:var(--radius-sm);
 }
 
 .sidebar-foot{ padding:10px 14px 16px;border-top:1px solid var(--line-soft);display:flex;flex-direction:column;gap:8px; }
@@ -116,7 +118,7 @@ nav.side-tabs button.active::before{
 .sidebar-quickrow{ display:flex;gap:6px;flex-wrap:wrap; }
 .role-tag{
   font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;
-  padding:1px 5px;border-radius:2px;background:var(--bg-raised-2);color:var(--text-muted);
+  padding:1px 5px;border-radius:var(--radius-sm);background:var(--bg-raised-2);color:var(--text-muted);
   border:1px solid var(--line);
 }
 .role-tag.admin{color:var(--spike);border-color:var(--spike-dim);background:var(--spike-dim);}
@@ -124,7 +126,7 @@ body.light-theme .role-tag.admin { background: var(--spike-dim); color: var(--sp
 
 .sidebar-toggle{
   position:fixed;top:14px;right:16px;z-index:60;
-  width:34px;height:34px;border-radius:8px;
+  width:34px;height:34px;border-radius:var(--radius-sm);
   background:var(--bg-raised-2);border:1px solid var(--line);color:var(--text-muted);
   display:flex;align-items:center;justify-content:center;font-size:14px;
   opacity:0;visibility:hidden;transform:translateX(6px);
@@ -145,16 +147,18 @@ body.light-theme .role-tag.admin { background: var(--spike-dim); color: var(--sp
 .btn{
   border:1px solid var(--line);background:var(--bg-raised);color:var(--text);
   padding:6px 12px;border-radius:var(--radius);font-size:12.5px;font-weight:600;
-  transition:all .1s;
+  transition:transform .15s cubic-bezier(.34,1.56,.64,1), background .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
-.btn:hover{border-color:var(--text-dim);background:var(--bg-raised-2);}
+.btn:hover{border-color:var(--text-dim);background:var(--bg-raised-2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.18);}
+.btn:active{transform:translateY(0) scale(.97);box-shadow:none;}
 .btn.primary{background:var(--spike);border-color:var(--spike);color:#fff;}
-.btn.primary:hover{background:var(--spike-hover);}
+.btn.primary:hover{background:var(--spike-hover);box-shadow:0 4px 16px var(--spike-shadow);}
 .btn.ghost{background:none;}
+.btn.ghost:hover{box-shadow:none;}
 .btn.small{padding:4px 8px;font-size:11.5px;}
 .btn.danger{border-color:var(--red);color:var(--red);background:none;}
 .btn.danger:hover{background:rgba(255,84,112,0.08);}
-.btn:disabled{opacity:0.3;cursor:not-allowed;}
+.btn:disabled{opacity:0.3;cursor:not-allowed;transform:none !important;box-shadow:none !important;}
 
 /* ---------- layout ---------- */
 main{max-width:1200px;padding:20px 15px 60px;}
@@ -171,6 +175,7 @@ main{max-width:1200px;padding:20px 15px 60px;}
 
 .panel{
   background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+  transition:border-color .2s ease, box-shadow .2s ease;
 }
 .panel-head{
   display:flex;align-items:center;justify-content:space-between;
@@ -181,10 +186,11 @@ main{max-width:1200px;padding:20px 15px 60px;}
 .demon-rows{max-height:75vh;overflow-y:auto;}
 .demon-row{
   display:flex;align-items:center;gap:10px;padding:8px 12px;
-  border-bottom:1px solid var(--line-soft);cursor:pointer;transition:background .1s;
+  border-bottom:1px solid var(--line-soft);cursor:pointer;
+  transition:background .15s ease, transform .15s ease;
 }
 .demon-row:last-child{border-bottom:none;}
-.demon-row:hover{background:var(--bg-raised);}
+.demon-row:hover{background:var(--bg-raised);transform:translateX(2px);}
 .demon-row.selected{background:var(--bg-raised-2);border-left:3px solid var(--spike);padding-left:9px;}
 
 .rank-badge{
@@ -193,7 +199,7 @@ main{max-width:1200px;padding:20px 15px 60px;}
   border:1px solid var(--line);
   display:flex;align-items:center;justify-content:center;
   font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;color:var(--text-muted);
-  border-radius:2px;
+  border-radius:var(--radius-sm);
 }
 .rank-badge.top{background:var(--spike-dim);color:var(--text);border-color:var(--spike);}
 body.light-theme .rank-badge.top { color: var(--spike); }
@@ -208,13 +214,13 @@ body.light-theme .rank-badge.top { color: var(--spike); }
 }
 .tag-pill {
   font-size:9px;font-weight:600;padding:1px 5px;background:var(--bg-void);
-  border:1px solid var(--line);color:var(--text-muted);text-transform:uppercase;border-radius:2px;
+  border:1px solid var(--line);color:var(--text-muted);text-transform:uppercase;border-radius:var(--radius-sm);
 }
 
 .reorder{display:flex;flex-direction:column;gap:1px;flex:none;}
 .reorder button{
   width:16px;height:12px;background:var(--bg-raised);border:1px solid var(--line);
-  color:var(--text-dim);font-size:8px;border-radius:1px;display:flex;align-items:center;justify-content:center;
+  color:var(--text-dim);font-size:8px;border-radius:6px;display:flex;align-items:center;justify-content:center;
 }
 .reorder button:hover{color:var(--text);border-color:var(--text-dim);}
 
@@ -244,7 +250,8 @@ body.light-theme .rank-badge.top { color: var(--spike); }
 .detail-meta span b{color:var(--text-muted);font-weight:600;}
 .detail-actions{display:flex;gap:6px;margin-top:14px;}
 .detail-banner{width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);background:var(--bg-raised-2);margin-bottom:12px;position:relative;}
-.detail-banner img{width:100%;height:100%;object-fit:cover;display:block;}
+.detail-banner img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s ease;}
+.detail-banner:hover img{transform:scale(1.04);}
 .video-tabs{display:flex;gap:6px;margin-top:12px;margin-bottom:-4px;}
 .video-tabs button{font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--line);border-bottom:none;background:var(--bg-raised);color:var(--text-dim);cursor:pointer;}
 .video-tabs button.active{color:var(--text);background:var(--bg-raised-2);}
@@ -262,12 +269,12 @@ body.light-theme .rank-badge.top { color: var(--spike); }
 .field textarea{resize:vertical;min-height:60px;}
 .field .hint{font-size:10.5px;color:var(--text-dim);line-height:1.3;}
 .modal-backdrop{
-  position:fixed;inset:0;background:rgba(4,5,7,0.8);
+  position:fixed;inset:0;background:rgba(4,5,7,0.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   display:flex;align-items:center;justify-content:center;z-index:100;padding:15px;
 }
 .modal{
-  background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);
-  width:100%;max-width:460px;max-height:90vh;overflow-y:auto;
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius-lg);
+  width:100%;max-width:460px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.45);
 }
 .modal-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--bg-raised);}
 .modal-head h3{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:var(--text);}
@@ -332,7 +339,7 @@ body.light-theme .lb-rank.r2 { color: #6b7280; }
 .sub-item-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;}
 .sub-item .who{font-weight:600;font-size:13px;}
 .sub-item .what{color:var(--text-muted);font-size:12px;}
-.status-pill{font-size:9px;text-transform:uppercase;padding:2px 6px;border-radius:2px;font-weight:700;}
+.status-pill{font-size:9px;text-transform:uppercase;padding:2px 6px;border-radius:var(--radius-sm);font-weight:700;}
 .status-pill.pending{background:rgba(255,184,69,0.08);color:var(--gold);border:1px solid rgba(255,184,69,0.2);}
 .status-pill.approved{background:rgba(74,222,128,0.08);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
 .status-pill.rejected{background:rgba(255,84,112,0.08);color:var(--red);border:1px solid rgba(255,84,112,0.2);}
@@ -345,7 +352,8 @@ body.sidebar-collapsed .footer-note{margin-left:0;}
 
 /* ---------- QOL: stat cards ---------- */
 .stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px;}
-.stat-card{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;}
+.stat-card{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,0.22);border-color:var(--text-dim);}
 .stat-card .sc-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--spike);}
 .stat-card .sc-lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-top:2px;}
 
@@ -362,7 +370,7 @@ body.sidebar-collapsed .footer-note{margin-left:0;}
 .tag-chip:hover{border-color:var(--text-dim);color:var(--text);}
 .tag-chip.active{background:var(--spike-dim);border-color:var(--spike);color:var(--text);}
 .result-count{font-size:11px;color:var(--text-dim);padding:6px 12px 0;}
-.kbd-hint{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-void);border:1px solid var(--line);border-radius:2px;padding:0 4px;color:var(--text-dim);}
+.kbd-hint{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-void);border:1px solid var(--line);border-radius:var(--radius-sm);padding:0 4px;color:var(--text-dim);}
 
 /* ---------- QOL: copy link / small icon buttons ---------- */
 .icon-btn{background:none;border:1px solid var(--line);color:var(--text-muted);border-radius:var(--radius);padding:4px 8px;font-size:11.5px;font-weight:600;}
@@ -399,7 +407,7 @@ body.sidebar-collapsed .footer-note{margin-left:0;}
   display:inline-flex;align-items:center;justify-content:center;
   min-width:15px;height:15px;padding:0 4px;margin-left:5px;
   background:var(--spike);color:#fff;font-size:9.5px;font-weight:700;
-  border-radius:8px;font-family:'JetBrains Mono',monospace;vertical-align:2px;
+  border-radius:var(--radius-sm);font-family:'JetBrains Mono',monospace;vertical-align:2px;
 }
 
 /* ---------- QOL: NEW pill ---------- */
@@ -459,7 +467,7 @@ body.light-theme .tag-pill.new{color:var(--spike);}
 .upcoming-card .uc-creator{font-size:11.5px;color:var(--text-dim);margin-top:1px;display:flex;align-items:center;gap:4px;}
 .upcoming-card .uc-rank{
   font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-dim);
-  border:1px solid var(--line);border-radius:2px;padding:1px 6px;flex:none;
+  border:1px solid var(--line);border-radius:var(--radius-sm);padding:1px 6px;flex:none;
 }
 .upcoming-card .uc-video{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);}
 .upcoming-card .uc-video iframe{width:100%;height:100%;border:none;}
@@ -471,27 +479,27 @@ body.light-theme .tag-pill.new{color:var(--spike);}
 /* ---------- animations ---------- */
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-@keyframes popIn{from{opacity:0;transform:scale(.96) translateY(4px);}to{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
 @keyframes rankPulse{0%,100%{box-shadow:0 0 0 rgba(255,59,107,0);}50%{box-shadow:0 0 12px var(--spike-shadow);}}
 
 .tab-panel.active{animation:fadeSlideIn .28s ease both;}
-.demon-row{animation:fadeSlideIn .22s ease both;}
+.demon-row{animation:fadeSlideIn .3s cubic-bezier(.22,1,.36,1) both;}
 .upcoming-card{animation:fadeSlideIn .22s ease both;}
-.demon-row{transition:background .15s ease, transform .15s ease;}
-.demon-row:hover{transform:translateX(2px);}
+.demon-rows .demon-row:nth-child(1){animation-delay:.01s;}
+.demon-rows .demon-row:nth-child(2){animation-delay:.03s;}
+.demon-rows .demon-row:nth-child(3){animation-delay:.05s;}
+.demon-rows .demon-row:nth-child(4){animation-delay:.07s;}
+.demon-rows .demon-row:nth-child(5){animation-delay:.09s;}
+.demon-rows .demon-row:nth-child(6){animation-delay:.11s;}
+.demon-rows .demon-row:nth-child(7){animation-delay:.13s;}
+.demon-rows .demon-row:nth-child(8){animation-delay:.15s;}
 .rank-badge.top{animation:rankPulse 2.6s ease-in-out infinite;}
-.rank-badge{transition:transform .15s ease;}
 .rank-badge.pop{animation:badgePop .35s ease;}
 @keyframes badgePop{0%{transform:scale(1);}45%{transform:scale(1.3);}100%{transform:scale(1);}}
-.stat-card{transition:transform .15s ease, border-color .15s ease;}
-.stat-card:hover{transform:translateY(-2px);border-color:var(--text-dim);}
-.btn{transition:transform .1s ease, background .1s ease, border-color .1s ease;}
-.btn:active{transform:scale(.96);}
-.modal-backdrop{animation:fadeIn .15s ease both;}
-.modal{animation:popIn .18s ease both;}
+.modal-backdrop{animation:fadeIn .18s ease both;}
+.modal{animation:popIn .25s cubic-bezier(.34,1.56,.64,1) both;}
 .toast{animation:toastIn .2s ease both;}
 .lb-table tr{animation:fadeSlideIn .22s ease both;}
-nav.side-tabs button.active{transition:background .15s ease;}
 
 @media (prefers-reduced-motion: reduce){
   .tab-panel.active,.demon-row,.upcoming-card,.rank-badge.top,.modal-backdrop,.modal,.toast,.lb-table tr{animation:none !important;}
@@ -510,10 +518,10 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
   transition:opacity .3s ease, visibility .3s ease;
 }
 #initLoader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
-.loader-mark{width:22px;height:22px;background:var(--spike);border-radius:4px;animation:loaderPulse 1s ease-in-out infinite;}
+.loader-mark{width:22px;height:22px;background:var(--spike);border-radius:10px;animation:loaderPulse 1s ease-in-out infinite;}
 @keyframes loaderPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(0.75);opacity:0.6;}}
 .loader-skeleton{width:280px;display:flex;flex-direction:column;gap:8px;}
-.skel-row{height:14px;border-radius:3px;background:linear-gradient(90deg,var(--bg-raised) 25%,var(--bg-raised-2) 37%,var(--bg-raised) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;}
+.skel-row{height:14px;border-radius:var(--radius-sm);background:linear-gradient(90deg,var(--bg-raised) 25%,var(--bg-raised-2) 37%,var(--bg-raised) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;}
 @keyframes shimmer{0%{background-position:100% 0;}100%{background-position:0 0;}}
 
 /* ---------- QOL: scroll to top ---------- */
@@ -595,7 +603,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 .chat-input-row input:focus{border-color:var(--spike);}
 
 /* ---------- QOL: level badges ---------- */
-.lvl-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;text-transform:uppercase;letter-spacing:.03em;}
+.lvl-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:var(--radius-sm);text-transform:uppercase;letter-spacing:.03em;}
 .lvl-badge.verified{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,.25);}
 .lvl-badge.buffed{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,.25);}
 .lvl-badge.nerfed{background:rgba(255,84,112,0.1);color:var(--red);border:1px solid rgba(255,84,112,.25);}
@@ -607,17 +615,17 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   background:linear-gradient(90deg, var(--spike-dim), transparent);border:1px solid var(--line);
   border-left:3px solid var(--gold);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;
-  cursor:pointer;transition:border-color .15s ease;
+  cursor:pointer;transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease;
 }
-.featured-banner:hover{border-color:var(--gold);}
+.featured-banner:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 20px rgba(255,184,69,0.12);}
 
 /* ---------- QOL: demon thumbnail ---------- */
-.demon-thumb{width:34px;height:22px;flex:none;border-radius:2px;object-fit:cover;background:var(--bg-raised-2);border:1px solid var(--line);}
+.demon-thumb{width:34px;height:22px;flex:none;border-radius:var(--radius-sm);object-fit:cover;background:var(--bg-raised-2);border:1px solid var(--line);}
 
 /* ---------- QOL: rating bars ---------- */
 .rating-row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim);margin-top:4px;}
-.rating-bar-wrap{flex:1;height:5px;background:var(--bg-raised);border-radius:4px;overflow:hidden;max-width:100px;}
-.rating-bar-fill{height:100%;background:var(--cyan);border-radius:4px;}
+.rating-bar-wrap{flex:1;height:5px;background:var(--bg-raised);border-radius:10px;overflow:hidden;max-width:100px;}
+.rating-bar-fill{height:100%;background:var(--cyan);border-radius:10px;}
 
 /* ---------- QOL: like button ---------- */
 .like-btn{background:none;border:1px solid var(--line);border-radius:var(--radius);color:var(--text-muted);padding:5px 10px;font-size:12px;transition:all .15s ease;}
@@ -746,7 +754,7 @@ const APP = {
     discordUrl: "",
     featuredDemonId: null
   },
-  listFilter: { search: '', tags: [], sort: 'rank', section: 'main', favoritesOnly: false, creator: '', verifier: '' }, // section: main | extended | legacy | all
+  listFilter: { search: '', tags: [], sort: 'rank', section: 'main', favoritesOnly: false, creator: '', verifier: '', minReq: '', maxReq: '', dateFrom: '', dateTo: '' }, // section: main | extended | legacy | all
   upcomingFilter: { search: '', tags: [] },
   lbFilter: { search: '', sort: 'points', view: 'players', period: 'month' }, // view: players | nations | records | period
   subFilter: { status: 'all', search: '' }
@@ -1954,7 +1962,7 @@ function getListStatus(rank){
 }
 function getFilteredSortedDemons(){
   const demons = APP.demons;
-  const { search, tags, sort, section, favoritesOnly, creator, verifier } = APP.listFilter;
+  const { search, tags, sort, section, favoritesOnly, creator, verifier, minReq, maxReq, dateFrom, dateTo } = APP.listFilter;
   const mainSize = APP.settings.mainListSize || 50;
   const extSize = Math.max(mainSize, APP.settings.extendedListSize || mainSize);
   const q = search.trim().toLowerCase();
@@ -1968,6 +1976,10 @@ function getFilteredSortedDemons(){
   }
   if(creator) list = list.filter(({d}) => d.creator === creator);
   if(verifier) list = list.filter(({d}) => d.verifier === verifier);
+  if(minReq) list = list.filter(({d}) => (d.requirement||100) >= Number(minReq));
+  if(maxReq) list = list.filter(({d}) => (d.requirement||100) <= Number(maxReq));
+  if(dateFrom) list = list.filter(({d}) => d.publishDate && d.publishDate >= dateFrom);
+  if(dateTo) list = list.filter(({d}) => d.publishDate && d.publishDate <= dateTo);
   if(q){
     list = list.filter(({d}) =>
       d.name.toLowerCase().includes(q) ||
@@ -1994,6 +2006,14 @@ function setListSort(v){ APP.listFilter.sort = v; renderListTab(); }
 function setListSection(v){ APP.listFilter.section = v; renderListTab(); }
 function setListCreatorFilter(v){ APP.listFilter.creator = v; renderListTab(); }
 function setListVerifierFilter(v){ APP.listFilter.verifier = v; renderListTab(); }
+function setListMinReq(v){ APP.listFilter.minReq = v; renderListTab(); }
+function setListMaxReq(v){ APP.listFilter.maxReq = v; renderListTab(); }
+function setListDateFrom(v){ APP.listFilter.dateFrom = v; renderListTab(); }
+function setListDateTo(v){ APP.listFilter.dateTo = v; renderListTab(); }
+function clearListAdvancedFilters(){
+  APP.listFilter.minReq = ''; APP.listFilter.maxReq = ''; APP.listFilter.dateFrom = ''; APP.listFilter.dateTo = '';
+  renderListTab();
+}
 function toggleFavoritesOnly(){ APP.listFilter.favoritesOnly = !APP.listFilter.favoritesOnly; renderListTab(); }
 function toggleListTagFilter(t){
   const i = APP.listFilter.tags.indexOf(t);
@@ -2140,6 +2160,19 @@ function renderListTab(preserveFocus){
           <option value="">All Verifiers</option>
           ${allVerifiers().map(v=>`<option value="${escapeHtml(v)}" ${APP.listFilter.verifier===v?'selected':''}>${escapeHtml(v)}</option>`).join('')}
         </select>
+      </div>
+      <div class="list-toolbar-row">
+        <label class="hint" style="display:flex;align-items:center;gap:5px;white-space:nowrap;">Req %
+          <input type="number" min="1" max="100" placeholder="Min" value="${escapeHtml(APP.listFilter.minReq)}" oninput="setListMinReq(this.value)" style="width:64px;">
+          –
+          <input type="number" min="1" max="100" placeholder="Max" value="${escapeHtml(APP.listFilter.maxReq)}" oninput="setListMaxReq(this.value)" style="width:64px;">
+        </label>
+        <label class="hint" style="display:flex;align-items:center;gap:5px;white-space:nowrap;">Published
+          <input type="date" value="${escapeHtml(APP.listFilter.dateFrom)}" oninput="setListDateFrom(this.value)" style="width:130px;">
+          –
+          <input type="date" value="${escapeHtml(APP.listFilter.dateTo)}" oninput="setListDateTo(this.value)" style="width:130px;">
+        </label>
+        ${(APP.listFilter.minReq||APP.listFilter.maxReq||APP.listFilter.dateFrom||APP.listFilter.dateTo) ? `<button class="btn small ghost" onclick="clearListAdvancedFilters()">Clear</button>` : ''}
       </div>
       ${tagChips}
     </div>
@@ -3171,7 +3204,7 @@ function renderStatsTab(){
   const legacyCount = Math.max(0, demons.length - mainSize);
   const newest = demons.slice().sort((a,b)=>(b.addedAt||0)-(a.addedAt||0))[0];
   const totalEarned = APP.players.reduce((s,p)=>s+(p.points||0),0);
-  const approvedRecords = APP.submissions.filter(s=>s.status==='approved');
+  const approvedRecords = APP.submissions.filter(s=>s.status==='approved' && s.type!=='progress');
   const pendingCount = APP.submissions.filter(s=>s.status==='pending').length;
 
   const nations = getNationStandings();
@@ -3181,6 +3214,53 @@ function renderStatsTab(){
   approvedRecords.forEach(s => { recordCounts[s.player] = (recordCounts[s.player]||0)+1; });
   let mostActive = null, mostActiveCount = 0;
   Object.entries(recordCounts).forEach(([name,c]) => { if(c>mostActiveCount){ mostActive = name; mostActiveCount = c; } });
+
+  // Most verified creator: creator with the most levels on the list
+  const creatorCounts = {};
+  demons.forEach(d => { if(d.creator) creatorCounts[d.creator] = (creatorCounts[d.creator]||0)+1; });
+  let mostVerifiedCreator = null, mostVerifiedCreatorCount = 0;
+  Object.entries(creatorCounts).forEach(([name,c]) => { if(c>mostVerifiedCreatorCount){ mostVerifiedCreator = name; mostVerifiedCreatorCount = c; } });
+
+  // Hardest verifier: verifier whose demons average the highest placement (lowest rank index = hardest)
+  const verifierRanks = {};
+  demons.forEach((d,i) => { if(d.verifier){ (verifierRanks[d.verifier]=verifierRanks[d.verifier]||[]).push(i); } });
+  let hardestVerifier = null, hardestVerifierAvg = Infinity;
+  Object.entries(verifierRanks).forEach(([name,ranks]) => {
+    const avg = ranks.reduce((s,r)=>s+r,0)/ranks.length;
+    if(avg < hardestVerifierAvg){ hardestVerifierAvg = avg; hardestVerifier = name; }
+  });
+
+  // Per-demon record counts, for most/least completed and completion rate
+  const perDemonCounts = {};
+  approvedRecords.forEach(s => { perDemonCounts[s.demonId] = (perDemonCounts[s.demonId]||0)+1; });
+  const demonsWithRecords = demons.filter(d => perDemonCounts[d.id]).length;
+  const completionRate = demons.length ? Math.round((demonsWithRecords/demons.length)*100) : 0;
+  let mostCompletedDemon = null, mostCompletedCount = -1;
+  let leastCompletedDemon = null, leastCompletedCount = Infinity;
+  demons.forEach(d => {
+    const c = perDemonCounts[d.id]||0;
+    if(c > mostCompletedCount){ mostCompletedCount = c; mostCompletedDemon = d; }
+    if(c < leastCompletedCount){ leastCompletedCount = c; leastCompletedDemon = d; }
+  });
+
+  // Point distribution buckets
+  const bucketSize = 25;
+  const buckets = {};
+  demons.forEach(d => {
+    const b = Math.floor((d.points||0)/bucketSize)*bucketSize;
+    buckets[b] = (buckets[b]||0)+1;
+  });
+  const bucketKeys = Object.keys(buckets).map(Number).sort((a,b)=>a-b);
+  const maxBucketCount = Math.max(1, ...bucketKeys.map(k=>buckets[k]));
+  const distGraphHtml = bucketKeys.length ? `
+    <div style="display:flex;align-items:flex-end;gap:6px;height:110px;padding:8px 4px 0;">
+      ${bucketKeys.map(k => `
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;" title="${buckets[k]} demon(s) at ${k}-${k+bucketSize-1}pt">
+          <div style="font-size:10px;color:var(--text-dim);">${buckets[k]}</div>
+          <div style="width:100%;background:var(--spike);border-radius:4px 4px 0 0;height:${Math.max(4,(buckets[k]/maxBucketCount)*70)}px;"></div>
+          <div style="font-size:9.5px;color:var(--text-dim);white-space:nowrap;">${k}+</div>
+        </div>`).join('')}
+    </div>` : `<div class="completion-item" style="color:var(--text-dim);">No demons yet.</div>`;
 
   const recentDemons = demons.slice().sort((a,b)=>(b.addedAt||0)-(a.addedAt||0)).slice(0,5);
   const recentHtml = recentDemons.length ? recentDemons.map(d => {
@@ -3201,6 +3281,7 @@ function renderStatsTab(){
       <div class="stat-card"><div class="sc-val">${APP.players.length}</div><div class="sc-lbl">Players</div></div>
       <div class="stat-card"><div class="sc-val">${totalEarned}</div><div class="sc-lbl">Total Points Earned</div></div>
       <div class="stat-card"><div class="sc-val">${approvedRecords.length}</div><div class="sc-lbl">Approved Records</div></div>
+      <div class="stat-card"><div class="sc-val">${completionRate}%</div><div class="sc-lbl">Completion Rate</div></div>
       ${isMod() ? `<div class="stat-card"><div class="sc-val">${pendingCount}</div><div class="sc-lbl">Pending Review</div></div>` : ''}
     </div>
     <div class="list-layout">
@@ -3212,11 +3293,19 @@ function renderStatsTab(){
           <div class="completion-item"><span>Newest addition</span><span style="color:var(--text-dim);">${newest?escapeHtml(newest.name):'—'}</span></div>
           <div class="completion-item"><span>Top nation</span><span style="color:var(--text-dim);">${topNation?flagEmoji(topNation.country)+' '+escapeHtml(countryName(topNation.country))+' ('+topNation.points+'pt)':'—'}</span></div>
           <div class="completion-item"><span>Most active player</span><span style="color:var(--text-dim);">${mostActive?escapeHtml(mostActive)+' ('+mostActiveCount+' records)':'—'}</span></div>
+          <div class="completion-item"><span>Most verified creator</span><span style="color:var(--text-dim);">${mostVerifiedCreator?escapeHtml(mostVerifiedCreator)+' ('+mostVerifiedCreatorCount+' levels)':'—'}</span></div>
+          <div class="completion-item"><span>Hardest verifier</span><span style="color:var(--text-dim);">${hardestVerifier?escapeHtml(hardestVerifier):'—'}</span></div>
+          <div class="completion-item"><span>Most completed demon</span><span style="color:var(--text-dim);">${mostCompletedDemon&&mostCompletedCount>0?escapeHtml(mostCompletedDemon.name)+' ('+mostCompletedCount+')':'—'}</span></div>
+          <div class="completion-item"><span>Least completed demon</span><span style="color:var(--text-dim);">${leastCompletedDemon?escapeHtml(leastCompletedDemon.name)+' ('+leastCompletedCount+')':'—'}</span></div>
         </div>
       </div>
       <div class="panel">
         <div class="panel-head"><h3>Recently Added</h3></div>
         <div>${recentHtml}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Point Distribution</h3></div>
+        ${distGraphHtml}
       </div>
     </div>
   `;
