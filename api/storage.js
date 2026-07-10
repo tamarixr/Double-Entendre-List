@@ -7,7 +7,12 @@ const ALLOWED_KEYS = new Set([
   'players',
   'submissions',
   'registered_users',
-  'site_settings'
+  'site_settings',
+  'upcoming',
+  'profiles',
+  'chat_messages',
+  'changelog',
+  'snapshots'
 ]);
 
 export default async function handler(req, res) {

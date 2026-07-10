@@ -657,6 +657,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
     <button data-tab="submit"><span class="si">🎬</span>Submit Play<span id="pendingBadgeSlot"></span></button>
     <div class="side-nav-label">Community</div>
     <button data-tab="leaderboard"><span class="si">🏆</span>Leaderboard</button>
+    <button data-tab="halloffame"><span class="si">🏛️</span>Hall of Fame</button>
     <button data-tab="stats"><span class="si">📊</span>Stats</button>
     <button data-tab="chat"><span class="si">💬</span>Chat<span id="chatBadgeSlot"></span></button>
     <button data-tab="changelog"><span class="si">🕘</span>Changelog</button>
@@ -670,6 +671,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
       <button class="btn ghost small" onclick="toggleThemeMode()" style="padding: 4px 6px; font-size: 13px;" title="Toggle Light/Dark Theme">🌓</button>
       <button class="btn ghost small" onclick="goToRandomDemon()" style="padding: 4px 6px; font-size: 13px;" title="Random Level">🎯</button>
       <button class="btn ghost small" onclick="openShortcutsModal()" style="padding: 4px 6px; font-size: 13px;" title="Keyboard Shortcuts">⌨️</button>
+      <span id="discordLinkSlot"></span>
     </div>
     <div class="account-area-wrapper">
       <div id="accountArea"></div>
@@ -684,6 +686,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
   <div class="tab-panel" id="panel-timemachine"></div>
   <div class="tab-panel" id="panel-roulette"></div>
   <div class="tab-panel" id="panel-leaderboard"></div>
+  <div class="tab-panel" id="panel-halloffame"></div>
   <div class="tab-panel" id="panel-submit"></div>
   <div class="tab-panel" id="panel-stats"></div>
   <div class="tab-panel" id="panel-chat"></div>
@@ -837,6 +840,13 @@ function applySystemTheme(){
   
   document.querySelectorAll('.site-name-text').forEach(el => el.textContent = APP.settings.siteName);
   document.querySelectorAll('.site-tagline-text').forEach(el => el.textContent = APP.settings.siteTagline);
+  renderDiscordLink();
+}
+function renderDiscordLink(){
+  const slot = document.getElementById('discordLinkSlot');
+  if(!slot) return;
+  const url = APP.settings.discordUrl;
+  slot.innerHTML = url ? `<a class="btn ghost small" href="${escapeHtml(url)}" target="_blank" rel="noopener" style="padding:4px 6px;font-size:13px;text-decoration:none;" title="Join our Discord">💬</a>` : '';
 }
 
 function toggleThemeMode(){
@@ -1413,6 +1423,7 @@ function buildCommandItems(query){
     { label:'Upcoming', sub:'Go to tab', tab:'upcoming' },
     { label:'Roulette', sub:'Go to tab', tab:'roulette' },
     { label:'Leaderboard', sub:'Go to tab', tab:'leaderboard' },
+    { label:'Hall of Fame', sub:'Go to tab', tab:'halloffame' },
     { label:'Submit Play', sub:'Go to tab', tab:'submit' },
     { label:'Stats', sub:'Go to tab', tab:'stats' },
   ];
@@ -1631,7 +1642,16 @@ function openAdminSettingsModal() {
         <div class="field">
           <label>Main List Size</label>
           <input id="st-mainsize" type="number" min="1" value="${APP.settings.mainListSize||50}">
-          <div class="hint">Demons ranked below this position are shown in the Legacy List instead of the main list, similar to other demon lists.</div>
+          <div class="hint">Demons ranked below this position fall into the Extended List instead of the main list, similar to other demon lists.</div>
+        </div>
+        <div class="field">
+          <label>Extended List Size</label>
+          <input id="st-extsize" type="number" min="1" value="${APP.settings.extendedListSize||100}">
+          <div class="hint">Demons ranked below this position fall into the Legacy List.</div>
+        </div>
+        <div class="field">
+          <label>Discord Invite URL <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label>
+          <input id="st-discord" value="${escapeHtml(APP.settings.discordUrl||'')}" placeholder="https://discord.gg/...">
         </div>
       </div>
       <div class="modal-foot">
@@ -1647,12 +1667,16 @@ async function handleSaveSettings(){
   const tagline = document.getElementById('st-tagline').value.trim();
   const accent = document.getElementById('st-color').value;
   const mainListSize = parseInt(document.getElementById('st-mainsize').value) || 50;
+  const extendedListSize = parseInt(document.getElementById('st-extsize').value) || 100;
+  const discordUrl = document.getElementById('st-discord').value.trim();
 
   if(!name) return;
   APP.settings.siteName = name;
   APP.settings.siteTagline = tagline;
   APP.settings.accentColor = accent;
   APP.settings.mainListSize = Math.max(1, mainListSize);
+  APP.settings.extendedListSize = Math.max(APP.settings.mainListSize, extendedListSize);
+  APP.settings.discordUrl = discordUrl;
 
   await saveSettings();
   applySystemTheme();
@@ -1688,6 +1712,7 @@ function renderAll(){
   renderTimeMachineTab();
   renderRouletteTab();
   renderLeaderboardTab();
+  renderHallOfFameTab();
   renderSubmitTab();
   renderStatsTab();
   renderChatTab();
@@ -1716,14 +1741,23 @@ function allDemonTags(){
   APP.demons.forEach(d => (d.tags||[]).forEach(t => set.add(t)));
   return Array.from(set).sort((a,b)=>a.localeCompare(b));
 }
+function getListStatus(rank){
+  const mainSize = APP.settings.mainListSize || 50;
+  const extSize = Math.max(mainSize, APP.settings.extendedListSize || mainSize);
+  if(rank < mainSize) return 'Main';
+  if(rank < extSize) return 'Extended';
+  return 'Legacy';
+}
 function getFilteredSortedDemons(){
   const demons = APP.demons;
   const { search, tags, sort, section, favoritesOnly } = APP.listFilter;
   const mainSize = APP.settings.mainListSize || 50;
+  const extSize = Math.max(mainSize, APP.settings.extendedListSize || mainSize);
   const q = search.trim().toLowerCase();
   let list = demons.map((d,i) => ({ d, rank: i }));
   if(section === 'main') list = list.filter(({rank}) => rank < mainSize);
-  else if(section === 'legacy') list = list.filter(({rank}) => rank >= mainSize);
+  else if(section === 'extended') list = list.filter(({rank}) => rank >= mainSize && rank < extSize);
+  else if(section === 'legacy') list = list.filter(({rank}) => rank >= extSize);
   if(favoritesOnly){
     const favs = getFavorites();
     list = list.filter(({d}) => favs.has(d.id));
@@ -1778,11 +1812,25 @@ function renderListTab(preserveFocus){
   const totalPoints = demons.reduce((s,d)=>s+(d.points||0),0);
   const hardest = demons[0];
   const mainSize = APP.settings.mainListSize || 50;
-  const hasLegacy = demons.length > mainSize;
+  const extSize = Math.max(mainSize, APP.settings.extendedListSize || mainSize);
+  const hasExtended = demons.length > mainSize && extSize > mainSize;
+  const hasLegacy = demons.length > extSize;
   const mainListDemons = demons.slice(0, mainSize);
   const completed = getCompleted();
   const completedCount = mainListDemons.filter(d => completed.has(d.id)).length;
   const progressPct = mainListDemons.length ? Math.round((completedCount / mainListDemons.length) * 100) : 0;
+  const featured = APP.settings.featuredDemonId ? APP.demons.find(d=>d.id===APP.settings.featuredDemonId) : null;
+  const featuredBanner = featured ? `
+    <div class="featured-banner" onclick="selectDemon('${featured.id}')">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+        ${getThumbnailUrl(featured) ? `<img class="demon-thumb" style="width:48px;height:32px;" src="${escapeHtml(getThumbnailUrl(featured))}" alt="" onerror="this.remove()">` : ''}
+        <div style="min-width:0;">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--gold);font-weight:700;">★ Featured Level</div>
+          <div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(featured.name)}</div>
+        </div>
+      </div>
+      <span class="lvl-badge featured">Featured</span>
+    </div>` : '';
   const statCards = demons.length ? `
     <div class="stat-cards">
       <div class="stat-card"><div class="sc-val" data-count="${Math.min(demons.length,mainSize)}">0</div><div class="sc-lbl">Main List</div></div>
@@ -1801,9 +1849,10 @@ function renderListTab(preserveFocus){
       ${tags.map(t => `<button class="tag-chip ${APP.listFilter.tags.includes(t)?'active':''}" onclick="toggleListTagFilter('${escapeHtml(t).replace(/'/g,"\\'")}')">${escapeHtml(t)}</button>`).join('')}
     </div>` : '';
 
-  const sectionToggle = hasLegacy ? `
+  const sectionToggle = (hasExtended || hasLegacy) ? `
     <div class="status-filter-row" style="padding:10px 12px 0;">
       <button class="status-filter-btn ${APP.listFilter.section==='main'?'active':''}" onclick="setListSection('main')">Main List</button>
+      ${hasExtended ? `<button class="status-filter-btn ${APP.listFilter.section==='extended'?'active':''}" onclick="setListSection('extended')">Extended List</button>` : ''}
       <button class="status-filter-btn ${APP.listFilter.section==='legacy'?'active':''}" onclick="setListSection('legacy')">Legacy List</button>
       <button class="status-filter-btn ${APP.listFilter.section==='all'?'active':''}" onclick="setListSection('all')">All</button>
     </div>` : '';
@@ -1845,7 +1894,7 @@ function renderListTab(preserveFocus){
       <div class="rank-badge ${i<3?'top':''}">${i+1}</div>
       ${getThumbnailUrl(d) ? `<img class="demon-thumb" src="${escapeHtml(getThumbnailUrl(d))}" alt="" loading="lazy" onerror="this.remove()">` : ''}
       <div class="info">
-        <div class="name">${escapeHtml(d.name)}${done?' ✓':''}</div>
+        <div class="name">${escapeHtml(d.name)}${done?' ✓':''}${d.difficultyChange==='buffed'?' <span class="lvl-badge buffed">Buffed</span>':''}${d.difficultyChange==='nerfed'?' <span class="lvl-badge nerfed">Nerfed</span>':''}${APP.settings.featuredDemonId===d.id?' <span class="lvl-badge featured">★</span>':''}</div>
         <div class="creator">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}</div>
         ${tagsHtml || isNew ? `<div class="tag-container">${isNew ? `<span class="tag-pill new">New</span>` : ''}${tagsHtml}</div>` : ''}
       </div>
@@ -1856,8 +1905,12 @@ function renderListTab(preserveFocus){
         <button onclick="event.stopPropagation();moveDemon('${d.id}',1)" ${i===demons.length-1?'disabled':''}>&#9660;</button>
       </div>` : ''}
     </div>`;
-    const showDivider = APP.listFilter.section==='all' && APP.listFilter.sort==='rank' && i===mainSize && !APP.listFilter.search && !APP.listFilter.tags.length;
-    return (showDivider ? `<div class="legacy-divider"><span class="line"></span>Legacy List<span class="line"></span></div>` : '') + rowHtml;
+    const showExtDivider = APP.listFilter.section==='all' && APP.listFilter.sort==='rank' && i===mainSize && hasExtended && !APP.listFilter.search && !APP.listFilter.tags.length;
+    const showLegDivider = APP.listFilter.section==='all' && APP.listFilter.sort==='rank' && i===extSize && hasLegacy && !APP.listFilter.search && !APP.listFilter.tags.length;
+    let divider = '';
+    if(showExtDivider) divider = `<div class="legacy-divider"><span class="line"></span>Extended List<span class="line"></span></div>`;
+    else if(showLegDivider) divider = `<div class="legacy-divider"><span class="line"></span>Legacy List<span class="line"></span></div>`;
+    return divider + rowHtml;
   });
 
   const rows = demons.length ? (filtered.length ? rowsArr.join('') : `<div class="empty-state"><div class="big">No matches</div>Try a different search or clear your tag filters.</div>`)
@@ -1871,6 +1924,7 @@ function renderListTab(preserveFocus){
       <h1 class="page-title site-name-text">${escapeHtml(APP.settings.siteName)}</h1>
       <p class="page-desc site-tagline-text">${escapeHtml(APP.settings.siteTagline)}</p>
     </div>
+    ${featuredBanner}
     ${statCards}
     <div class="list-layout">
       <div class="panel">
@@ -1915,14 +1969,52 @@ function renderDemonDetail(d, index){
   if(songLabel) metaParts.push(`<span><b>Song:</b> ${escapeHtml(songLabel)}</span>`);
   if(publishLabel) metaParts.push(`<span><b>Published:</b> ${escapeHtml(publishLabel)}</span>`);
   const hasVerify = !!d.verifyVideo;
+  const status = getListStatus(index);
+  const isFeatured = APP.settings.featuredDemonId === d.id;
+
+  const badges = [];
+  if(d.lengthTag) badges.push(`<span class="lvl-badge" style="background:var(--bg-raised-2);color:var(--text-muted);border:1px solid var(--line);">${escapeHtml(d.lengthTag)}</span>`);
+  if(d.difficultyChange==='buffed') badges.push(`<span class="lvl-badge buffed">Buffed</span>`);
+  if(d.difficultyChange==='nerfed') badges.push(`<span class="lvl-badge nerfed">Nerfed</span>`);
+  if(isFeatured) badges.push(`<span class="lvl-badge featured">Featured</span>`);
+
+  const likeCount = Object.keys(d.likes||{}).length;
+  const liked = APP.currentUser && d.likes && d.likes[APP.currentUser.username.toLowerCase()];
+  const enj = getEnjoymentAverage(d);
+  const myRating = APP.currentUser && d.enjoymentRatings ? d.enjoymentRatings[APP.currentUser.username.toLowerCase()] : null;
+
+  const ratingBars = (d.decoRating || d.gameplayRating) ? `
+    <div style="margin-top:10px;">
+      ${d.decoRating ? `<div class="rating-row"><span style="width:64px;">Deco</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:${d.decoRating*10}%;"></div></div><span>${d.decoRating}/10</span></div>` : ''}
+      ${d.gameplayRating ? `<div class="rating-row"><span style="width:64px;">Gameplay</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:${d.gameplayRating*10}%;"></div></div><span>${d.gameplayRating}/10</span></div>` : ''}
+    </div>` : '';
+
+  const enjoymentWidget = `
+    <div style="margin-top:8px;">
+      <div class="rating-row"><span style="width:64px;">Enjoyment</span><div class="rating-bar-wrap"><div class="rating-bar-fill" style="width:${enj?enj.avg*10:0}%;background:var(--gold);"></div></div><span>${enj?`${enj.avg}/10 (${enj.count})`:'No ratings yet'}</span></div>
+      ${APP.currentUser ? `<div style="display:flex;gap:3px;margin-top:4px;">${Array.from({length:10},(_,n)=>n+1).map(n=>`<button class="btn ghost small" style="padding:2px 6px;font-size:10.5px;${myRating===n?'border-color:var(--gold);color:var(--gold);':''}" onclick="rateEnjoyment('${d.id}',${n})">${n}</button>`).join('')}</div>` : `<div class="hint" style="margin-top:2px;">Log in to rate this level's enjoyment.</div>`}
+    </div>`;
+
+  const records = APP.submissions.filter(s=>s.demonId===d.id && s.status==='approved').slice().sort((a,b)=>(b.percent-a.percent) || (a.submittedAt-b.submittedAt));
+  const recordsHtml = records.length ? `
+    <div class="panel-head" style="margin-top:16px;"><h3>Records (${records.length})</h3></div>
+    <div class="demon-rows" style="max-height:220px;">
+      ${records.map(s => `<div class="demon-row" style="cursor:default;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)}${s.attempts?` · ${s.attempts} attempts`:''}</div></div><div class="pts">${s.percent}%</div></div>`).join('')}
+    </div>` : '';
+
+  const changelogEntries = (d.levelChangelog||[]).slice().reverse();
+  const changelogHtml = `
+    <div class="panel-head" style="margin-top:16px;"><h3>Level History</h3>${isMod() ? `<button class="btn small ghost" onclick="addLevelChangelogEntry('${d.id}')">+ Add Entry</button>` : ''}</div>
+    ${changelogEntries.length ? `<div class="demon-rows" style="max-height:200px;">${changelogEntries.map(c => `<div class="demon-row" style="cursor:default;"><div class="info"><div class="name" style="font-size:12.5px;">${escapeHtml(c.text)}</div><div class="creator">${new Date(c.ts).toLocaleDateString()}${c.auto?' · auto':''}</div></div></div>`).join('')}</div>` : `<div class="hint" style="padding:8px 0;">No history yet.</div>`}`;
 
   return `
     ${banner ? `<div class="detail-banner"><img src="${escapeHtml(banner)}" alt="${escapeHtml(d.name)} thumbnail" onerror="this.parentElement.style.display='none'"></div>` : ''}
     <div class="detail-top">
       <div>
         <div class="detail-title">${fav?'★ ':''}${escapeHtml(d.name)}</div>
-        <div class="detail-sub">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
+        <div class="detail-sub">${flagEmoji(d.country)} by <a href="javascript:void(0)" onclick="event.stopPropagation();openCreatorProfile('${escapeHtml(d.creator||'').replace(/'/g,"\\'")}')" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;">${escapeHtml(d.creator||'Unknown')}</a>${d.verifier ? ' · verified by '+`<a href="javascript:void(0)" onclick="event.stopPropagation();openCreatorProfile('${escapeHtml(d.verifier).replace(/'/g,"\\'")}')" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;">${escapeHtml(d.verifier)}</a>` : ''}</div>
         ${metaParts.length ? `<div class="detail-meta">${metaParts.join('')}</div>` : ''}
+        ${badges.length ? `<div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;">${badges.join('')}</div>` : ''}
         ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
       </div>
       <div>
@@ -1930,25 +2022,32 @@ function renderDemonDetail(d, index){
         ${isMod() ? `
         <button class="btn small" onclick="openDemonModal('${d.id}')">Edit</button>
         <button class="btn small danger" onclick="deleteDemon('${d.id}')">Delete</button>` : ''}
+        ${isAdmin() ? `<button class="btn small ${isFeatured?'primary':'ghost'}" onclick="setFeaturedDemon('${d.id}')">${isFeatured?'★ Featured':'☆ Feature'}</button>` : ''}
       </div>
     </div>
     <div class="detail-actions" style="margin-top:0;margin-bottom:12px;">
       <button class="btn small ${fav?'primary':''}" onclick="toggleFavorite('${d.id}', null); renderListTab();">${fav?'★ Favorited':'☆ Favorite'}</button>
       <button class="complete-check ${done?'done':''}" onclick="toggleCompleted('${d.id}')">${done?'✓ Completed':'Mark as Completed'}</button>
+      <button class="like-btn ${liked?'liked':''}" onclick="toggleLevelLike('${d.id}')">${liked?'♥':'♡'} ${likeCount}</button>
     </div>
     <div class="stat-row">
       <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Placement</div></div>
       <div class="stat"><div class="val">${d.points}</div><div class="lbl">Points</div></div>
       <div class="stat"><div class="val">${d.requirement||100}%</div><div class="lbl">Requirement</div></div>
       ${d.requirement2 ? `<div class="stat"><div class="val">${d.requirement2}%+</div><div class="lbl">Reduced (${d.points2||0}pt)</div></div>` : ''}
-      ${index >= (APP.settings.mainListSize||50) ? `<div class="stat"><div class="val" style="color:var(--text-muted);">Legacy</div><div class="lbl">List Status</div></div>` : ''}
+      <div class="stat"><div class="val" style="${status!=='Main'?'color:var(--text-muted);':''}">${status}</div><div class="lbl">List Status</div></div>
+      ${d.downloadCount ? `<div class="stat"><div class="val">${d.downloadCount.toLocaleString()}</div><div class="lbl">Downloads</div></div>` : ''}
     </div>
+    ${ratingBars}
+    ${enjoymentWidget}
     ${hasVerify ? `<div class="video-tabs">
       <button data-mode="gameplay" class="active" onclick="switchDetailVideo('gameplay','${d.id}')">Gameplay Showcase</button>
       <button data-mode="verify" onclick="switchDetailVideo('verify','${d.id}')">Verification</button>
     </div>` : ''}
     <div class="video-wrap" id="detailVideoWrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
     ${d.description ? `<div class="detail-desc">${escapeHtml(d.description)}</div>` : ''}
+    ${recordsHtml}
+    ${changelogHtml}
   `;
 }
 
@@ -2001,10 +2100,35 @@ function openDemonModal(id, prefill){
           </div>
         </div>
         <div class="field hint" style="margin-top:-6px;">Records at or above the reduced requirement (but below the main one) award reduced points instead of full points. Leave the reduced requirement blank to disable.</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Length</label>
+            <select id="dm-length">
+              <option value="" ${!src||!src.lengthTag?'selected':''}>—</option>
+              ${['Tiny','Short','Medium','Long','XL'].map(l=>`<option value="${l}" ${src&&src.lengthTag===l?'selected':''}>${l}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Difficulty Change</label>
+            <select id="dm-diffchange">
+              <option value="" ${!src||!src.difficultyChange?'selected':''}>None</option>
+              <option value="buffed" ${src&&src.difficultyChange==='buffed'?'selected':''}>Buffed</option>
+              <option value="nerfed" ${src&&src.difficultyChange==='nerfed'?'selected':''}>Nerfed</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>Deco Rating (1-10)</label><input id="dm-decorating" type="number" min="1" max="10" value="${src&&src.decoRating?src.decoRating:''}" placeholder="e.g. 8"></div>
+          <div class="field"><label>Gameplay Rating (1-10)</label><input id="dm-gameplayrating" type="number" min="1" max="10" value="${src&&src.gameplayRating?src.gameplayRating:''}" placeholder="e.g. 9"></div>
+        </div>
+        <div class="field"><label>Download Count <span style="color:var(--text-dim);font-weight:400;">(optional, from the level's GD stats)</span></label><input id="dm-downloads" type="number" min="0" value="${src&&src.downloadCount?src.downloadCount:''}" placeholder="e.g. 250000"></div>
         <div class="field">
           <label>Tags</label>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px;">
+            ${['Wave','Memory','Ship','Cube','Flow','Timing','Spam','Dual','Mini','Swing'].map(t=>`<button type="button" class="tag-chip" onclick="quickAddTag('${t}')">${t}</button>`).join('')}
+          </div>
           <input id="dm-tags" value="${escapeHtml(currentTagsString)}" placeholder="e.g. Memory, Timing, XL, Wave, Challenge">
-          <div class="hint">Type whatever tags you want for this level, separated by commas.</div>
+          <div class="hint">Type whatever tags you want for this level, separated by commas, or click a quick tag above.</div>
         </div>
         <div class="field"><label>Description (optional)</label><textarea id="dm-desc">${src?escapeHtml(src.description||''):''}</textarea></div>
       </div>
@@ -2014,6 +2138,13 @@ function openDemonModal(id, prefill){
       </div>
     </div>
   </div>`);
+}
+function quickAddTag(t){
+  const input = document.getElementById('dm-tags');
+  if(!input) return;
+  const parts = input.value.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!parts.includes(t)) parts.push(t);
+  input.value = parts.join(', ');
 }
 async function saveDemonForm(id, promotedFromId){
   const name = document.getElementById('dm-name').value.trim();
@@ -2033,12 +2164,22 @@ async function saveDemonForm(id, promotedFromId){
   if(requirement2 !== null && requirement2 >= requirement) requirement2 = null; // must be strictly lower
   const points2 = parseInt(document.getElementById('dm-points2').value) || 0;
 
+  let decoRating = parseInt(document.getElementById('dm-decorating').value);
+  decoRating = isNaN(decoRating) ? null : Math.min(10, Math.max(1, decoRating));
+  let gameplayRating = parseInt(document.getElementById('dm-gameplayrating').value);
+  gameplayRating = isNaN(gameplayRating) ? null : Math.min(10, Math.max(1, gameplayRating));
+  let downloadCount = parseInt(document.getElementById('dm-downloads').value);
+  downloadCount = isNaN(downloadCount) ? 0 : Math.max(0, downloadCount);
+
+  const points = parseInt(document.getElementById('dm-points').value) || 0;
+  const difficultyChange = document.getElementById('dm-diffchange').value;
+
   const data = {
     name,
     creator: document.getElementById('dm-creator').value.trim(),
     verifier: document.getElementById('dm-verifier').value.trim(),
     country: document.getElementById('dm-country').value,
-    points: parseInt(document.getElementById('dm-points').value) || 0,
+    points,
     video: document.getElementById('dm-video').value.trim(),
     verifyVideo: document.getElementById('dm-verifyvideo').value.trim(),
     thumbnail: document.getElementById('dm-thumbnail').value.trim(),
@@ -2050,13 +2191,19 @@ async function saveDemonForm(id, promotedFromId){
     tags: processedTags,
     requirement,
     requirement2,
-    points2
+    points2,
+    lengthTag: document.getElementById('dm-length').value,
+    difficultyChange,
+    decoRating,
+    gameplayRating,
+    downloadCount
   };
   if(id){
     const d = APP.demons.find(x=>x.id===id);
+    logLevelHistory(d, data);
     Object.assign(d, data);
   }else{
-    APP.demons.push({ id: uid(), ...data, addedAt: Date.now() });
+    APP.demons.push({ id: uid(), ...data, addedAt: Date.now(), likes:{}, enjoymentRatings:{}, levelChangelog:[] });
     APP.selectedDemonId = APP.demons[APP.demons.length-1].id;
   }
   await saveDemons();
@@ -2067,6 +2214,57 @@ async function saveDemonForm(id, promotedFromId){
   closeModal();
   renderAll();
   showToast(id ? 'Demon updated' : (promotedFromId ? 'Promoted to main list' : 'Demon added'));
+}
+function logLevelHistory(d, newData){
+  if(!d.levelChangelog) d.levelChangelog = [];
+  const entries = [];
+  if(newData.requirement !== d.requirement) entries.push(`Requirement changed from ${d.requirement||100}% to ${newData.requirement}%`);
+  if(newData.points !== d.points) entries.push(`Points changed from ${d.points} to ${newData.points}`);
+  if(newData.difficultyChange && newData.difficultyChange !== d.difficultyChange) entries.push(`Level marked as ${newData.difficultyChange}`);
+  entries.forEach(text => d.levelChangelog.push({ id: uid(), ts: Date.now(), text, auto: true, mod: APP.currentUser ? APP.currentUser.username : null }));
+}
+async function addLevelChangelogEntry(demonId){
+  const d = APP.demons.find(x=>x.id===demonId);
+  if(!d || !isMod()) return;
+  const text = prompt('Changelog entry text (e.g. "Nerfed from Extreme to Insane Demon"):');
+  if(!text || !text.trim()) return;
+  if(!d.levelChangelog) d.levelChangelog = [];
+  d.levelChangelog.push({ id: uid(), ts: Date.now(), text: text.trim(), auto:false, mod: APP.currentUser.username });
+  await saveDemons();
+  renderListTab();
+  showToast('Changelog entry added');
+}
+async function toggleLevelLike(demonId){
+  if(!APP.currentUser){ showToast('Log in to like levels', 'error'); return; }
+  const d = APP.demons.find(x=>x.id===demonId);
+  if(!d) return;
+  if(!d.likes) d.likes = {};
+  const u = APP.currentUser.username.toLowerCase();
+  if(d.likes[u]) delete d.likes[u]; else d.likes[u] = true;
+  await saveDemons();
+  renderListTab();
+}
+async function rateEnjoyment(demonId, value){
+  if(!APP.currentUser){ showToast('Log in to rate levels', 'error'); return; }
+  const d = APP.demons.find(x=>x.id===demonId);
+  if(!d) return;
+  if(!d.enjoymentRatings) d.enjoymentRatings = {};
+  d.enjoymentRatings[APP.currentUser.username.toLowerCase()] = value;
+  await saveDemons();
+  renderListTab();
+  showToast('Rating saved');
+}
+function getEnjoymentAverage(d){
+  const vals = Object.values(d.enjoymentRatings||{});
+  if(!vals.length) return null;
+  return { avg: (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1), count: vals.length };
+}
+async function setFeaturedDemon(demonId){
+  if(!isAdmin()) return;
+  APP.settings.featuredDemonId = (APP.settings.featuredDemonId === demonId) ? null : demonId;
+  await saveSettings();
+  renderListTab();
+  showToast(APP.settings.featuredDemonId ? 'Set as featured level' : 'Removed from featured');
 }
 async function deleteDemon(id){
   const d = APP.demons.find(x=>x.id===id);
@@ -2548,6 +2746,57 @@ function renderLeaderboardTab(preserveFocus){
   }
 }
 
+/* ============================= HALL OF FAME TAB ============================= */
+function renderHallOfFameTab(){
+  const el = document.getElementById('panel-halloffame');
+  if(!el) return;
+  const topPlayers = APP.players.slice().sort((a,b)=>b.points-a.points).slice(0,10);
+  const medals = ['🥇','🥈','🥉'];
+  const topPlayersHtml = topPlayers.length ? topPlayers.map((p,i) => `
+    <div class="demon-row" style="cursor:pointer;" onclick="openPlayerProfile('${p.id}')">
+      <div class="rank-badge ${i<3?'top':''}">${medals[i]||('#'+(i+1))}</div>
+      <div class="info"><div class="name">${flagEmoji(p.country)} ${escapeHtml(p.name)}</div></div>
+      <div class="pts">${p.points}pt</div>
+    </div>`).join('') : `<div class="empty-state">No players yet.</div>`;
+
+  const hardest = APP.demons[0];
+  let conquerorsHtml = `<div class="empty-state">No demons on the list yet.</div>`;
+  if(hardest){
+    const conquerors = APP.submissions.filter(s => s.status==='approved' && s.demonId===hardest.id).slice().sort((a,b)=>a.submittedAt-b.submittedAt);
+    conquerorsHtml = conquerors.length ? conquerors.map((s,i) => `
+      <div class="demon-row" style="cursor:default;">
+        <div class="rank-badge ${i===0?'top':''}">${i===0?'👑':(i+1)}</div>
+        <div class="info"><div class="name">${flagEmoji(s.country)} ${escapeHtml(s.player)}${i===0?' <span class="lvl-badge featured">First Victor</span>':''}</div><div class="creator">${new Date(s.submittedAt).toLocaleDateString()}</div></div>
+        <div class="pts">${s.percent}%</div>
+      </div>`).join('') : `<div class="empty-state">Nobody has beaten it yet — be the first!</div>`;
+  }
+
+  const mostActive = (() => {
+    const counts = {};
+    APP.submissions.filter(s=>s.status==='approved').forEach(s => { counts[s.player] = (counts[s.player]||0)+1; });
+    const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    return entries[0] || null;
+  })();
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Hall of Fame</h1>
+      <p class="page-desc">The list's legends — top point earners, the demons that have humbled everyone, and the players who conquered them first.</p>
+    </div>
+    <div class="list-layout" style="grid-template-columns:1fr 1fr;">
+      <div class="panel">
+        <div class="panel-head"><h3>🏆 Top 10 Players</h3></div>
+        <div class="demon-rows" style="max-height:none;">${topPlayersHtml}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>👑 Conquerors of ${hardest?escapeHtml(hardest.name):'the #1 Demon'}</h3></div>
+        <div class="demon-rows" style="max-height:none;">${conquerorsHtml}</div>
+      </div>
+    </div>
+    ${mostActive ? `<div class="panel" style="margin-top:16px;padding:14px;"><span style="color:var(--text-dim);">Most active player:</span> <b>${escapeHtml(mostActive[0])}</b> with ${mostActive[1]} approved completions.</div>` : ''}
+  `;
+}
+
 /* ============================= STATS TAB ============================= */
 function renderStatsTab(){
   const el = document.getElementById('panel-stats');
@@ -2646,6 +2895,36 @@ function openPlayerProfile(id){
     </div>
   </div>`);
 }
+function openCreatorProfile(name){
+  if(!name) return;
+  const nameLower = name.toLowerCase();
+  const created = APP.demons.filter(d => (d.creator||'').toLowerCase()===nameLower);
+  const verified = APP.demons.filter(d => (d.verifier||'').toLowerCase()===nameLower);
+  const demonsList = (arr, emptyMsg) => arr.length ? arr.map(d => {
+    const rank = APP.demons.findIndex(x=>x.id===d.id);
+    return `<div class="completion-item" style="cursor:pointer;" onclick="closeModal();selectDemon('${d.id}');switchTab('list');"><span>${escapeHtml(d.name)}</span><span style="color:var(--text-dim);">#${rank+1} · ${d.points}pt</span></div>`;
+  }).join('') : `<div class="completion-item" style="color:var(--text-dim);">${emptyMsg}</div>`;
+  const avgPlacement = created.length ? Math.round(created.reduce((s,d)=>s+APP.demons.findIndex(x=>x.id===d.id)+1,0)/created.length) : null;
+
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>${escapeHtml(name)}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="stat-row" style="margin-top:0;">
+          <div class="stat rankstat"><div class="val">${created.length}</div><div class="lbl">Levels Created</div></div>
+          <div class="stat"><div class="val">${verified.length}</div><div class="lbl">Levels Verified</div></div>
+          ${avgPlacement ? `<div class="stat"><div class="val">#${avgPlacement}</div><div class="lbl">Avg. Placement</div></div>` : ''}
+        </div>
+        <div class="field"><label>Created</label></div>
+        <div class="panel">${demonsList(created, 'No levels created on this list.')}</div>
+        <div class="field"><label>Verified</label></div>
+        <div class="panel">${demonsList(verified, 'No levels verified on this list.')}</div>
+      </div>
+      <div class="modal-foot"><button class="btn ghost" onclick="closeModal()">Close</button></div>
+    </div>
+  </div>`);
+}
 function openPlayerModal(id){
   if(!isMod()) return;
   const editing = id ? APP.players.find(p=>p.id===id) : null;
@@ -2727,7 +3006,13 @@ function renderSubmitTab(preserveFocus){
         <span class="status-pill ${s.status}">${s.status}</span>
       </div>
       ${s.note ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px; font-style:italic;">"${escapeHtml(s.note)}"</div>` : ''}
+      ${s.attempts ? `<div style="font-size:11.5px;color:var(--text-dim);margin-bottom:2px;">${s.attempts.toLocaleString()} attempts</div>` : ''}
       <a class="sub-link" href="${escapeHtml(s.video)}" target="_blank">Watch submission ↗</a>
+      ${s.rawFootage ? ` · <a class="sub-link" href="${escapeHtml(s.rawFootage)}" target="_blank">Raw footage ↗</a>` : ''}
+      ${isMod() ? `
+      <div class="field" style="margin-top:6px;margin-bottom:0;">
+        <textarea placeholder="Private moderator notes (not visible to the player)" style="font-size:11.5px;min-height:40px;" onchange="setModNote('${s.id}', this.value)">${escapeHtml(s.modNote||'')}</textarea>
+      </div>` : ''}
       ${isMod() && s.status==='pending' ? `
       <div class="sub-actions">
         <button class="btn small primary" onclick="reviewSubmission('${s.id}','approved')">Approve</button>
@@ -2755,6 +3040,10 @@ function renderSubmitTab(preserveFocus){
           </div>
           <div class="req-hint" id="subReqHint"></div>
           <div class="field"><label>Video URL</label><input id="sb-video" placeholder="https://youtube.com/..."></div>
+          <div class="form-grid">
+            <div class="field"><label>Attempts <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label><input id="sb-attempts" type="number" min="1" placeholder="e.g. 4200"></div>
+            <div class="field"><label>Raw Footage URL <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label><input id="sb-rawfootage" placeholder="Google Drive / Dropbox link"></div>
+          </div>
           <div class="field"><label>Note (optional)</label><textarea id="sb-note" placeholder="Anything moderators should know"></textarea></div>
           <button class="btn primary" style="width:100%;" onclick="submitPlay()">Send for Review</button>
           <div id="submitMsg"></div>
@@ -2806,6 +3095,9 @@ async function submitPlay(){
   const video = document.getElementById('sb-video').value.trim();
   const country = document.getElementById('sb-country').value;
   const note = document.getElementById('sb-note').value.trim();
+  const attemptsRaw = parseInt(document.getElementById('sb-attempts').value);
+  const attempts = isNaN(attemptsRaw) ? null : Math.max(1, attemptsRaw);
+  const rawFootage = document.getElementById('sb-rawfootage').value.trim();
   const msgEl = document.getElementById('submitMsg');
   if(!player || !video || isNaN(percent) || percent<1 || percent>100){
     msgEl.innerHTML = `<div class="msg error">Fill in your name, a percent (1-100), and a video URL.</div>`;
@@ -2818,10 +3110,17 @@ async function submitPlay(){
     msgEl.innerHTML = `<div class="msg error">This demon requires at least ${floor}% to be submitted.</div>`;
     return;
   }
-  APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, status:'pending', submittedAt: Date.now() });
+  APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, attempts, rawFootage, status:'pending', submittedAt: Date.now(), modNote:'' });
   await saveSubmissions();
   msgEl.innerHTML = `<div class="msg ok">Submitted! A moderator will review it soon.</div>`;
   renderSubmitTab();
+}
+async function setModNote(id, value){
+  if(!isMod()) return;
+  const s = APP.submissions.find(x=>x.id===id);
+  if(!s) return;
+  s.modNote = value;
+  await saveSubmissions();
 }
 async function reviewSubmission(id, status){
   if(!isMod()) return;
