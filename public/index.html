@@ -63,51 +63,57 @@ input,select,textarea{font-family:inherit;}
 h1,h2,h3,.display{font-family:'Inter',sans-serif;}
 .mono{font-family:'JetBrains Mono',monospace;}
 
-/* ---------- top nav ---------- */
-.topbar{
-  position:sticky;top:0;z-index:40;
-  background:rgba(8,9,12,0.95);
-  border-bottom:1px solid var(--line);
+/* ---------- sidebar nav ---------- */
+:root{ --sidebar-w:220px; }
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);z-index:40;
+  background:rgba(8,9,12,0.98);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;
+  transition:transform .32s cubic-bezier(.65,0,.35,1), box-shadow .32s ease;
+  overflow-y:auto;
 }
-body.light-theme .topbar {
-  background:rgba(255,255,255,0.95);
+body.light-theme .sidebar{ background:rgba(255,255,255,0.98); }
+.sidebar.collapsed{ transform:translateX(calc(-1 * var(--sidebar-w))); box-shadow:none; }
+body.sidebar-collapsed main{ margin-left:0; }
+body.sidebar-collapsed .sidebar-toggle{ opacity:1;visibility:visible;transform:translateX(0); }
+main{ margin-left:var(--sidebar-w); transition:margin-left .32s cubic-bezier(.65,0,.35,1); }
+
+.sidebar-head{ padding:16px 16px 10px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.sidebar .logo{
+  font-family:'Inter',sans-serif;font-weight:700;font-size:15px;letter-spacing:-0.01em;
+  display:flex;align-items:center;gap:8px;color:var(--text);white-space:nowrap;
 }
-.topbar-inner{
-  max-width:1200px;margin:0 auto;
-  display:flex;align-items:center;gap:20px;
-  padding:10px 15px;
+.sidebar .logo .mark{ width:13px;height:13px;background:var(--spike);display:inline-block;flex:none; }
+.sidebar-collapse-btn{
+  background:none;border:1px solid var(--line);color:var(--text-dim);border-radius:var(--radius);
+  width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:12px;flex:none;
+  transition:all .15s ease;
 }
-.logo{
-  font-family:'Inter',sans-serif;
-  font-weight:700;font-size:16px;letter-spacing:-0.01em;
-  display:flex;align-items:center;gap:8px;
-  color:var(--text);white-space:nowrap;
+.sidebar-collapse-btn:hover{ color:var(--text);border-color:var(--text-dim); }
+
+nav.side-tabs{ display:flex;flex-direction:column;gap:1px;padding:6px 10px;flex:1; }
+.side-nav-label{
+  font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-dim);
+  font-weight:700;padding:12px 8px 4px;
 }
-.logo .mark{
-  width:14px;height:14px;
-  background:var(--spike);
-  display:inline-block;
-}
-nav.tabs{display:flex;gap:2px;flex:1;}
-nav.tabs button{
+nav.side-tabs button{
+  display:flex;align-items:center;gap:9px;text-align:left;
   background:none;border:none;color:var(--text-muted);
   font-family:'Inter',sans-serif;font-weight:600;font-size:13px;
-  padding:6px 12px;border-radius:var(--radius);transition:all .1s;
+  padding:8px 10px;border-radius:var(--radius);transition:all .12s ease;position:relative;
 }
-nav.tabs button:hover{color:var(--text);background:var(--bg-raised);}
-nav.tabs button.active{color:var(--text);background:var(--bg-raised-2);border:1px solid var(--line);}
-
-.account-area-wrapper {
-  display:flex;
-  align-items:center;
-  gap:10px;
+nav.side-tabs button .si{ font-size:13px;flex:none;width:16px;text-align:center; }
+nav.side-tabs button:hover{ color:var(--text);background:var(--bg-raised); }
+nav.side-tabs button.active{ color:var(--text);background:var(--bg-raised-2); }
+nav.side-tabs button.active::before{
+  content:'';position:absolute;left:0;top:6px;bottom:6px;width:2.5px;background:var(--spike);border-radius:2px;
 }
 
-.account-chip{
-  display:flex;align-items:center;gap:8px;
-  font-size:12px;color:var(--text-muted);
-}
-.account-chip .name{color:var(--text);font-weight:600;}
+.sidebar-foot{ padding:10px 14px 16px;border-top:1px solid var(--line-soft);display:flex;flex-direction:column;gap:8px; }
+.account-area-wrapper{ display:flex;flex-direction:column;align-items:stretch;gap:8px; }
+.account-chip{ display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--text-muted); }
+.account-chip .name{ color:var(--text);font-weight:600; }
+.sidebar-quickrow{ display:flex;gap:6px;flex-wrap:wrap; }
 .role-tag{
   font-size:9px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;
   padding:1px 5px;border-radius:2px;background:var(--bg-raised-2);color:var(--text-muted);
@@ -115,6 +121,26 @@ nav.tabs button.active{color:var(--text);background:var(--bg-raised-2);border:1p
 }
 .role-tag.admin{color:var(--spike);border-color:var(--spike-dim);background:var(--spike-dim);}
 body.light-theme .role-tag.admin { background: var(--spike-dim); color: var(--spike); }
+
+.sidebar-toggle{
+  position:fixed;top:14px;right:16px;z-index:60;
+  width:34px;height:34px;border-radius:8px;
+  background:var(--bg-raised-2);border:1px solid var(--line);color:var(--text-muted);
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  opacity:0;visibility:hidden;transform:translateX(6px);
+  transition:opacity .2s ease, transform .2s ease, visibility .2s ease, background .15s ease, color .15s ease;
+  box-shadow:0 4px 14px rgba(0,0,0,0.3);
+}
+.sidebar-toggle:hover{ color:var(--text);border-color:var(--spike); }
+
+@media(max-width:880px){
+  :root{ --sidebar-w:230px; }
+  .sidebar{ transform:translateX(calc(-1 * var(--sidebar-w))); box-shadow:0 0 30px rgba(0,0,0,0.5); }
+  .sidebar:not(.collapsed){ transform:translateX(0); }
+  main{ margin-left:0 !important; }
+  .sidebar-toggle{ opacity:1;visibility:visible;transform:translateX(0); }
+  body:not(.sidebar-collapsed) .sidebar-toggle{ right:calc(var(--sidebar-w) + 12px); }
+}
 
 .btn{
   border:1px solid var(--line);background:var(--bg-raised);color:var(--text);
@@ -131,7 +157,7 @@ body.light-theme .role-tag.admin { background: var(--spike-dim); color: var(--sp
 .btn:disabled{opacity:0.3;cursor:not-allowed;}
 
 /* ---------- layout ---------- */
-main{max-width:1200px;margin:0 auto;padding:20px 15px 60px;}
+main{max-width:1200px;padding:20px 15px 60px;}
 .page-head{margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:15px;}
 .page-title{font-size:26px;font-weight:700;margin-bottom:4px;}
 .page-desc{color:var(--text-muted);font-size:13px;max-width:720px;line-height:1.4;}
@@ -307,7 +333,9 @@ body.light-theme .lb-rank.r2 { color: #6b7280; }
 .sub-actions{display:flex;gap:4px;margin-top:6px;}
 .sub-link{font-size:11.5px;color:var(--cyan);display:inline-block;margin-top:2px;}
 
-.footer-note{max-width:1200px;margin:0 auto;padding:20px 15px;color:var(--text-dim);font-size:11px;text-align:center;border-top:1px solid var(--line-soft);}
+.footer-note{max-width:1200px;margin-left:var(--sidebar-w);padding:20px 15px;color:var(--text-dim);font-size:11px;text-align:center;border-top:1px solid var(--line-soft);transition:margin-left .32s cubic-bezier(.65,0,.35,1);}
+body.sidebar-collapsed .footer-note{margin-left:0;}
+@media(max-width:880px){.footer-note{margin-left:0 !important;}}
 
 /* ---------- QOL: stat cards ---------- */
 .stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:14px;}
@@ -457,7 +485,7 @@ body.light-theme .tag-pill.new{color:var(--spike);}
 .modal{animation:popIn .18s ease both;}
 .toast{animation:toastIn .2s ease both;}
 .lb-table tr{animation:fadeSlideIn .22s ease both;}
-nav.tabs button.active{transition:background .15s ease;}
+nav.side-tabs button.active{transition:background .15s ease;}
 
 @media (prefers-reduced-motion: reduce){
   .tab-panel.active,.demon-row,.upcoming-card,.rank-badge.top,.modal-backdrop,.modal,.toast,.lb-table tr{animation:none !important;}
@@ -465,7 +493,7 @@ nav.tabs button.active{transition:background .15s ease;}
 }
 
 /* ---------- theme transition ---------- */
-body,.topbar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
+body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
   transition:background-color .25s ease, border-color .25s ease, color .25s ease;
 }
 
@@ -495,9 +523,6 @@ body,.topbar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 #scrollTopBtn.show{opacity:1;visibility:visible;transform:translateY(0);}
 #scrollTopBtn:hover{color:var(--text);background:var(--bg-raised);border-color:var(--spike);}
 
-/* ---------- QOL: topbar scroll shadow ---------- */
-.topbar{transition:box-shadow .2s ease;}
-.topbar.scrolled{box-shadow:0 4px 14px rgba(0,0,0,0.35);}
 
 /* ---------- QOL: favorite star ---------- */
 .fav-star{
@@ -541,6 +566,60 @@ body,.topbar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 /* ---------- QOL: tag chip press ---------- */
 .tag-chip,.status-filter-btn{transition:transform .1s ease, background .12s ease, border-color .12s ease;}
 .tag-chip:active,.status-filter-btn:active{transform:scale(.94);}
+/* ---------- QOL: announcement banner ---------- */
+.announcement-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--spike-dim);border:1px solid var(--spike);border-radius:var(--radius);
+  padding:9px 14px;margin-bottom:16px;font-size:12.5px;color:var(--text);
+  animation:fadeSlideIn .3s ease both;
+}
+.announcement-close{background:none;border:none;color:var(--text);font-size:16px;line-height:1;opacity:.7;}
+.announcement-close:hover{opacity:1;}
+
+/* ---------- QOL: chat ---------- */
+.chat-messages{max-height:60vh;min-height:200px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
+.chat-msg{animation:fadeSlideIn .2s ease both;}
+.chat-msg-head{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-dim);margin-bottom:2px;}
+.chat-msg-user{font-weight:700;color:var(--text);font-size:12px;}
+.chat-msg-del{background:none;border:none;color:var(--text-dim);margin-left:auto;font-size:14px;}
+.chat-msg-del:hover{color:var(--red);}
+.chat-msg-text{font-size:13px;color:var(--text-muted);line-height:1.4;word-break:break-word;}
+.chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);}
+.chat-input-row input{flex:1;background:var(--bg-raised);border:1px solid var(--line);color:var(--text);padding:8px 10px;border-radius:var(--radius);font-size:13px;outline:none;}
+.chat-input-row input:focus{border-color:var(--spike);}
+
+/* ---------- QOL: level badges ---------- */
+.lvl-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;text-transform:uppercase;letter-spacing:.03em;}
+.lvl-badge.verified{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,.25);}
+.lvl-badge.buffed{background:rgba(74,222,128,0.1);color:var(--green);border:1px solid rgba(74,222,128,.25);}
+.lvl-badge.nerfed{background:rgba(255,84,112,0.1);color:var(--red);border:1px solid rgba(255,84,112,.25);}
+.lvl-badge.featured{background:rgba(255,184,69,0.12);color:var(--gold);border:1px solid rgba(255,184,69,.3);}
+
+/* ---------- QOL: featured banner ---------- */
+.featured-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:linear-gradient(90deg, var(--spike-dim), transparent);border:1px solid var(--line);
+  border-left:3px solid var(--gold);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;
+  cursor:pointer;transition:border-color .15s ease;
+}
+.featured-banner:hover{border-color:var(--gold);}
+
+/* ---------- QOL: demon thumbnail ---------- */
+.demon-thumb{width:34px;height:22px;flex:none;border-radius:2px;object-fit:cover;background:var(--bg-raised-2);border:1px solid var(--line);}
+
+/* ---------- QOL: rating bars ---------- */
+.rating-row{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-dim);margin-top:4px;}
+.rating-bar-wrap{flex:1;height:5px;background:var(--bg-raised);border-radius:4px;overflow:hidden;max-width:100px;}
+.rating-bar-fill{height:100%;background:var(--cyan);border-radius:4px;}
+
+/* ---------- QOL: like button ---------- */
+.like-btn{background:none;border:1px solid var(--line);border-radius:var(--radius);color:var(--text-muted);padding:5px 10px;font-size:12px;transition:all .15s ease;}
+.like-btn.liked{color:var(--red);border-color:var(--red);background:rgba(255,84,112,.08);}
+.like-btn:active{animation:starPop .3s ease;}
+
+/* ---------- QOL: manage users list ---------- */
+.user-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;}
+.user-row:last-child{border-bottom:none;}
 </style>
 </head>
 <body>
@@ -555,33 +634,56 @@ body,.topbar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 </div>
 
 <button id="scrollTopBtn" title="Back to top" onclick="scrollToTop()">&#8593;</button>
+<button id="sidebarToggle" class="sidebar-toggle" title="Show sidebar" onclick="setSidebarCollapsed(false)">&#9776;</button>
 
-<div class="topbar">
-  <div class="topbar-inner">
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-head">
     <div class="logo"><span class="mark"></span><span class="site-name-text">Double Entendre</span></div>
-    <nav class="tabs" id="tabs">
-      <button data-tab="list" class="active">Demon List</button>
-      <button data-tab="upcoming">Upcoming<span id="upcomingBadgeSlot"></span></button>
-      <button data-tab="roulette">Roulette</button>
-      <button data-tab="leaderboard">Leaderboard</button>
-      <button data-tab="submit">Submit Play<span id="pendingBadgeSlot"></span></button>
-      <button data-tab="stats">Stats</button>
-    </nav>
-    <div class="account-area-wrapper">
+    <button class="sidebar-collapse-btn" title="Hide sidebar" onclick="setSidebarCollapsed(true)">&#10094;</button>
+  </div>
+  <nav class="side-tabs" id="tabs">
+    <div class="side-nav-label">List</div>
+    <button data-tab="list" class="active"><span class="si">📜</span>Demon List</button>
+    <button data-tab="upcoming"><span class="si">🕓</span>Upcoming<span id="upcomingBadgeSlot"></span></button>
+    <button data-tab="timemachine"><span class="si">🕰️</span>Time Machine</button>
+    <div class="side-nav-label">Play</div>
+    <button data-tab="roulette"><span class="si">🎲</span>Roulette</button>
+    <button data-tab="submit"><span class="si">🎬</span>Submit Play<span id="pendingBadgeSlot"></span></button>
+    <div class="side-nav-label">Community</div>
+    <button data-tab="leaderboard"><span class="si">🏆</span>Leaderboard</button>
+    <button data-tab="stats"><span class="si">📊</span>Stats</button>
+    <button data-tab="chat"><span class="si">💬</span>Chat<span id="chatBadgeSlot"></span></button>
+    <button data-tab="changelog"><span class="si">🕘</span>Changelog</button>
+    <div class="side-nav-label">Info</div>
+    <button data-tab="faq"><span class="si">❓</span>FAQ</button>
+    <button data-tab="guidelines"><span class="si">📋</span>Guidelines</button>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="sidebar-quickrow">
       <button class="btn ghost small search-trigger-btn" onclick="openCommandPalette()" style="padding:4px 8px;font-size:12px;" title="Search (Ctrl+K)">⌕ <span class="kbd-hint" style="margin-left:2px;">Ctrl K</span></button>
       <button class="btn ghost small" onclick="toggleThemeMode()" style="padding: 4px 6px; font-size: 13px;" title="Toggle Light/Dark Theme">🌓</button>
+      <button class="btn ghost small" onclick="goToRandomDemon()" style="padding: 4px 6px; font-size: 13px;" title="Random Level">🎯</button>
+      <button class="btn ghost small" onclick="openShortcutsModal()" style="padding: 4px 6px; font-size: 13px;" title="Keyboard Shortcuts">⌨️</button>
+    </div>
+    <div class="account-area-wrapper">
       <div id="accountArea"></div>
     </div>
   </div>
 </div>
 
 <main>
+  <div id="announcementSlot"></div>
   <div class="tab-panel active" id="panel-list"></div>
   <div class="tab-panel" id="panel-upcoming"></div>
+  <div class="tab-panel" id="panel-timemachine"></div>
   <div class="tab-panel" id="panel-roulette"></div>
   <div class="tab-panel" id="panel-leaderboard"></div>
   <div class="tab-panel" id="panel-submit"></div>
   <div class="tab-panel" id="panel-stats"></div>
+  <div class="tab-panel" id="panel-chat"></div>
+  <div class="tab-panel" id="panel-changelog"></div>
+  <div class="tab-panel" id="panel-faq"></div>
+  <div class="tab-panel" id="panel-guidelines"></div>
 </main>
 
 <div class="footer-note">Lightweight client-side data architecture. Verified ecosystem engine. Admin access strictly curated.</div>
@@ -608,18 +710,29 @@ const APP = {
   players: [],
   submissions: [],
   registeredUsers: [], // Normal public registered users storage
+  profiles: [], // { username, bio, avatarEmoji, country, socials }
+  chatMessages: [],
+  changelog: [],
+  snapshots: [], // Time Machine snapshots: { date, ts, demons }
   currentUser: null,
   activeTab: 'list',
   selectedDemonId: null,
+  timeMachineDate: 'now',
   roulette: { required: 1, current: null, usedIds: [], history: [], done:false, streak:0, bestStreak:0 },
   settings: {
     siteName: "Double Entendre",
     siteTagline: "The hardest levels, ranked by difficulty.",
     accentColor: "pink",
     themeMode: "dark", // "dark" or "light"
-    mainListSize: 50 // demons ranked beyond this fall into the Legacy List
+    mainListSize: 50, // demons ranked beyond this fall into the Extended List
+    extendedListSize: 100, // demons ranked beyond this fall into the Legacy List
+    announcement: { text: '', active: false },
+    faqContent: "Q: How do I get on the list?\nA: Submit a video of your completion via the Submit Play tab once it's been verified.\n\nQ: How are points calculated?\nA: Each level has a fixed point value based on its placement. Beating it awards those points to your profile.\n\nQ: What's the Extended and Legacy list?\nA: The Main List is the current hardest levels. Extended and Legacy hold older or lower-ranked demons that still count for points.",
+    guidelinesContent: "1. Records must show clean, unedited gameplay from start to finish.\n2. Cheats, hacks, or macros of any kind are not allowed.\n3. Mods reserve the right to reject low-quality or suspicious footage.\n4. Be respectful to other members in Chat and Submissions.\n5. Repeated rule violations may result in a ban.",
+    discordUrl: "",
+    featuredDemonId: null
   },
-  listFilter: { search: '', tags: [], sort: 'rank', section: 'main', favoritesOnly: false }, // section: main | legacy | all
+  listFilter: { search: '', tags: [], sort: 'rank', section: 'main', favoritesOnly: false }, // section: main | extended | legacy | all
   upcomingFilter: { search: '', tags: [] },
   lbFilter: { search: '', sort: 'points', view: 'players' }, // view: players | nations | records
   subFilter: { status: 'all', search: '' }
@@ -681,18 +794,26 @@ async function loadAll(){
   APP.players = (await storageGet('players')) || [];
   APP.submissions = (await storageGet('submissions')) || [];
   APP.registeredUsers = (await storageGet('registered_users')) || [];
+  APP.profiles = (await storageGet('profiles')) || [];
+  APP.chatMessages = (await storageGet('chat_messages')) || [];
+  APP.changelog = (await storageGet('changelog')) || [];
+  APP.snapshots = (await storageGet('snapshots')) || [];
   const savedSettings = await storageGet('site_settings');
   if(savedSettings) {
     APP.settings = Object.assign(APP.settings, savedSettings);
   }
   applySystemTheme();
 }
-function saveDemons(){ return storageSet('demons', APP.demons); }
+function saveDemons(){ takeSnapshot(); return storageSet('demons', APP.demons); }
 function saveUpcoming(){ return storageSet('upcoming', APP.upcoming); }
 function savePlayers(){ return storageSet('players', APP.players); }
 function saveSubmissions(){ return storageSet('submissions', APP.submissions); }
 function saveUsers(){ return storageSet('registered_users', APP.registeredUsers); }
 function saveSettings(){ return storageSet('site_settings', APP.settings); }
+function saveProfiles(){ return storageSet('profiles', APP.profiles); }
+function saveChat(){ return storageSet('chat_messages', APP.chatMessages); }
+function saveChangelogStore(){ return storageSet('changelog', APP.changelog); }
+function saveSnapshots(){ return storageSet('snapshots', APP.snapshots); }
 
 function applySystemTheme(){
   if(APP.settings.themeMode === 'light') {
@@ -718,6 +839,279 @@ function toggleThemeMode(){
   applySystemTheme();
 }
 
+/* ============================= CHANGELOG / MOD LOG ============================= */
+function logChange(text, mod){
+  APP.changelog.push({ id: uid(), text, ts: Date.now(), mod: !!mod, actor: (APP.currentUser && APP.currentUser.username) || 'system' });
+  if(APP.changelog.length > 400) APP.changelog = APP.changelog.slice(-400);
+  saveChangelogStore();
+  if(APP.activeTab === 'changelog') renderChangelogTab();
+}
+
+/* ============================= TIME MACHINE (SNAPSHOTS) ============================= */
+function takeSnapshot(){
+  const today = new Date().toISOString().slice(0,10);
+  if(APP.snapshots.length && APP.snapshots[APP.snapshots.length-1].date === today){
+    APP.snapshots[APP.snapshots.length-1].demons = JSON.parse(JSON.stringify(APP.demons));
+  }else{
+    APP.snapshots.push({ date: today, ts: Date.now(), demons: JSON.parse(JSON.stringify(APP.demons)) });
+    if(APP.snapshots.length > 60) APP.snapshots = APP.snapshots.slice(-60);
+  }
+  saveSnapshots();
+}
+function setTimeMachineDate(v){ APP.timeMachineDate = v; renderTimeMachineTab(); }
+function renderTimeMachineTab(){
+  const el = document.getElementById('panel-timemachine');
+  if(!el) return;
+  const options = APP.snapshots.slice().reverse().map(s => `<option value="${s.date}" ${APP.timeMachineDate===s.date?'selected':''}>${s.date}</option>`).join('');
+  const viewingNow = APP.timeMachineDate === 'now' || !APP.snapshots.length;
+  const source = viewingNow ? APP.demons : ((APP.snapshots.find(s=>s.date===APP.timeMachineDate)||{}).demons || APP.demons);
+  const rows = source.map((d,i) => `
+    <div class="demon-row" style="cursor:default;">
+      <div class="rank-badge ${i<3?'top':''}">${i+1}</div>
+      <div class="info">
+        <div class="name">${escapeHtml(d.name)}</div>
+        <div class="creator">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}</div>
+      </div>
+      <div class="pts">${d.points}pt</div>
+    </div>`).join('');
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Time Machine</h1>
+      <p class="page-desc">See what the list looked like on an earlier date. A snapshot is captured automatically whenever the list changes.</p>
+    </div>
+    ${APP.snapshots.length ? `
+    <div class="list-toolbar" style="margin-bottom:12px;">
+      <div class="list-toolbar-row">
+        <select class="sort-select" onchange="setTimeMachineDate(this.value)">
+          <option value="now" ${viewingNow?'selected':''}>Now (Live)</option>
+          ${options}
+        </select>
+      </div>
+    </div>` : `<div class="empty-state"><div class="big">No snapshots yet</div>Snapshots build up automatically as the list is edited.</div>`}
+    <div class="panel"><div class="demon-rows" style="max-height:none;">${rows || `<div class="empty-state">Nothing to show.</div>`}</div></div>
+  `;
+}
+
+/* ============================= CHAT ============================= */
+let __chatPollTimer = null;
+function startChatPolling(){
+  stopChatPolling();
+  __chatPollTimer = setInterval(async () => {
+    if(APP.activeTab !== 'chat') return;
+    const msgs = await storageGet('chat_messages');
+    if(msgs){ APP.chatMessages = msgs; renderChatTab(true); }
+  }, 4000);
+}
+function stopChatPolling(){ if(__chatPollTimer){ clearInterval(__chatPollTimer); __chatPollTimer = null; } }
+function renderChatTab(preserveScroll){
+  const el = document.getElementById('panel-chat');
+  if(!el) return;
+  const list = document.getElementById('chatMessages');
+  const wasAtBottom = list ? (list.scrollHeight - list.scrollTop - list.clientHeight < 40) : true;
+
+  const msgs = APP.chatMessages.slice(-200).map(m => `
+    <div class="chat-msg">
+      <div class="chat-msg-head"><span class="chat-msg-user">${escapeHtml(m.user)}</span><span class="chat-msg-time">${new Date(m.ts).toLocaleString()}</span>${isMod() ? `<button class="chat-msg-del" onclick="deleteChatMessage('${m.id}')" title="Delete message">&times;</button>` : ''}</div>
+      <div class="chat-msg-text">${escapeHtml(m.text)}</div>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Chat</h1>
+      <p class="page-desc">Talk with other members of the list. Be respectful — see the Guidelines tab.</p>
+    </div>
+    <div class="panel">
+      <div class="chat-messages" id="chatMessages">${msgs || `<div class="empty-state"><div class="big">No messages yet</div>Say hello!</div>`}</div>
+      ${APP.currentUser ? `
+      <div class="chat-input-row">
+        <input id="chat-input" placeholder="Message as ${escapeHtml(APP.currentUser.username)}..." maxlength="500">
+        <button class="btn primary small" onclick="sendChatMessage()">Send</button>
+      </div>` : `<div class="empty-state">Log in to join the conversation.</div>`}
+    </div>
+  `;
+  const newList = document.getElementById('chatMessages');
+  if(newList && (wasAtBottom || !preserveScroll)) newList.scrollTop = newList.scrollHeight;
+  const input = document.getElementById('chat-input');
+  if(input) input.addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); sendChatMessage(); } });
+}
+async function sendChatMessage(){
+  const input = document.getElementById('chat-input');
+  if(!input || !APP.currentUser) return;
+  const text = input.value.trim();
+  if(!text) return;
+  APP.chatMessages.push({ id: uid(), user: APP.currentUser.username, text, ts: Date.now() });
+  if(APP.chatMessages.length > 500) APP.chatMessages = APP.chatMessages.slice(-500);
+  input.value = '';
+  await saveChat();
+  renderChatTab();
+}
+async function deleteChatMessage(id){
+  if(!isMod()) return;
+  APP.chatMessages = APP.chatMessages.filter(m=>m.id!==id);
+  await saveChat();
+  renderChatTab();
+}
+
+/* ============================= PROFILES ============================= */
+function getProfile(username){
+  return APP.profiles.find(p => p.username.toLowerCase() === (username||'').toLowerCase()) || null;
+}
+function openProfileEditorModal(){
+  if(!APP.currentUser) return;
+  const existing = getProfile(APP.currentUser.username) || {};
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>Edit Profile</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><label>Display Avatar (emoji)</label><input id="pf-avatar" maxlength="4" value="${escapeHtml(existing.avatarEmoji||'🙂')}" placeholder="🙂"></div>
+        <div class="field"><label>Country</label><select id="pf-country">${countryOptions(existing.country||'OTHER')}</select></div>
+        <div class="field"><label>Bio</label><textarea id="pf-bio" maxlength="280" placeholder="A short line about you...">${escapeHtml(existing.bio||'')}</textarea></div>
+        <div class="field"><label>YouTube / Twitch (optional)</label><input id="pf-video-link" value="${escapeHtml((existing.socials&&existing.socials.video)||'')}" placeholder="https://youtube.com/@you"></div>
+        <div class="field"><label>Discord Username (optional)</label><input id="pf-discord" value="${escapeHtml((existing.socials&&existing.socials.discord)||'')}" placeholder="username"></div>
+        <div class="hint">This links to your account (${escapeHtml(APP.currentUser.username)}). If your player name on the leaderboard matches, your avatar and bio will show on your player profile.</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveProfileForm()">Save Profile</button>
+      </div>
+    </div>
+  </div>`);
+}
+async function saveProfileForm(){
+  const username = APP.currentUser.username;
+  const data = {
+    username,
+    avatarEmoji: document.getElementById('pf-avatar').value.trim() || '🙂',
+    country: document.getElementById('pf-country').value,
+    bio: document.getElementById('pf-bio').value.trim(),
+    socials: {
+      video: document.getElementById('pf-video-link').value.trim(),
+      discord: document.getElementById('pf-discord').value.trim()
+    }
+  };
+  const existing = getProfile(username);
+  if(existing) Object.assign(existing, data);
+  else APP.profiles.push(data);
+  await saveProfiles();
+  closeModal();
+  showToast('Profile saved');
+  renderAll();
+}
+
+/* ============================= ANNOUNCEMENTS ============================= */
+let __announcementDismissed = false;
+function dismissAnnouncement(){ __announcementDismissed = true; renderAnnouncement(); }
+function renderAnnouncement(){
+  const slot = document.getElementById('announcementSlot');
+  if(!slot) return;
+  const a = APP.settings.announcement;
+  if(!a || !a.active || !a.text || __announcementDismissed){ slot.innerHTML = ''; return; }
+  slot.innerHTML = `
+    <div class="announcement-banner">
+      <span>📣 ${escapeHtml(a.text)}</span>
+      <button class="announcement-close" onclick="dismissAnnouncement()" title="Dismiss">&times;</button>
+    </div>`;
+}
+
+/* ============================= CHANGELOG TAB ============================= */
+function renderChangelogTab(){
+  const el = document.getElementById('panel-changelog');
+  if(!el) return;
+  const showMod = isMod();
+  const entries = APP.changelog.slice().reverse().filter(c => showMod || !c.mod);
+  const rows = entries.slice(0, 150).map(c => `
+    <div class="sub-item">
+      <div class="sub-item-top">
+        <span style="font-size:12.5px;">${escapeHtml(c.text)}${c.mod ? ' <span class="status-pill pending" style="margin-left:4px;">MOD</span>' : ''}</span>
+        <span style="font-size:11px;color:var(--text-dim);white-space:nowrap;">${new Date(c.ts).toLocaleDateString()}</span>
+      </div>
+    </div>`).join('');
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Changelog</h1>
+      <p class="page-desc">Recent placements, edits, and approvals across the list.${showMod ? ' Moderator-only entries are included and marked MOD.' : ''}</p>
+    </div>
+    <div class="panel"><div class="sub-list demon-rows" style="max-height:none;">${rows || `<div class="empty-state"><div class="big">Nothing yet</div>Changes will show up here as the list evolves.</div>`}</div></div>
+  `;
+}
+
+/* ============================= FAQ / GUIDELINES TABS ============================= */
+function renderFaqTab(){
+  const el = document.getElementById('panel-faq');
+  if(!el) return;
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">FAQ</h1>
+      <p class="page-desc">Answers to common questions.</p>
+    </div>
+    <div class="panel"><div class="detail-desc" style="white-space:pre-wrap;line-height:1.7;">${escapeHtml(APP.settings.faqContent||'')}</div></div>
+    ${isMod() ? `<div style="margin-top:10px;"><button class="btn small" onclick="openEditStaticPage('faqContent','FAQ')">Edit FAQ</button></div>` : ''}
+  `;
+}
+function renderGuidelinesTab(){
+  const el = document.getElementById('panel-guidelines');
+  if(!el) return;
+  el.innerHTML = `
+    <div class="page-head">
+      <h1 class="page-title">Guidelines</h1>
+      <p class="page-desc">Rules for submissions and community conduct.</p>
+    </div>
+    <div class="panel"><div class="detail-desc" style="white-space:pre-wrap;line-height:1.7;">${escapeHtml(APP.settings.guidelinesContent||'')}</div></div>
+    ${isMod() ? `<div style="margin-top:10px;"><button class="btn small" onclick="openEditStaticPage('guidelinesContent','Guidelines')">Edit Guidelines</button></div>` : ''}
+  `;
+}
+function openEditStaticPage(field, label){
+  if(!isMod()) return;
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>Edit ${escapeHtml(label)}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field"><textarea id="static-page-content" style="min-height:220px;">${escapeHtml(APP.settings[field]||'')}</textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveStaticPage('${field}')">Save</button>
+      </div>
+    </div>
+  </div>`);
+}
+async function saveStaticPage(field){
+  APP.settings[field] = document.getElementById('static-page-content').value;
+  await saveSettings();
+  closeModal();
+  renderAll();
+  showToast('Saved');
+}
+
+/* ============================= RANDOM LEVEL / SHORTCUTS ============================= */
+function goToRandomDemon(){
+  if(!APP.demons.length){ showToast('No demons yet', 'error'); return; }
+  const pick = APP.demons[Math.floor(Math.random()*APP.demons.length)];
+  APP.selectedDemonId = pick.id;
+  switchTab('list');
+  const badge = document.querySelector('.demon-row.selected .rank-badge');
+  if(badge){ badge.classList.remove('pop'); void badge.offsetWidth; badge.classList.add('pop'); }
+}
+function openShortcutsModal(){
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>Keyboard Shortcuts</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="user-row"><span>Open command palette / search everything</span><span class="mono">Ctrl / ⌘ + K</span></div>
+        <div class="user-row"><span>Focus level search</span><span class="mono">/</span></div>
+        <div class="user-row"><span>Move selection in Demon List</span><span class="mono">↑ / ↓</span></div>
+        <div class="user-row"><span>Jump to List / Upcoming / Roulette / Leaderboard / Submit / Stats</span><span class="mono">1–6</span></div>
+        <div class="user-row"><span>Close modal / dialog</span><span class="mono">Esc</span></div>
+        <div class="user-row"><span>Random level</span><span class="mono">🎯 button</span></div>
+      </div>
+      <div class="modal-foot"><button class="btn primary" onclick="closeModal()">Got it</button></div>
+    </div>
+  </div>`);
+}
+
 /* ============================= AUTH ============================= */
 async function loginAccount(username, password){
   const normalizedUser = username.trim().toLowerCase();
@@ -734,6 +1128,9 @@ async function loginAccount(username, password){
   }
   
   const matchedUser = APP.registeredUsers.find(u => u.username.toLowerCase() === normalizedUser);
+  if(matchedUser && matchedUser.banned){
+    throw new Error('This account has been banned.');
+  }
   if(matchedUser && matchedUser.password === btoa(password)) {
     APP.currentUser = { username: matchedUser.username, role: 'user' };
     saveSession();
@@ -928,10 +1325,22 @@ function recallTab(){ try{ return localStorage.getItem('demonlist_last_tab'); }c
 
 /* ============================= QOL: SCROLL TO TOP + TOPBAR SHADOW ============================= */
 function scrollToTop(){ window.scrollTo({ top:0, behavior: (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth' }); }
+
+/* ============================= QOL: SIDEBAR COLLAPSE ============================= */
+function setSidebarCollapsed(collapsed){
+  const sidebar = document.getElementById('sidebar');
+  if(sidebar) sidebar.classList.toggle('collapsed', collapsed);
+  document.body.classList.toggle('sidebar-collapsed', collapsed);
+  try{ localStorage.setItem('demonlist_sidebar_collapsed', collapsed ? '1' : '0'); }catch(e){}
+}
+function restoreSidebarState(){
+  let collapsed = false;
+  try{ collapsed = localStorage.getItem('demonlist_sidebar_collapsed') === '1'; }catch(e){}
+  if(window.matchMedia && window.matchMedia('(max-width:880px)').matches) collapsed = true;
+  setSidebarCollapsed(collapsed);
+}
 window.addEventListener('scroll', () => {
   const y = window.scrollY || document.documentElement.scrollTop;
-  const topbar = document.querySelector('.topbar');
-  if(topbar) topbar.classList.toggle('scrolled', y > 4);
   const btn = document.getElementById('scrollTopBtn');
   if(btn) btn.classList.toggle('show', y > 400);
 }, { passive: true });
@@ -1073,18 +1482,22 @@ document.addEventListener('keydown', e => {
 function renderAccountArea(){
   const el = document.getElementById('accountArea');
   if(!APP.currentUser){
-    el.innerHTML = `<button class="btn" style="padding:4px 10px; font-size:12px;" onclick="openLoginModal()">Login</button>`;
+    el.innerHTML = `<button class="btn" style="padding:4px 10px; font-size:12px; width:100%;" onclick="openLoginModal()">Login</button>`;
     return;
   }
   const u = APP.currentUser;
   const roleLabel = u.role === 'admin' ? 'admin' : 'member';
   const roleClass = u.role === 'admin' ? 'admin' : '';
+  const profile = getProfile(u.username);
   
   el.innerHTML = `
     <div class="account-chip">
-      ${u.role === 'admin' ? `<button class="btn small ghost" onclick="openAdminSettingsModal()">Settings</button>` : ''}
-      <span class="name">${escapeHtml(u.username)}</span>
+      <span class="name">${profile?escapeHtml(profile.avatarEmoji||'🙂')+' ':''}${escapeHtml(u.username)}</span>
       <span class="role-tag ${roleClass}">${roleLabel}</span>
+    </div>
+    <div class="sidebar-quickrow">
+      <button class="btn small ghost" onclick="openProfileEditorModal()">Profile</button>
+      ${u.role === 'admin' ? `<button class="btn small ghost" onclick="openAdminSettingsModal()">Settings</button>` : ''}
       <button class="btn small" onclick="logout()">Log Out</button>
     </div>`;
 }
@@ -1213,9 +1626,11 @@ function switchTab(tab){
   if(tab !== 'list' && location.hash.startsWith('#demon-')){
     history.replaceState(null, '', location.pathname + location.search);
   }
-  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('nav.side-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
+  if(tab === 'chat') startChatPolling(); else stopChatPolling();
+  if(window.matchMedia && window.matchMedia('(max-width:880px)').matches) setSidebarCollapsed(true);
   renderAll();
 }
 document.getElementById('tabs').addEventListener('click', e=>{
@@ -1225,12 +1640,18 @@ document.getElementById('tabs').addEventListener('click', e=>{
 
 function renderAll(){
   applySystemTheme();
+  renderAnnouncement();
   renderListTab();
   renderUpcomingTab();
+  renderTimeMachineTab();
   renderRouletteTab();
   renderLeaderboardTab();
   renderSubmitTab();
   renderStatsTab();
+  renderChatTab();
+  renderChangelogTab();
+  renderFaqTab();
+  renderGuidelinesTab();
   updateNavBadges();
 }
 
@@ -2355,6 +2776,7 @@ async function reviewSubmission(id, status){
 
 /* ============================= INIT ============================= */
 async function init(){     
+  restoreSidebarState();
   await loadAll();
   restoreSession();
   loadRouletteLocal();
@@ -2364,7 +2786,7 @@ async function init(){
     const lastTab = recallTab();
     if(lastTab && document.getElementById('panel-'+lastTab)) APP.activeTab = lastTab;
   }
-  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===APP.activeTab));
+  document.querySelectorAll('nav.side-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===APP.activeTab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+APP.activeTab));
 
   renderAccountArea();
@@ -2373,7 +2795,7 @@ async function init(){
   const loader = document.getElementById('initLoader');
   if(loader) loader.classList.add('hidden');
 }
-window.addEventListener('hashchange', () => { applyHashRoute(); renderAll(); document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===APP.activeTab)); document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+APP.activeTab)); });
+window.addEventListener('hashchange', () => { applyHashRoute(); renderAll(); document.querySelectorAll('nav.side-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===APP.activeTab)); document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id==='panel-'+APP.activeTab)); });
 init();
 </script>
 </body>
