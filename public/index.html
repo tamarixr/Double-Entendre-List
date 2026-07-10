@@ -240,8 +240,14 @@ body.light-theme .rank-badge.top { color: var(--spike); }
   height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:12.5px;
 }
 .detail-desc{margin-top:12px;color:var(--text-muted);font-size:13px;line-height:1.5;padding:10px;background:var(--bg-raised);border:1px solid var(--line);border-radius:var(--radius);}
-.detail-meta{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-dim);margin-top:10px;display:flex;gap:15px;}
+.detail-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);margin-top:2px;margin-bottom:10px;display:flex;flex-wrap:wrap;gap:4px 16px;}
+.detail-meta span b{color:var(--text-muted);font-weight:600;}
 .detail-actions{display:flex;gap:6px;margin-top:14px;}
+.detail-banner{width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);background:var(--bg-raised-2);margin-bottom:12px;position:relative;}
+.detail-banner img{width:100%;height:100%;object-fit:cover;display:block;}
+.video-tabs{display:flex;gap:6px;margin-top:12px;margin-bottom:-4px;}
+.video-tabs button{font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 10px;border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--line);border-bottom:none;background:var(--bg-raised);color:var(--text-dim);cursor:pointer;}
+.video-tabs button.active{color:var(--text);background:var(--bg-raised-2);}
 
 /* forms */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -1203,6 +1209,42 @@ function getEmbedUrl(url){
     return null;
   }catch(e){ return null; }
 }
+function getYoutubeId(url){
+  if(!url) return null;
+  try{
+    const u = new URL(url);
+    if(u.hostname.includes('youtu.be')) return u.pathname.slice(1);
+    if(u.hostname.includes('youtube.com')){
+      const id = u.searchParams.get('v');
+      if(id) return id;
+      if(u.pathname.startsWith('/embed/')) return u.pathname.split('/')[2];
+      if(u.pathname.startsWith('/live/')) return u.pathname.split('/')[2];
+    }
+  }catch(e){}
+  return null;
+}
+function getThumbnailUrl(d){
+  if(!d) return null;
+  if(d.thumbnail) return d.thumbnail;
+  const yid = getYoutubeId(d.video) || getYoutubeId(d.verifyVideo);
+  if(yid) return `https://img.youtube.com/vi/${yid}/mqdefault.jpg`;
+  return null;
+}
+function formatPublishDate(d){
+  if(!d || !d.publishDate) return null;
+  try{
+    return new Date(d.publishDate+'T00:00:00').toLocaleDateString(undefined, {year:'numeric', month:'short', day:'numeric'});
+  }catch(e){ return d.publishDate; }
+}
+function switchDetailVideo(mode, id){
+  const d = APP.demons.find(x=>x.id===id);
+  if(!d) return;
+  const url = mode==='verify' ? d.verifyVideo : d.video;
+  const embed = getEmbedUrl(url);
+  const wrap = document.getElementById('detailVideoWrap');
+  if(wrap) wrap.innerHTML = embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${url ? `<a href="${escapeHtml(url)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`;
+  document.querySelectorAll('.video-tabs button').forEach(b => b.classList.toggle('active', b.dataset.mode===mode));
+}
 function closeModal(){ document.getElementById('modalRoot').innerHTML = ''; }
 function openModal(html){ document.getElementById('modalRoot').innerHTML = html; }
 
@@ -1717,8 +1759,8 @@ function toggleListTagFilter(t){
 function exportDemonListCsv(){
   const demons = APP.demons;
   if(!demons.length){ showToast('No demons to export', 'error'); return; }
-  const header = 'Rank,Name,Creator,Verifier,Country,Points,Requirement\n';
-  const rows = demons.map((d,i) => `${i+1},"${(d.name||'').replace(/"/g,'""')}","${(d.creator||'').replace(/"/g,'""')}","${(d.verifier||'').replace(/"/g,'""')}",${countryName(d.country)},${d.points},${d.requirement||100}`).join('\n');
+  const header = 'Rank,Name,Level ID,Creator,Verifier,Country,Points,Requirement,Song Artist,Song Name,Publish Date\n';
+  const rows = demons.map((d,i) => `${i+1},"${(d.name||'').replace(/"/g,'""')}","${(d.levelId||'').replace(/"/g,'""')}","${(d.creator||'').replace(/"/g,'""')}","${(d.verifier||'').replace(/"/g,'""')}",${countryName(d.country)},${d.points},${d.requirement||100},"${(d.songArtist||'').replace(/"/g,'""')}","${(d.songName||'').replace(/"/g,'""')}",${d.publishDate||''}`).join('\n');
   const blob = new Blob([header+rows], { type:'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1801,6 +1843,7 @@ function renderListTab(preserveFocus){
     <div class="demon-row ${d.id===APP.selectedDemonId?'selected':''} ${fav?'favorited':''}" style="animation-delay:${delay}ms" onclick="selectDemon('${d.id}')">
       <button class="fav-star ${fav?'active':''}" onclick="event.stopPropagation();toggleFavorite('${d.id}', this)" title="${fav?'Remove from favorites':'Add to favorites'}">${fav?'★':'☆'}</button>
       <div class="rank-badge ${i<3?'top':''}">${i+1}</div>
+      ${getThumbnailUrl(d) ? `<img class="demon-thumb" src="${escapeHtml(getThumbnailUrl(d))}" alt="" loading="lazy" onerror="this.remove()">` : ''}
       <div class="info">
         <div class="name">${escapeHtml(d.name)}${done?' ✓':''}</div>
         <div class="creator">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}</div>
@@ -1864,12 +1907,22 @@ function renderDemonDetail(d, index){
   const tagHtml = (d.tags || []).map(t => `<span class="tag-pill" style="font-size:11px; padding:2px 6px;">${escapeHtml(t)}</span>`).join(' ');
   const fav = isFavorite(d.id);
   const done = isCompleted(d.id);
-  
+  const banner = getThumbnailUrl(d);
+  const songLabel = [d.songArtist, d.songName].filter(Boolean).join(' - ');
+  const publishLabel = formatPublishDate(d);
+  const metaParts = [];
+  if(d.levelId) metaParts.push(`<span><b>Level ID:</b> ${escapeHtml(String(d.levelId))}</span>`);
+  if(songLabel) metaParts.push(`<span><b>Song:</b> ${escapeHtml(songLabel)}</span>`);
+  if(publishLabel) metaParts.push(`<span><b>Published:</b> ${escapeHtml(publishLabel)}</span>`);
+  const hasVerify = !!d.verifyVideo;
+
   return `
+    ${banner ? `<div class="detail-banner"><img src="${escapeHtml(banner)}" alt="${escapeHtml(d.name)} thumbnail" onerror="this.parentElement.style.display='none'"></div>` : ''}
     <div class="detail-top">
       <div>
         <div class="detail-title">${fav?'★ ':''}${escapeHtml(d.name)}</div>
         <div class="detail-sub">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
+        ${metaParts.length ? `<div class="detail-meta">${metaParts.join('')}</div>` : ''}
         ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
       </div>
       <div>
@@ -1890,7 +1943,11 @@ function renderDemonDetail(d, index){
       ${d.requirement2 ? `<div class="stat"><div class="val">${d.requirement2}%+</div><div class="lbl">Reduced (${d.points2||0}pt)</div></div>` : ''}
       ${index >= (APP.settings.mainListSize||50) ? `<div class="stat"><div class="val" style="color:var(--text-muted);">Legacy</div><div class="lbl">List Status</div></div>` : ''}
     </div>
-    <div class="video-wrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
+    ${hasVerify ? `<div class="video-tabs">
+      <button data-mode="gameplay" class="active" onclick="switchDetailVideo('gameplay','${d.id}')">Gameplay Showcase</button>
+      <button data-mode="verify" onclick="switchDetailVideo('verify','${d.id}')">Verification</button>
+    </div>` : ''}
+    <div class="video-wrap" id="detailVideoWrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
     ${d.description ? `<div class="detail-desc">${escapeHtml(d.description)}</div>` : ''}
   `;
 }
@@ -1913,8 +1970,20 @@ function openDemonModal(id, prefill){
         </div>
         <div class="field"><label>Creator's Country</label><select id="dm-country">${countryOptions(src?src.country:'OTHER')}</select></div>
         <div class="form-grid">
+          <div class="field"><label>Level ID</label><input id="dm-levelid" value="${src?escapeHtml(src.levelId||''):''}" placeholder="e.g. 98765432"></div>
+          <div class="field"><label>Publish Date</label><input id="dm-publishdate" type="date" value="${src?escapeHtml(src.publishDate||''):''}"></div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>Song Artist</label><input id="dm-songartist" value="${src?escapeHtml(src.songArtist||''):''}" placeholder="e.g. Camellia"></div>
+          <div class="field"><label>Song Name</label><input id="dm-songname" value="${src?escapeHtml(src.songName||''):''}" placeholder="e.g. Crystallized"></div>
+        </div>
+        <div class="form-grid">
           <div class="field"><label>Points if beaten</label><input id="dm-points" type="number" min="0" value="${editing?editing.points:100}"></div>
-          <div class="field"><label>Video URL</label><input id="dm-video" value="${src?escapeHtml(src.video||''):''}" placeholder="https://youtube.com/..."></div>
+          <div class="field"><label>Gameplay Video URL</label><input id="dm-video" value="${src?escapeHtml(src.video||''):''}" placeholder="https://youtube.com/..."></div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>Verification Video URL <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label><input id="dm-verifyvideo" value="${src?escapeHtml(src.verifyVideo||''):''}" placeholder="https://youtube.com/..."></div>
+          <div class="field"><label>Thumbnail URL <span style="color:var(--text-dim);font-weight:400;">(optional, auto from video)</span></label><input id="dm-thumbnail" value="${src?escapeHtml(src.thumbnail||''):''}" placeholder="https://..."></div>
         </div>
         <div class="field">
           <label>Record Requirement (%)</label>
@@ -1971,6 +2040,12 @@ async function saveDemonForm(id, promotedFromId){
     country: document.getElementById('dm-country').value,
     points: parseInt(document.getElementById('dm-points').value) || 0,
     video: document.getElementById('dm-video').value.trim(),
+    verifyVideo: document.getElementById('dm-verifyvideo').value.trim(),
+    thumbnail: document.getElementById('dm-thumbnail').value.trim(),
+    levelId: document.getElementById('dm-levelid').value.trim(),
+    songArtist: document.getElementById('dm-songartist').value.trim(),
+    songName: document.getElementById('dm-songname').value.trim(),
+    publishDate: document.getElementById('dm-publishdate').value,
     description: document.getElementById('dm-desc').value.trim(),
     tags: processedTags,
     requirement,
