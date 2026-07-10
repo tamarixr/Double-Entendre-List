@@ -135,13 +135,28 @@ body.light-theme .role-tag.admin { background: var(--spike-dim); color: var(--sp
 }
 .sidebar-toggle:hover{ color:var(--text);border-color:var(--spike); }
 
+.bottom-nav{ display:none; }
+
 @media(max-width:880px){
   :root{ --sidebar-w:230px; }
   .sidebar{ transform:translateX(calc(-1 * var(--sidebar-w))); box-shadow:0 0 30px rgba(0,0,0,0.5); }
   .sidebar:not(.collapsed){ transform:translateX(0); }
-  main{ margin-left:0 !important; }
-  .sidebar-toggle{ opacity:1;visibility:visible;transform:translateX(0); }
-  body:not(.sidebar-collapsed) .sidebar-toggle{ right:calc(var(--sidebar-w) + 12px); }
+  main{ margin-left:0 !important; padding-bottom:70px; }
+  .sidebar-toggle{ display:none; }
+  .bottom-nav{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:55;
+    background:rgba(8,9,12,0.98);border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  body.light-theme .bottom-nav{ background:rgba(255,255,255,0.98); }
+  .bottom-nav button{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+    background:none;border:none;color:var(--text-dim);padding:6px 2px;border-radius:var(--radius-sm);
+  }
+  .bottom-nav button.active{ color:var(--spike); }
+  .bottom-nav .bn-icon{ font-size:16px; }
+  .bottom-nav .bn-label{ font-size:9.5px;font-weight:600; }
+  #scrollTopBtn{ bottom:76px; }
 }
 
 .btn{
@@ -345,6 +360,10 @@ body.light-theme .lb-rank.r2 { color: #6b7280; }
 .status-pill.rejected{background:rgba(255,84,112,0.08);color:var(--red);border:1px solid rgba(255,84,112,0.2);}
 .sub-actions{display:flex;gap:4px;margin-top:6px;}
 .sub-link{font-size:11.5px;color:var(--cyan);display:inline-block;margin-top:2px;}
+.sub-embed-wrap{display:none;}
+.sub-embed-wrap.open{display:block;}
+.sub-embed-wrap .video-wrap{aspect-ratio:16/9;max-width:420px;margin-top:8px;}
+.bulk-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg-raised);border-bottom:1px solid var(--line);flex-wrap:wrap;}
 
 .footer-note{max-width:1200px;margin-left:var(--sidebar-w);padding:20px 15px;color:var(--text-dim);font-size:11px;text-align:center;border-top:1px solid var(--line-soft);transition:margin-left .32s cubic-bezier(.65,0,.35,1);}
 body.sidebar-collapsed .footer-note{margin-left:0;}
@@ -369,6 +388,11 @@ body.sidebar-collapsed .footer-note{margin-left:0;}
 .tag-chip{font-size:10px;font-weight:600;padding:3px 8px;border-radius:10px;border:1px solid var(--line);background:var(--bg-void);color:var(--text-muted);text-transform:uppercase;transition:all .1s;}
 .tag-chip:hover{border-color:var(--text-dim);color:var(--text);}
 .tag-chip.active{background:var(--spike-dim);border-color:var(--spike);color:var(--text);}
+.filters-advanced{display:flex;flex-direction:column;gap:8px;padding-top:8px;margin-top:2px;border-top:1px dashed var(--line);}
+.progress-tracker{display:flex;flex-direction:column;gap:3px;margin:2px 0 4px;}
+.presets-row{align-items:center;flex-wrap:wrap;}
+.preset-x{margin-left:5px;opacity:.6;}
+.preset-x:hover{opacity:1;color:var(--red);}
 .result-count{font-size:11px;color:var(--text-dim);padding:6px 12px 0;}
 .kbd-hint{font-family:'JetBrains Mono',monospace;font-size:10px;background:var(--bg-void);border:1px solid var(--line);border-radius:var(--radius-sm);padding:0 4px;color:var(--text-dim);}
 
@@ -650,6 +674,14 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 
 <button id="scrollTopBtn" title="Back to top" onclick="scrollToTop()">&#8593;</button>
 <button id="sidebarToggle" class="sidebar-toggle" title="Show sidebar" onclick="setSidebarCollapsed(false)">&#9776;</button>
+
+<nav class="bottom-nav" id="bottomNav">
+  <button data-tab="home" onclick="switchTab('home')"><span class="bn-icon">🏠</span><span class="bn-label">Home</span></button>
+  <button data-tab="list" class="active" onclick="switchTab('list')"><span class="bn-icon">📜</span><span class="bn-label">List</span></button>
+  <button data-tab="submit" onclick="switchTab('submit')"><span class="bn-icon">🎬</span><span class="bn-label">Submit</span></button>
+  <button data-tab="leaderboard" onclick="switchTab('leaderboard')"><span class="bn-icon">🏆</span><span class="bn-label">Ranks</span></button>
+  <button onclick="setSidebarCollapsed(false)"><span class="bn-icon">☰</span><span class="bn-label">More</span></button>
+</nav>
 
 <div class="sidebar" id="sidebar">
   <div class="sidebar-head">
@@ -1237,6 +1269,35 @@ function isAdmin(){ return APP.currentUser !== null && APP.currentUser.role === 
 
 /* ============================= ADMIN TAB ============================= */
 let ADMIN_USER_FILTER = '';
+let ADV_FILTERS_OPEN = false;
+function toggleAdvFilters(){ ADV_FILTERS_OPEN = !ADV_FILTERS_OPEN; renderListTab(); }
+function getFilterPresets(){ try{ return JSON.parse(localStorage.getItem('demonlist_filter_presets')||'[]'); }catch(e){ return []; } }
+function saveFilterPresets(list){ try{ localStorage.setItem('demonlist_filter_presets', JSON.stringify(list)); }catch(e){} }
+function saveCurrentFilterPreset(){
+  const name = (prompt('Name this filter preset:') || '').trim();
+  if(!name) return;
+  const presets = getFilterPresets();
+  presets.push({ name, filter: JSON.parse(JSON.stringify(APP.listFilter)) });
+  saveFilterPresets(presets);
+  showToast('Preset "'+name+'" saved');
+  renderListTab();
+}
+function applyFilterPreset(idx){
+  const presets = getFilterPresets();
+  const p = presets[idx];
+  if(!p) return;
+  APP.listFilter = JSON.parse(JSON.stringify(p.filter));
+  ADV_FILTERS_OPEN = true;
+  renderListTab();
+  showToast('Applied preset "'+p.name+'"');
+}
+function deleteFilterPreset(idx, ev){
+  if(ev) ev.stopPropagation();
+  const presets = getFilterPresets();
+  presets.splice(idx,1);
+  saveFilterPresets(presets);
+  renderListTab();
+}
 function setAdminUserFilter(v){ ADMIN_USER_FILTER = v; renderAdminTab(); }
 function renderAdminTab(){
   const el = document.getElementById('panel-admin');
@@ -1470,6 +1531,11 @@ function applyHashRoute(){
     if(APP.demons.some(d=>d.id===id)){
       APP.selectedDemonId = id;
       APP.activeTab = 'list';
+    }
+  } else if(hash.startsWith('#player-')){
+    const id = hash.slice(8);
+    if(APP.players.some(p=>p.id===id)){
+      setTimeout(() => openPlayerProfile(id), 0);
     }
   }
 }
@@ -1797,6 +1863,7 @@ function switchTab(tab){
     history.replaceState(null, '', location.pathname + location.search);
   }
   document.querySelectorAll('nav.side-tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.bottom-nav button[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab===tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
   if(tab === 'chat') startChatPolling(); else stopChatPolling();
@@ -2131,6 +2198,8 @@ function renderListTab(preserveFocus){
       <button class="status-filter-btn ${APP.listFilter.section==='all'?'active':''}" onclick="setListSection('all')">All</button>
     </div>` : '';
 
+  const presets = getFilterPresets();
+  const advActiveCount = ['creator','verifier','minReq','maxReq','dateFrom','dateTo'].filter(k=>APP.listFilter[k]).length;
   const toolbar = `
     ${sectionToggle}
     <div class="list-toolbar">
@@ -2150,31 +2219,39 @@ function renderListTab(preserveFocus){
         </select>
         <button class="btn small ${APP.listFilter.favoritesOnly?'primary':'ghost'}" onclick="toggleFavoritesOnly()" title="Show only your favorited levels">★ Favorites</button>
         <button class="btn small ghost" onclick="openCompareModal()" title="Compare two levels side-by-side">⇄ Compare</button>
+        <button class="btn small ghost" onclick="toggleAdvFilters()" title="More filters">${ADV_FILTERS_OPEN?'▾':'▸'} Filters${advActiveCount?` (${advActiveCount})`:''}</button>
       </div>
-      <div class="list-toolbar-row">
-        <select class="sort-select" onchange="setListCreatorFilter(this.value)" title="Filter by creator">
-          <option value="">All Creators</option>
-          ${allCreators().map(c=>`<option value="${escapeHtml(c)}" ${APP.listFilter.creator===c?'selected':''}>${escapeHtml(c)}</option>`).join('')}
-        </select>
-        <select class="sort-select" onchange="setListVerifierFilter(this.value)" title="Filter by verifier">
-          <option value="">All Verifiers</option>
-          ${allVerifiers().map(v=>`<option value="${escapeHtml(v)}" ${APP.listFilter.verifier===v?'selected':''}>${escapeHtml(v)}</option>`).join('')}
-        </select>
+      <div class="filters-advanced" style="display:${ADV_FILTERS_OPEN?'block':'none'};">
+        <div class="list-toolbar-row">
+          <select class="sort-select" onchange="setListCreatorFilter(this.value)" title="Filter by creator">
+            <option value="">All Creators</option>
+            ${allCreators().map(c=>`<option value="${escapeHtml(c)}" ${APP.listFilter.creator===c?'selected':''}>${escapeHtml(c)}</option>`).join('')}
+          </select>
+          <select class="sort-select" onchange="setListVerifierFilter(this.value)" title="Filter by verifier">
+            <option value="">All Verifiers</option>
+            ${allVerifiers().map(v=>`<option value="${escapeHtml(v)}" ${APP.listFilter.verifier===v?'selected':''}>${escapeHtml(v)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="list-toolbar-row">
+          <label class="hint" style="display:flex;align-items:center;gap:5px;white-space:nowrap;">Req %
+            <input type="number" min="1" max="100" placeholder="Min" value="${escapeHtml(APP.listFilter.minReq)}" oninput="setListMinReq(this.value)" style="width:64px;">
+            –
+            <input type="number" min="1" max="100" placeholder="Max" value="${escapeHtml(APP.listFilter.maxReq)}" oninput="setListMaxReq(this.value)" style="width:64px;">
+          </label>
+          <label class="hint" style="display:flex;align-items:center;gap:5px;white-space:nowrap;">Published
+            <input type="date" value="${escapeHtml(APP.listFilter.dateFrom)}" oninput="setListDateFrom(this.value)" style="width:130px;">
+            –
+            <input type="date" value="${escapeHtml(APP.listFilter.dateTo)}" oninput="setListDateTo(this.value)" style="width:130px;">
+          </label>
+          ${(APP.listFilter.minReq||APP.listFilter.maxReq||APP.listFilter.dateFrom||APP.listFilter.dateTo) ? `<button class="btn small ghost" onclick="clearListAdvancedFilters()">Clear</button>` : ''}
+        </div>
+        ${tagChips}
+        <div class="list-toolbar-row presets-row">
+          <span class="hint" style="white-space:nowrap;">Presets:</span>
+          ${presets.length ? presets.map((p,i)=>`<button class="tag-chip" onclick="applyFilterPreset(${i})">${escapeHtml(p.name)}<span class="preset-x" onclick="deleteFilterPreset(${i},event)" title="Delete preset">&times;</span></button>`).join('') : `<span class="hint" style="color:var(--text-dim);">None saved yet</span>`}
+          <button class="btn small ghost" onclick="saveCurrentFilterPreset()">+ Save current</button>
+        </div>
       </div>
-      <div class="list-toolbar-row">
-        <label class="hint" style="display:flex;align-items:center;gap:5px;white-space:nowrap;">Req %
-          <input type="number" min="1" max="100" placeholder="Min" value="${escapeHtml(APP.listFilter.minReq)}" oninput="setListMinReq(this.value)" style="width:64px;">
-          –
-          <input type="number" min="1" max="100" placeholder="Max" value="${escapeHtml(APP.listFilter.maxReq)}" oninput="setListMaxReq(this.value)" style="width:64px;">
-        </label>
-        <label class="hint" style="display:flex;align-items:center;gap:5px;white-space:nowrap;">Published
-          <input type="date" value="${escapeHtml(APP.listFilter.dateFrom)}" oninput="setListDateFrom(this.value)" style="width:130px;">
-          –
-          <input type="date" value="${escapeHtml(APP.listFilter.dateTo)}" oninput="setListDateTo(this.value)" style="width:130px;">
-        </label>
-        ${(APP.listFilter.minReq||APP.listFilter.maxReq||APP.listFilter.dateFrom||APP.listFilter.dateTo) ? `<button class="btn small ghost" onclick="clearListAdvancedFilters()">Clear</button>` : ''}
-      </div>
-      ${tagChips}
     </div>
     ${filtered.length !== demons.length ? `<div class="result-count">${filtered.length} of ${demons.length} levels match</div>` : ''}
   `;
@@ -3315,7 +3392,12 @@ function renderStatsTab(){
 function openPlayerProfile(id){
   const p = APP.players.find(x=>x.id===id);
   if(!p) return;
-  const rank = APP.players.slice().sort((a,b)=>b.points-a.points).findIndex(x=>x.id===id) + 1;
+  const ranked = APP.players.slice().sort((a,b)=>b.points-a.points);
+  const rank = ranked.findIndex(x=>x.id===id) + 1;
+  const above = rank > 1 ? ranked[rank-2] : null;
+  const nextMilestone = (Math.floor(p.points/100)+1)*100;
+  const toMilestone = nextMilestone - p.points;
+  const toOvertake = above ? Math.max(0, above.points - p.points + 1) : 0;
   const beaten = APP.submissions.filter(s => s.status==='approved' && s.type!=='progress' && s.player.toLowerCase()===p.name.toLowerCase());
   const totalDemons = APP.demons.length;
   const pct = totalDemons ? Math.round((beaten.length/totalDemons)*100) : 0;
@@ -3383,6 +3465,10 @@ function openPlayerProfile(id){
         </div>
         ${hardest ? `<div class="hint" style="margin-top:-4px;">🏆 Hardest completion: <b style="color:var(--text);">#${hardest.rankIdx+1} ${escapeHtml(hardest.demon.name)}</b></div>` : ''}
         ${joinedLabel ? `<div class="hint">📅 Member since ${joinedLabel}</div>` : ''}
+        <div class="progress-tracker">
+          ${above ? `<div class="hint">🎯 <b style="color:var(--text);">${toOvertake}pt</b> to pass <b style="color:var(--text);">${escapeHtml(above.name)}</b> (#${rank-1})</div>` : `<div class="hint">👑 Currently #1 on the leaderboard</div>`}
+          <div class="hint">📈 <b style="color:var(--text);">${toMilestone}pt</b> to reach ${nextMilestone}pt</div>
+        </div>
         <div class="field">
           <label>List Completion — ${pct}%</label>
           <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>
@@ -3398,9 +3484,60 @@ function openPlayerProfile(id){
         ${progressEntries.length ? `<div class="field"><label>Progress on Other Demons</label></div><div class="panel">${progressHtml}</div>` : ''}
         ${isMod() && p.adminNote ? `<div class="field"><label>🔒 Admin Notes</label></div><div class="panel" style="padding:8px 10px;font-size:12.5px;color:var(--text-muted);">${escapeHtml(p.adminNote)}</div>` : ''}
       </div>
-      <div class="modal-foot"><button class="btn ghost" onclick="closeModal()">Close</button></div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="copyProfileLink('${p.id}')">🔗 Copy Link</button>
+        <button class="btn ghost" onclick="downloadProfileCard('${p.id}')">🖼️ Share Card</button>
+        <button class="btn ghost" onclick="closeModal()">Close</button>
+      </div>
     </div>
   </div>`);
+}
+function copyProfileLink(id){
+  const url = location.origin + location.pathname + '#player-' + id;
+  copyToClipboard(url, 'Profile link copied');
+}
+function downloadProfileCard(id){
+  const p = APP.players.find(x=>x.id===id);
+  if(!p) return;
+  const rank = APP.players.slice().sort((a,b)=>b.points-a.points).findIndex(x=>x.id===id) + 1;
+  const beaten = APP.submissions.filter(s => s.status==='approved' && s.type!=='progress' && s.player.toLowerCase()===p.name.toLowerCase()).length;
+  const isLight = document.body.classList.contains('light-theme');
+  const bg = isLight ? '#ffffff' : '#11131a';
+  const bg2 = isLight ? '#f3f4f6' : '#171a24';
+  const text = isLight ? '#111827' : '#e4e6eb';
+  const muted = isLight ? '#4b5563' : '#82879c';
+  const accent = '#ff3b6b';
+  const gold = '#ffb845';
+  const canvas = document.createElement('canvas');
+  canvas.width = 1000; canvas.height = 520;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle = bg2; ctx.fillRect(0,0,canvas.width,10);
+  ctx.fillStyle = accent; ctx.fillRect(0,0,10,canvas.height);
+  ctx.fillStyle = muted; ctx.font = '600 22px Inter, sans-serif';
+  ctx.fillText((APP.settings.siteName||'Demon List').toUpperCase(), 60, 80);
+  ctx.fillStyle = text; ctx.font = '700 64px Inter, sans-serif';
+  ctx.fillText(`${flagEmoji(p.country)}  ${p.name}`, 60, 175);
+  ctx.fillStyle = accent; ctx.font = '700 40px "JetBrains Mono", monospace';
+  ctx.fillText('#'+rank, 60, 240);
+  ctx.fillStyle = muted; ctx.font = '500 20px Inter, sans-serif';
+  ctx.fillText('LEADERBOARD RANK', 60, 268);
+  const stats = [[String(p.points), 'POINTS', gold], [String(beaten), 'DEMONS BEATEN', text]];
+  let sx = 60;
+  stats.forEach(([val,label,color]) => {
+    ctx.fillStyle = color; ctx.font = '700 44px "JetBrains Mono", monospace';
+    ctx.fillText(val, sx, 360);
+    ctx.fillStyle = muted; ctx.font = '500 16px Inter, sans-serif';
+    ctx.fillText(label, sx, 388);
+    sx += 260;
+  });
+  ctx.fillStyle = muted; ctx.font = '500 18px Inter, sans-serif';
+  ctx.fillText(location.origin + location.pathname + '#player-' + p.id, 60, 470);
+  const a = document.createElement('a');
+  a.download = p.name.replace(/[^a-z0-9]/gi,'_') + '_profile_card.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+  showToast('Profile card downloaded');
 }
 function openCreatorProfile(name){
   if(!name) return;
@@ -3483,6 +3620,30 @@ async function deletePlayer(id){
 }
 
 /* ============================= SUBMIT TAB ============================= */
+let BULK_SELECTED = new Set();
+function toggleBulkSelect(id, ev){
+  if(ev) ev.stopPropagation();
+  if(BULK_SELECTED.has(id)) BULK_SELECTED.delete(id); else BULK_SELECTED.add(id);
+  renderSubmitTab();
+}
+function toggleBulkSelectAll(pendingIds){
+  const allSelected = pendingIds.length && pendingIds.every(id => BULK_SELECTED.has(id));
+  if(allSelected) pendingIds.forEach(id => BULK_SELECTED.delete(id));
+  else pendingIds.forEach(id => BULK_SELECTED.add(id));
+  renderSubmitTab();
+}
+async function bulkReviewSelected(status){
+  const ids = Array.from(BULK_SELECTED).filter(id => APP.submissions.some(s=>s.id===id && s.status==='pending'));
+  if(!ids.length) return;
+  const ok = await customConfirm(`${status==='approved'?'Approve':'Reject'} ${ids.length} selected submission(s)?`);
+  if(!ok) return;
+  for(const id of ids){ await reviewSubmission(id, status, true); }
+  BULK_SELECTED.clear();
+  await savePlayers();
+  await saveSubmissions();
+  renderAll();
+  showToast(`${ids.length} submissions ${status}`, status==='approved'?'ok':'error');
+}
 function setSubStatusFilter(status){ APP.subFilter.status = status; renderSubmitTab(); }
 function setSubSearch(v){ APP.subFilter.search = v; renderSubmitTab(true); }
 function renderSubmitTab(preserveFocus){
@@ -3505,21 +3666,39 @@ function renderSubmitTab(preserveFocus){
     rejected: APP.submissions.filter(s=>s.status==='rejected').length
   };
 
+  const pendingIdsOnScreen = queue.filter(s=>s.status==='pending').map(s=>s.id);
+  const allOnScreenSelected = pendingIdsOnScreen.length && pendingIdsOnScreen.every(id=>BULK_SELECTED.has(id));
+  const bulkBar = (isMod() && pendingIdsOnScreen.length) ? `
+    <div class="bulk-bar">
+      <label class="hint" style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+        <input type="checkbox" ${allOnScreenSelected?'checked':''} onchange="toggleBulkSelectAll(${JSON.stringify(pendingIdsOnScreen)})"> Select all pending (${pendingIdsOnScreen.length})
+      </label>
+      ${BULK_SELECTED.size ? `
+      <span class="hint">${BULK_SELECTED.size} selected</span>
+      <button class="btn small primary" onclick="bulkReviewSelected('approved')">Approve selected</button>
+      <button class="btn small danger" onclick="bulkReviewSelected('rejected')">Reject selected</button>` : ''}
+    </div>` : '';
   const queueHtml = queue.length ? queue.map(s => {
     const demon = APP.demons.find(d=>d.id===s.demonId);
+    const embed = getEmbedUrl(s.video);
     return `
     <div class="sub-item">
       <div class="sub-item-top">
-        <div>
-          <span class="who">${escapeHtml(s.player)}</span>
-          <span class="what"> — ${demon?escapeHtml(demon.name):'(deleted demon)'} · ${s.percent}%${s.type==='progress'?' <span class="status-pill pending">progress</span>':''}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${isMod() && s.status==='pending' ? `<input type="checkbox" ${BULK_SELECTED.has(s.id)?'checked':''} onclick="toggleBulkSelect('${s.id}', event)">` : ''}
+          <div>
+            <span class="who">${escapeHtml(s.player)}</span>
+            <span class="what"> — ${demon?escapeHtml(demon.name):'(deleted demon)'} · ${s.percent}%${s.type==='progress'?' <span class="status-pill pending">progress</span>':''}</span>
+          </div>
         </div>
         <span class="status-pill ${s.status}">${s.status}</span>
       </div>
       ${s.note ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px; font-style:italic;">"${escapeHtml(s.note)}"</div>` : ''}
       ${s.attempts ? `<div style="font-size:11.5px;color:var(--text-dim);margin-bottom:2px;">${s.attempts.toLocaleString()} attempts</div>` : ''}
       <a class="sub-link" href="${escapeHtml(s.video)}" target="_blank">Watch submission ↗</a>
+      ${embed ? ` · <a class="sub-link" href="javascript:void(0)" onclick="this.closest('.sub-item').querySelector('.sub-embed-wrap').classList.toggle('open')">▶ Preview inline</a>` : ''}
       ${s.rawFootage ? ` · <a class="sub-link" href="${escapeHtml(s.rawFootage)}" target="_blank">Raw footage ↗</a>` : ''}
+      ${embed ? `<div class="sub-embed-wrap"><div class="video-wrap"><iframe src="${embed}" allowfullscreen loading="lazy"></iframe></div></div>` : ''}
       ${isMod() ? `
       <div class="field" style="margin-top:6px;margin-bottom:0;">
         <textarea placeholder="Private moderator notes (not visible to the player)" style="font-size:11.5px;min-height:40px;" onchange="setModNote('${s.id}', this.value)">${escapeHtml(s.modNote||'')}</textarea>
@@ -3577,6 +3756,7 @@ function renderSubmitTab(preserveFocus){
             <input id="sub-search" placeholder="Search player or level..." value="${escapeHtml(search)}" oninput="setSubSearch(this.value)">
           </div>
         </div>` : ''}
+        ${bulkBar}
         <div class="sub-list demon-rows" style="max-height:none;">${queueHtml}</div>
       </div>` : ''}
     </div>
@@ -3632,7 +3812,7 @@ async function setModNote(id, value){
   s.modNote = value;
   await saveSubmissions();
 }
-async function reviewSubmission(id, status){
+async function reviewSubmission(id, status, silent){
   if(!isMod()) return;
   const s = APP.submissions.find(x=>x.id===id);
   if(!s) return;
@@ -3655,12 +3835,14 @@ async function reviewSubmission(id, status){
       }
       player.points += awarded;
     }
-    await savePlayers();
+    if(!silent) await savePlayers();
   }
-  await saveSubmissions();
   logChange(`${s.player}'s ${s.type==='progress'?'progress ':''}submission on "${demon?demon.name:'a deleted demon'}" (${s.percent}%) was ${status}`, true);
-  renderAll();
-  showToast(status==='approved' ? 'Submission approved' : 'Submission rejected', status==='approved'?'ok':'error');
+  if(!silent){
+    await saveSubmissions();
+    renderAll();
+    showToast(status==='approved' ? 'Submission approved' : 'Submission rejected', status==='approved'?'ok':'error');
+  }
 }
 
 /* ============================= INIT ============================= */
