@@ -788,6 +788,14 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 .like-btn.liked{color:var(--red);border-color:var(--red);background:rgba(255,84,112,.08);}
 .like-btn:active{animation:starPop .3s ease;}
 
+/* ---------- QOL: dev log (live GitHub feed) ---------- */
+.changelog-entry{animation:fadeSlideIn .25s ease both;}
+.devlog-contributors{display:flex;align-items:center;gap:6px;padding:2px 4px 12px;flex-wrap:wrap;}
+.devlog-contributors img{width:24px;height:24px;border-radius:50%;border:2px solid var(--bg-raised-2);margin-left:-8px;transition:transform .15s ease;}
+.devlog-contributors img:first-child{margin-left:0;}
+.devlog-contributors img:hover{transform:translateY(-2px);z-index:1;}
+.devlog-contributors .dc-label{font-size:11px;color:var(--text-dim);margin-left:6px;}
+
 /* ---------- QOL: manage users list ---------- */
 .user-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;}
 .user-row:last-child{border-bottom:none;}
@@ -840,7 +848,7 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
     <button data-tab="halloffame"><span class="si">🏛️</span>Hall of Fame</button>
     <button data-tab="stats"><span class="si">📊</span>Stats</button>
     <button data-tab="chat"><span class="si">💬</span>Chat<span id="chatBadgeSlot"></span></button>
-    <button data-tab="changelog"><span class="si">🕘</span>Changelog</button>
+    <button data-tab="changelog"><span class="si">🕘</span>Dev Log<span id="devlogBadgeSlot"></span></button>
     <div id="catSlot-community"></div>
     <div class="side-nav-label">Info</div>
     <button data-tab="faq"><span class="si">❓</span>FAQ</button>
@@ -917,6 +925,7 @@ const APP = {
   profiles: [], // { username, bio, avatarEmoji, country, socials }
   chatMessages: [],
   changelog: [],
+  devLog: { commits: null, loading: false, error: null }, // live commit feed pulled from GitHub
   snapshots: [], // Time Machine snapshots: { date, ts, demons }
   currentUser: null,
   activeTab: 'list',
@@ -1021,6 +1030,41 @@ async function loadAll(){
   }
   applySystemTheme();
   await seedChangelogIfEmpty();
+  await mergeCherryIntoTamari();
+}
+
+/* One-time data fix: the Cherry team's verifier credit was actually the registered
+   player "tamari" wearing a team tag. This links them for good — any level currently
+   crediting "Cherry" (or "Cherry Team") as verifier is re-credited to "tamari", and
+   "Cherry" is kept as a permanent alias on tamari's profile so anything reintroduced
+   under that name still resolves and links correctly. Runs once, then flips a settings flag. */
+async function mergeCherryIntoTamari(){
+  if(APP.settings.cherryTamariMerged) return;
+  const isCherry = v => /^cherry(\s*team)?$/i.test((v||'').trim());
+  const saves = [];
+  let anyMatch = false;
+
+  const tamari = APP.players.find(p => p.name.toLowerCase()==='tamari');
+  if(tamari){
+    const before = (tamari.aliases||[]).length;
+    tamari.aliases = Array.from(new Set([...(tamari.aliases||[]), 'Cherry', 'Cherry Team']));
+    if(tamari.aliases.length !== before) saves.push(savePlayers());
+  }
+
+  const fix = (arr, saveFn) => {
+    let changed = false;
+    arr.forEach(d => { if(isCherry(d.verifier)){ d.verifier = 'tamari'; changed = true; anyMatch = true; } });
+    if(changed) saves.push(saveFn());
+  };
+  fix(APP.demons, saveDemons);
+  fix(APP.challenges, saveChallenges);
+  fix(APP.platformers, savePlatformers);
+  fix(APP.upcoming, saveUpcoming);
+
+  APP.settings.cherryTamariMerged = true;
+  saves.push(saveSettings());
+  await Promise.all(saves);
+  if(anyMatch) logChange('Cherry team verifier credit merged into tamari\'s account.', true);
 }
 
 /* Seeds a starter changelog (visible to everyone on Home) so the feed isn't empty
@@ -1043,11 +1087,12 @@ async function seedChangelogIfEmpty(){
     mk(10, 12, 20, 'Demon Roulette added — spin for a random challenge from the list.'),
     mk(10, 15, 30, 'Challenge List and Platformer List split out into their own dedicated tabs.'),
     mk(10, 19, 45, 'Stats tab added with completion trends and player breakdowns.'),
-    mk(today, 8, 30, 'Home tab redesigned with a cleaner layout and an at-a-glance changelog feed.'),
-    mk(today, 8, 45, 'Changelog tab polished with day-grouped entries and clearer styling.'),
+    mk(today, 8, 30, 'Home tab redesigned with a cleaner layout and an at-a-glance activity feed.'),
+    mk(today, 8, 45, 'Site Activity feed polished with day-grouped entries and clearer styling.'),
     mk(today, 9, 0, 'Profile tab overhauled: refreshed hero card with a rank badge, icon stats, and smoother tab switching.'),
     mk(today, 9, 15, 'Site Settings reorganized into sections with a live accent color preview.'),
-    mk(today, 9, 30, 'General visual polish pass across buttons, panels, and forms sitewide.')
+    mk(today, 9, 30, 'General visual polish pass across buttons, panels, and forms sitewide.'),
+    mk(today, 9, 45, 'Changelog tab replaced with a real Dev Log pulling live commit history straight from GitHub.')
   ];
   await saveChangelogStore();
 }
@@ -1271,20 +1316,160 @@ function renderAnnouncement(){
     </div>`;
 }
 
-/* ============================= CHANGELOG TAB ============================= */
+/* ============================= DEV LOG (live GitHub commit feed) ============================= */
+const DEVLOG_REPO = 'tamarixr/Double-Entendre-List';
+const DEVLOG_COMMIT_TYPES = {
+  feat:     { icon:'✨', label:'Feature', color:'var(--cyan)' },
+  fix:      { icon:'🐛', label:'Fix',     color:'var(--red)' },
+  docs:     { icon:'📝', label:'Docs',    color:'var(--text-dim)' },
+  style:    { icon:'💄', label:'Style',   color:'var(--spike)' },
+  refactor: { icon:'♻️', label:'Refactor',color:'var(--cyan)' },
+  perf:     { icon:'⚡', label:'Perf',     color:'var(--spike)' },
+  test:     { icon:'✅', label:'Test',    color:'var(--cyan)' },
+  chore:    { icon:'🔧', label:'Chore',   color:'var(--text-dim)' },
+  build:    { icon:'📦', label:'Build',   color:'var(--text-dim)' },
+  ci:       { icon:'⚙️', label:'CI',      color:'var(--text-dim)' },
+  revert:   { icon:'⏪', label:'Revert',  color:'var(--red)' }
+};
+function commitTypeMeta(message){
+  const m = /^(\w+)(\([\w\-\/. ]+\))?!?:\s*/.exec(message||'');
+  return (m && DEVLOG_COMMIT_TYPES[m[1].toLowerCase()]) || { icon:'🔹', label:null, color:'var(--cyan)' };
+}
+function relativeTimeFromNow(dateStr){
+  if(!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return hrs + 'h ago';
+  const days = Math.floor(hrs/24);
+  if(days < 30) return days + 'd ago';
+  const months = Math.floor(days/30);
+  if(months < 12) return months + 'mo ago';
+  return Math.floor(months/12) + 'y ago';
+}
+function groupCommitsByDate(commits){
+  const groups = [];
+  let lastKey = null;
+  commits.forEach(c => {
+    if(!c.date) return;
+    const d = new Date(c.date);
+    const key = d.toDateString();
+    if(key !== lastKey){ groups.push({ key, label: formatChangelogDateLabel(d), items: [] }); lastKey = key; }
+    groups[groups.length-1].items.push(c);
+  });
+  return groups;
+}
+function renderCommitDigest(groups){
+  if(!groups.length) return '';
+  return groups.map(g => `
+    <div class="changelog-day-group">
+      <div class="changelog-day-label">${escapeHtml(g.label)}</div>
+      ${g.items.map(c => {
+        const meta = commitTypeMeta(c.message);
+        return `<div class="changelog-entry">
+          <span class="changelog-dot" style="background:${meta.color};box-shadow:0 0 0 3px var(--bg-raised-2);"></span>
+          <div class="changelog-entry-body" style="flex:1;min-width:0;">
+            <div class="changelog-entry-text">
+              <a href="${escapeHtml(c.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;" title="View commit on GitHub">${meta.icon} ${escapeHtml(c.message)}</a>
+            </div>
+            <div class="changelog-entry-meta">
+              ${c.authorAvatar ? `<img src="${escapeHtml(c.authorAvatar)}" alt="" style="width:14px;height:14px;border-radius:50%;vertical-align:-3px;margin-right:4px;">` : ''}${escapeHtml(c.authorName)} · <span style="font-family:'JetBrains Mono',monospace;">${escapeHtml(c.shortSha)}</span> · ${relativeTimeFromNow(c.date)}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
+/* Fetches real commit history straight from GitHub, client-side — this is what actually
+   drives the Dev Log now instead of a hand-written summary. Cached in-memory for the session;
+   call with force=true to bypass the cache (used by the Retry button). */
+async function ensureDevLog(force){
+  if(APP.devLog.loading) return;
+  if(APP.devLog.commits && !force) return;
+  APP.devLog.loading = true;
+  APP.devLog.error = null;
+  if(APP.activeTab === 'changelog') renderChangelogTab();
+  try{
+    const res = await fetch(`https://api.github.com/repos/${DEVLOG_REPO}/commits?per_page=60`, { headers: { 'Accept':'application/vnd.github+json' } });
+    if(!res.ok) throw new Error(res.status === 403 ? 'Rate limited by GitHub, try again shortly.' : `GitHub responded with ${res.status}`);
+    const data = await res.json();
+    APP.devLog.commits = data.map(c => ({
+      sha: c.sha,
+      shortSha: (c.sha||'').slice(0,7),
+      message: ((c.commit && c.commit.message) || '').split('\n')[0],
+      date: (c.commit && c.commit.author && c.commit.author.date) || null,
+      authorName: (c.author && c.author.login) || (c.commit && c.commit.author && c.commit.author.name) || 'unknown',
+      authorAvatar: c.author && c.author.avatar_url,
+      url: c.html_url
+    }));
+  }catch(e){
+    APP.devLog.error = (e && e.message) || 'Could not load commits from GitHub.';
+  }
+  APP.devLog.loading = false;
+  if(APP.activeTab === 'changelog') renderChangelogTab();
+  updateNavBadges();
+}
+
+/* ============================= CHANGELOG / DEV LOG TAB ============================= */
 function renderChangelogTab(){
   const el = document.getElementById('panel-changelog');
   if(!el) return;
+  ensureDevLog(); // kicks off (or reuses) the fetch; re-renders itself when it resolves
+
+  const dl = APP.devLog;
+  let devSection;
+  if(dl.loading && !dl.commits){
+    devSection = `<div class="panel"><div class="changelog-feed" style="padding:16px 14px;">
+      <div class="skel-row" style="width:65%;margin-bottom:12px;"></div>
+      <div class="skel-row" style="width:92%;margin-bottom:12px;"></div>
+      <div class="skel-row" style="width:48%;"></div>
+    </div></div>`;
+  } else if(dl.error){
+    devSection = `<div class="panel"><div class="empty-state">
+      <div class="big">Couldn't reach GitHub</div>${escapeHtml(dl.error)}
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn small ghost" onclick="ensureDevLog(true)">↻ Retry</button>
+        <a class="btn small ghost" href="https://github.com/${DEVLOG_REPO}/commits" target="_blank" rel="noopener">View on GitHub ↗</a>
+      </div>
+    </div></div>`;
+  } else if(dl.commits && dl.commits.length){
+    const groups = groupCommitsByDate(dl.commits);
+    const seen = new Set();
+    const contributors = [];
+    dl.commits.forEach(c => { if(c.authorAvatar && !seen.has(c.authorName)){ seen.add(c.authorName); contributors.push(c); } });
+    const contributorsHtml = contributors.length ? `<div class="devlog-contributors">
+      ${contributors.slice(0,10).map(c => `<img src="${escapeHtml(c.authorAvatar)}" alt="${escapeHtml(c.authorName)}" title="${escapeHtml(c.authorName)}">`).join('')}
+      <span class="dc-label">${contributors.length} contributor${contributors.length===1?'':'s'} · ${dl.commits.length} commit${dl.commits.length===1?'':'s'} shown</span>
+    </div>` : '';
+    devSection = `${contributorsHtml}<div class="panel"><div class="changelog-feed" style="max-height:none;">${renderCommitDigest(groups)}</div></div>`;
+  } else {
+    devSection = `<div class="panel"><div class="empty-state"><div class="big">No commits yet</div>The dev log will populate as commits land on GitHub.</div></div>`;
+  }
+
   const showMod = isMod();
   const entries = APP.changelog.slice().reverse().filter(c => showMod || !c.mod).slice(0, 300);
   const groups = groupChangelogByDate(entries);
-  const feed = groups.length ? renderChangelogDigest(groups) : `<div class="empty-state"><div class="big">Nothing yet</div>Changes will show up here as the list evolves.</div>`;
+  const activityFeed = groups.length ? renderChangelogDigest(groups) : `<div class="empty-state"><div class="big">Nothing yet</div>Changes will show up here as the list evolves.</div>`;
+
   el.innerHTML = `
     <div class="page-head">
-      <h1 class="page-title">Changelog</h1>
-      <p class="page-desc">Every placement, edit, and feature update across the site, newest first.${showMod ? ' Moderator-only entries are included and marked MOD.' : ''}</p>
+      <div class="page-head-row">
+        <div>
+          <h1 class="page-title">Dev Log</h1>
+          <p class="page-desc">A live feed of real commits from the project's GitHub repo, newest first.</p>
+        </div>
+        <a class="btn small ghost" href="https://github.com/${DEVLOG_REPO}" target="_blank" rel="noopener">⭐ View on GitHub ↗</a>
+      </div>
     </div>
-    <div class="panel"><div class="changelog-feed" style="max-height:none;">${feed}</div></div>
+    ${devSection}
+    <div class="page-head" style="margin-top:24px;">
+      <h1 class="page-title" style="font-size:17px;">📋 Site Activity</h1>
+      <p class="page-desc">Placements, edits, and feature updates tracked automatically as the list evolves.${showMod ? ' Moderator-only entries are included and marked MOD.' : ''}</p>
+    </div>
+    <div class="panel"><div class="changelog-feed" style="max-height:none;">${activityFeed}</div></div>
   `;
 }
 
@@ -2370,7 +2555,7 @@ const TAB_TITLES = {
   home:'Home', list:'Demon List', challengelist:'Challenge List', platformerlist:'Platformer List',
   upcoming:'Upcoming', timemachine:'Time Machine', roulette:'Roulette',
   submit:'Submit Play', submitlevel:'Submit Level', profile:'My Profile', leaderboard:'Leaderboard', halloffame:'Hall of Fame',
-  stats:'Stats', chat:'Chat', changelog:'Changelog', faq:'FAQ', guidelines:'Guidelines', admin:'Admin'
+  stats:'Stats', chat:'Chat', changelog:'Dev Log', faq:'FAQ', guidelines:'Guidelines', admin:'Admin'
 };
 function updateDocumentTitle(tab){
   let label = TAB_TITLES[tab];
@@ -2434,6 +2619,12 @@ function updateNavBadges(){
   if(lvlSlot){
     const pendingLvl = APP.levelSubmissions.filter(s=>s.status==='pending').length;
     lvlSlot.innerHTML = (isMod() && pendingLvl) ? `<span class="nav-badge">${pendingLvl}</span>` : '';
+  }
+  const devSlot = document.getElementById('devlogBadgeSlot');
+  if(devSlot){
+    const commits = APP.devLog.commits;
+    const recent = commits ? commits.filter(c => c.date && (Date.now() - new Date(c.date).getTime()) < 7*24*60*60*1000).length : 0;
+    devSlot.innerHTML = recent ? `<span class="nav-badge" title="${recent} commit${recent===1?'':'s'} in the last 7 days">${recent}</span>` : '';
   }
 }
 
@@ -2527,7 +2718,7 @@ function renderHomeTab(){
   const changelogSectionHtml = `
     <div class="panel" style="margin-top:12px;">
       <div class="panel-head">
-        <h3>🕘 Changelog <span class="hint" style="font-weight:400;">since ${escapeHtml(cutoffLabel)} (${changelogEntries.length})</span></h3>
+        <h3>📋 Site Activity <span class="hint" style="font-weight:400;">since ${escapeHtml(cutoffLabel)} (${changelogEntries.length})</span></h3>
         <button class="btn small ghost" onclick="switchTab('changelog')">Full History</button>
       </div>
       <div class="changelog-feed">
@@ -3082,7 +3273,7 @@ function renderDemonDetail(d, index){
     <div class="detail-top">
       <div>
         <div class="detail-title">${fav?'★ ':''}${escapeHtml(d.name)}</div>
-        <div class="detail-sub">${flagEmoji(d.country)} by <a href="javascript:void(0)" onclick="event.stopPropagation();openCreatorProfile('${escapeHtml(d.creator||'').replace(/'/g,"\\'")}')" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;">${escapeHtml(d.creator||'Unknown')}</a>${d.verifier ? ' · verified by '+`<a href="javascript:void(0)" onclick="event.stopPropagation();openCreatorProfile('${escapeHtml(d.verifier).replace(/'/g,"\\'")}')" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;">${escapeHtml(d.verifier)}</a>` : ''}</div>
+        <div class="detail-sub">${flagEmoji(d.country)} by <a href="javascript:void(0)" onclick="event.stopPropagation();openCreatorProfile('${escapeHtml(d.creator||'').replace(/'/g,"\\'")}')" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;">${escapeHtml(d.creator||'Unknown')}</a>${d.verifier ? ' · verified by '+`<a href="javascript:void(0)" onclick="event.stopPropagation();openCreatorProfile('${escapeHtml(d.verifier).replace(/'/g,"\\'")}')" style="color:inherit;text-decoration:underline;text-decoration-style:dotted;">${escapeHtml(displayVerifierName(d.verifier))}</a>` : ''}</div>
         ${metaParts.length ? `<div class="detail-meta">${metaParts.join('')}</div>` : ''}
         ${badges.length ? `<div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;">${badges.join('')}</div>` : ''}
         ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
@@ -3606,7 +3797,7 @@ function renderGenericDetail(kind, d, index){
     <div class="detail-top">
       <div>
         <div class="detail-title">${escapeHtml(d.name)}</div>
-        <div class="detail-sub">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(d.verifier) : ''}</div>
+        <div class="detail-sub">${flagEmoji(d.country)} by ${escapeHtml(d.creator||'Unknown')}${d.verifier ? ' · verified by '+escapeHtml(displayVerifierName(d.verifier)) : ''}</div>
         ${metaParts.length ? `<div class="detail-meta">${metaParts.join('')}</div>` : ''}
         ${tagHtml ? `<div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">${tagHtml}</div>` : ''}
       </div>
@@ -3796,7 +3987,7 @@ function renderUpcomingTab(preserveFocus){
       <div class="uc-top">
         <div>
           <div class="uc-name">${escapeHtml(u.name)}</div>
-          <div class="uc-creator">${flagEmoji(u.country)} by ${escapeHtml(u.creator||'Unknown')}${u.verifier ? ' · verified by '+escapeHtml(u.verifier) : ''}</div>
+          <div class="uc-creator">${flagEmoji(u.country)} by ${escapeHtml(u.creator||'Unknown')}${u.verifier ? ' · verified by '+escapeHtml(displayVerifierName(u.verifier)) : ''}</div>
         </div>
         <div class="uc-rank">#${rank+1} queued</div>
       </div>
@@ -4313,7 +4504,7 @@ function renderStatsTab(){
 
   // Hardest verifier: verifier whose demons average the highest placement (lowest rank index = hardest)
   const verifierRanks = {};
-  demons.forEach((d,i) => { if(d.verifier){ (verifierRanks[d.verifier]=verifierRanks[d.verifier]||[]).push(i); } });
+  demons.forEach((d,i) => { if(d.verifier){ const vn = displayVerifierName(d.verifier); (verifierRanks[vn]=verifierRanks[vn]||[]).push(i); } });
   let hardestVerifier = null, hardestVerifierAvg = Infinity;
   Object.entries(verifierRanks).forEach(([name,ranks]) => {
     const avg = ranks.reduce((s,r)=>s+r,0)/ranks.length;
@@ -4467,7 +4658,7 @@ function openPlayerProfile(id){
   // Verified demons — across all three lists.
   const verifiedItems = [];
   [{kind:'demon', title:'Demon List', arr: APP.demons}, {kind:'challenge', title:'Challenge List', arr: APP.challenges}, {kind:'platformer', title:'Platformer Demon List', arr: APP.platformers}]
-    .forEach(({kind,title,arr}) => arr.forEach((d,i) => { if(d.verifier && d.verifier.toLowerCase()===p.name.toLowerCase()) verifiedItems.push({ d, rankIdx:i, kind, title }); }));
+    .forEach(({kind,title,arr}) => arr.forEach((d,i) => { if(d.verifier && displayVerifierName(d.verifier).toLowerCase()===p.name.toLowerCase()) verifiedItems.push({ d, rankIdx:i, kind, title }); }));
   const verifiedHtml = verifiedItems.length ? verifiedItems.map(({d,rankIdx,kind,title}) => `<div class="completion-item" style="cursor:pointer;" onclick="openLevelFromProfile('${kind}','${d.id}')"><span>#${rankIdx+1} ${escapeHtml(d.name)}</span><span style="color:var(--text-dim);">${escapeHtml(title)}</span></div>`).join('') : '';
 
   const account = APP.registeredUsers.find(u => u.username.toLowerCase() === p.name.toLowerCase());
@@ -4581,11 +4772,30 @@ function downloadProfileCard(id){
   a.click();
   showToast('Profile card downloaded');
 }
+/* ---------- QOL: name aliases ----------
+   Players can be credited on levels under a nickname, team name, or old handle
+   that doesn't match their registered player name (e.g. a level lists its verifier
+   as "Cherry" but that's actually the player "tamari" wearing a team tag). Instead of
+   splitting that credit across two disconnected identities, any name matching a
+   player's `aliases` list resolves back to that player everywhere credit is shown,
+   linked, or counted in stats. Manage aliases from the player's edit form. */
+function resolvePlayerByName(name){
+  if(!name) return null;
+  const q = name.trim().toLowerCase();
+  if(!q) return null;
+  return APP.players.find(p => p.name.toLowerCase()===q || (p.aliases||[]).some(a=>a.toLowerCase()===q)) || null;
+}
+function displayVerifierName(name){
+  if(!name) return name;
+  const p = resolvePlayerByName(name);
+  return p ? p.name : name;
+}
 function openCreatorProfile(name){
   if(!name) return;
-  const nameLower = name.toLowerCase();
-  const created = APP.demons.filter(d => (d.creator||'').toLowerCase()===nameLower);
-  const verified = APP.demons.filter(d => (d.verifier||'').toLowerCase()===nameLower);
+  const canonical = displayVerifierName(name);
+  const nameLower = canonical.toLowerCase();
+  const created = APP.demons.filter(d => displayVerifierName(d.creator||'').toLowerCase()===nameLower);
+  const verified = APP.demons.filter(d => displayVerifierName(d.verifier||'').toLowerCase()===nameLower);
   const demonsList = (arr, emptyMsg) => arr.length ? arr.map(d => {
     const rank = APP.demons.findIndex(x=>x.id===d.id);
     return `<div class="completion-item" style="cursor:pointer;" onclick="closeModal();selectDemon('${d.id}');switchTab('list');"><span>${escapeHtml(d.name)}</span><span style="color:var(--text-dim);">#${rank+1} · ${d.points}pt</span></div>`;
@@ -4595,7 +4805,7 @@ function openCreatorProfile(name){
   openModal(`
   <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
     <div class="modal">
-      <div class="modal-head"><h3>${escapeHtml(name)}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-head"><h3>${escapeHtml(canonical)}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
       <div class="modal-body">
         <div class="stat-row" style="margin-top:0;">
           <div class="stat rankstat"><div class="val">${created.length}</div><div class="lbl">Levels Created</div></div>
@@ -4642,7 +4852,7 @@ function renderProfileTab(){
     progressEntries = Object.entries(progressBests)
       .map(([demonId, percent]) => ({ demon: APP.demons.find(d=>d.id===demonId), percent }))
       .filter(x => x.demon && !beatenWithRank.some(b=>b.demon.id===x.demon.id));
-    [APP.demons, APP.challenges, APP.platformers].forEach(arr => arr.forEach(d => { if(d.verifier && d.verifier.toLowerCase()===player.name.toLowerCase()) verifiedCount++; }));
+    [APP.demons, APP.challenges, APP.platformers].forEach(arr => arr.forEach(d => { if(d.verifier && displayVerifierName(d.verifier).toLowerCase()===player.name.toLowerCase()) verifiedCount++; }));
   }
 
   const favIds = Array.from(getFavorites());
@@ -4772,6 +4982,7 @@ function openPlayerModal(id){
           <div class="field"><label>Region / Country</label><select id="pl-country">${countryOptions(editing?editing.country:'US')}</select></div>
           <div class="field"><label>Points</label><input id="pl-points" type="number" min="0" value="${editing?editing.points:0}"></div>
         </div>
+        <div class="field"><label>Aliases <span style="color:var(--text-dim);font-weight:400;">(comma-separated — other names/team tags this player is credited under; merges their creator/verifier credit and stats onto this profile)</span></label><input id="pl-aliases" placeholder="e.g. Cherry, Cherry Team" value="${editing?escapeHtml((editing.aliases||[]).join(', ')):''}"></div>
         <div class="field"><label>🔒 Admin Notes <span style="color:var(--text-dim);font-weight:400;">(mods only)</span></label><textarea id="pl-adminnote" placeholder="Internal notes about this player...">${editing?escapeHtml(editing.adminNote||''):''}</textarea></div>
       </div>
       <div class="modal-foot">
@@ -4789,6 +5000,7 @@ async function savePlayerForm(id){
     name,
     country: document.getElementById('pl-country').value,
     points: parseInt(document.getElementById('pl-points').value) || 0,
+    aliases: document.getElementById('pl-aliases').value.split(',').map(s=>s.trim()).filter(Boolean),
   };
   if(noteEl) data.adminNote = noteEl.value.trim();
   if(id){ Object.assign(APP.players.find(p=>p.id===id), data); logChange(`Player "${name}" was edited`, true); }
