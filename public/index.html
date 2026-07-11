@@ -1031,6 +1031,45 @@ async function loadAll(){
   applySystemTheme();
   await seedChangelogIfEmpty();
   await mergeCherryIntoTamari();
+  await applyHallOfFameCredits();
+}
+
+/* One-time credit fix: the Hall of Fame's #1 demon should show tamari as its verifier,
+   and toby credited as the first victor in the "Conquerors" panel. If toby already has
+   an approved completion for that demon, its timestamp is nudged earlier than every other
+   record so the First Victor badge lands on them; otherwise a completion is created for them. */
+async function applyHallOfFameCredits(){
+  if(APP.settings.hofCreditsApplied) return;
+  const hardest = APP.demons[0];
+  if(!hardest) return; // no #1 demon yet — try again next load instead of setting the flag
+  const saves = [];
+
+  if(hardest.verifier !== 'tamari'){
+    hardest.verifier = 'tamari';
+    saves.push(saveDemons());
+  }
+
+  const subs = APP.submissions.filter(s => s.status==='approved' && s.demonId===hardest.id).sort((a,b)=>a.submittedAt-b.submittedAt);
+  const earliestTs = subs.length ? subs[0].submittedAt : Date.now();
+  const tobySub = APP.submissions.find(s => s.demonId===hardest.id && s.status==='approved' && s.player.toLowerCase()==='toby');
+  let subsChanged = false;
+  if(tobySub){
+    if(tobySub.submittedAt >= earliestTs){ tobySub.submittedAt = earliestTs - 1000; subsChanged = true; }
+  } else {
+    APP.submissions.push({
+      id: uid(), player: 'toby', demonId: hardest.id, listKind: 'demon', percent: 100,
+      video: '', country: 'US', note: 'First victor', attempts: null, rawFootage: '',
+      enjoymentRating: null, decoRating: null, gameplayRating: null,
+      status: 'approved', type: 'completion', submittedAt: earliestTs - 1000, modNote: ''
+    });
+    subsChanged = true;
+  }
+  if(subsChanged) saves.push(saveSubmissions());
+
+  APP.settings.hofCreditsApplied = true;
+  saves.push(saveSettings());
+  await Promise.all(saves);
+  logChange('Hall of Fame credits updated: tamari set as verifier, toby credited as first victor.', true);
 }
 
 /* One-time data fix: the Cherry team's verifier credit was actually the registered
@@ -4464,7 +4503,7 @@ function renderHallOfFameTab(){
         <div class="demon-rows" style="max-height:none;">${topPlayersHtml}</div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h3>👑 Conquerors of ${hardest?escapeHtml(hardest.name):'the #1 Demon'}</h3></div>
+        <div class="panel-head"><h3>👑 Conquerors of ${hardest?escapeHtml(hardest.name):'the #1 Demon'}</h3>${hardest && hardest.verifier ? `<span class="hint">Verified by ${escapeHtml(displayVerifierName(hardest.verifier))}</span>` : ''}</div>
         <div class="demon-rows" style="max-height:none;">${conquerorsHtml}</div>
       </div>
     </div>
