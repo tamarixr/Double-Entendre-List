@@ -799,6 +799,90 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 /* ---------- QOL: manage users list ---------- */
 .user-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;}
 .user-row:last-child{border-bottom:none;}
+
+/* ---------- QOL: registered users panel (home) ---------- */
+.user-chip-list{display:flex;flex-direction:column;}
+.user-chip-row{
+  display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;
+  border-bottom:1px solid var(--line-soft);transition:background .15s ease, transform .15s ease;
+}
+.user-chip-row:last-child{border-bottom:none;}
+.user-chip-row:hover{background:var(--bg-raised);transform:translateX(2px);}
+.user-chip-avatar{
+  width:30px;height:30px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:15px;background:var(--bg-raised-2);border:1px solid var(--line);
+}
+.user-chip-info{flex:1;min-width:0;}
+.user-chip-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px;}
+.user-chip-meta{font-size:10.5px;color:var(--text-dim);margin-top:1px;}
+
+/* =========================================================================
+   UI POLISH PASS — refined buttons, inputs, cards, and micro-interactions
+   ========================================================================= */
+
+/* Buttons: subtle gradient + lift + glow */
+.btn{
+  box-shadow:0 1px 0 rgba(255,255,255,0.02) inset;
+}
+.btn.primary{
+  background:linear-gradient(135deg, var(--spike) 0%, var(--spike-hover) 100%);
+  border-color:transparent;
+}
+.btn.primary:hover{
+  background:linear-gradient(135deg, var(--spike-hover) 0%, var(--spike) 100%);
+  box-shadow:0 6px 20px var(--spike-shadow), 0 0 0 1px var(--spike-hover) inset;
+  transform:translateY(-1.5px);
+}
+.btn:focus-visible, .quick-link-card:focus-visible, .demon-row:focus-visible{
+  outline:2px solid var(--spike);outline-offset:2px;
+}
+
+/* Inputs & selects: nicer focus ring, custom select arrow, consistent hover */
+.field input,.field select,.field textarea{
+  transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.field input:hover,.field select:hover,.field textarea:hover{border-color:var(--text-dim);}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:var(--spike);box-shadow:0 0 0 3px var(--spike-shadow);
+}
+.field select{
+  appearance:none;-webkit-appearance:none;
+  background-image:linear-gradient(45deg, transparent 50%, var(--text-dim) 50%), linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+  background-position:calc(100% - 16px) center, calc(100% - 11px) center;
+  background-size:5px 5px, 5px 5px;background-repeat:no-repeat;
+  padding-right:30px;cursor:pointer;
+}
+.field select:hover{background-image:linear-gradient(45deg, transparent 50%, var(--text) 50%), linear-gradient(135deg, var(--text) 50%, transparent 50%);}
+
+/* Panels: soft top accent line + deeper hover elevation */
+.panel{position:relative;}
+.panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg, var(--spike) 0%, transparent 70%);
+  opacity:0;transition:opacity .25s ease;pointer-events:none;
+}
+.panel:hover::before{opacity:.6;}
+.panel:hover{transform:translateY(-1px);box-shadow:0 10px 28px rgba(0,0,0,0.24);}
+body.light-theme .panel:hover{box-shadow:0 10px 24px rgba(0,0,0,0.08);}
+
+/* Stat cards: gradient value + livelier hover */
+.stat-card{position:relative;overflow:hidden;}
+.stat-card::after{
+  content:'';position:absolute;inset:0;background:radial-gradient(120px 60px at 15% 0%, var(--spike-shadow), transparent 70%);
+  opacity:0;transition:opacity .25s ease;pointer-events:none;
+}
+.stat-card:hover::after{opacity:.5;}
+.stat-card:hover{border-color:var(--spike-dim);}
+.stat-card .sc-val{background:linear-gradient(90deg, var(--text) 0%, var(--spike) 160%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+
+/* Quick link cards: icon pop on hover */
+.quick-link-card .ql-icon{transition:transform .2s cubic-bezier(.34,1.56,.64,1);}
+.quick-link-card:hover .ql-icon{transform:scale(1.15) rotate(-4deg);}
+
+/* Modal: slightly richer entrance shadow */
+.modal{box-shadow:0 24px 70px rgba(0,0,0,0.5), 0 0 0 1px var(--line);}
+
+::-moz-selection{background:var(--spike);color:#fff;}
 </style>
 </head>
 <body>
@@ -993,6 +1077,32 @@ function countryOptions(selected){
   ).join('');
 }
 
+/* ============================= USER DIRECTORY (for verifier assignment) =============================
+   Combines registered accounts, tracked players, and built-in staff accounts into a single,
+   de-duplicated list so mods can pick a verifier from a dropdown instead of typing a name in
+   by hand. Anyone can be assigned — no name is special-cased. */
+function allAssignableUsers(){
+  const map = new Map(); // lowercase -> { name, role }
+  APP.registeredUsers.forEach(u => { if(u.username) map.set(u.username.toLowerCase(), { name: u.username, role: u.role==='admin'?'Admin':'Registered' }); });
+  APP.players.forEach(p => { if(p.name && !map.has(p.name.toLowerCase())) map.set(p.name.toLowerCase(), { name: p.name, role: 'Player' }); });
+  Object.keys(DIRECT_AUTH).forEach(u => { if(!map.has(u.toLowerCase())) map.set(u.toLowerCase(), { name: u, role: 'Admin' }); });
+  return Array.from(map.values()).sort((a,b)=>a.name.localeCompare(b.name));
+}
+/* Renders a <select> of assignable users for a "Verifier" field. If the current value doesn't
+   match anyone in the directory (e.g. a name typed in before this feature existed), it's kept
+   as a selected, clearly-labeled option so existing data isn't silently lost or changed. */
+function verifierSelectHtml(id, current){
+  const users = allAssignableUsers();
+  const cur = (current||'').trim();
+  const curLower = cur.toLowerCase();
+  const matches = users.some(u => u.name.toLowerCase()===curLower);
+  return `<select id="${id}">
+    <option value="" ${!cur?'selected':''}>— No verifier —</option>
+    ${cur && !matches ? `<option value="${escapeHtml(cur)}" selected>${escapeHtml(cur)} (unregistered name)</option>` : ''}
+    ${users.map(u => `<option value="${escapeHtml(u.name)}" ${u.name.toLowerCase()===curLower?'selected':''}>${escapeHtml(u.name)} · ${u.role}</option>`).join('')}
+  </select>`;
+}
+
 /* ============================= STORAGE ============================= */
 async function storageGet(key){
   try{
@@ -1030,80 +1140,6 @@ async function loadAll(){
   }
   applySystemTheme();
   await seedChangelogIfEmpty();
-  await mergeCherryIntoTamari();
-  await applyHallOfFameCredits();
-}
-
-/* One-time credit fix: the Hall of Fame's #1 demon should show tamari as its verifier,
-   and toby credited as the first victor in the "Conquerors" panel. If toby already has
-   an approved completion for that demon, its timestamp is nudged earlier than every other
-   record so the First Victor badge lands on them; otherwise a completion is created for them. */
-async function applyHallOfFameCredits(){
-  if(APP.settings.hofCreditsApplied) return;
-  const hardest = APP.demons[0];
-  if(!hardest) return; // no #1 demon yet — try again next load instead of setting the flag
-  const saves = [];
-
-  if(hardest.verifier !== 'tamari'){
-    hardest.verifier = 'tamari';
-    saves.push(saveDemons());
-  }
-
-  const subs = APP.submissions.filter(s => s.status==='approved' && s.demonId===hardest.id).sort((a,b)=>a.submittedAt-b.submittedAt);
-  const earliestTs = subs.length ? subs[0].submittedAt : Date.now();
-  const tobySub = APP.submissions.find(s => s.demonId===hardest.id && s.status==='approved' && s.player.toLowerCase()==='toby');
-  let subsChanged = false;
-  if(tobySub){
-    if(tobySub.submittedAt >= earliestTs){ tobySub.submittedAt = earliestTs - 1000; subsChanged = true; }
-  } else {
-    APP.submissions.push({
-      id: uid(), player: 'toby', demonId: hardest.id, listKind: 'demon', percent: 100,
-      video: '', country: 'US', note: 'First victor', attempts: null, rawFootage: '',
-      enjoymentRating: null, decoRating: null, gameplayRating: null,
-      status: 'approved', type: 'completion', submittedAt: earliestTs - 1000, modNote: ''
-    });
-    subsChanged = true;
-  }
-  if(subsChanged) saves.push(saveSubmissions());
-
-  APP.settings.hofCreditsApplied = true;
-  saves.push(saveSettings());
-  await Promise.all(saves);
-  logChange('Hall of Fame credits updated: tamari set as verifier, toby credited as first victor.', true);
-}
-
-/* One-time data fix: the Cherry team's verifier credit was actually the registered
-   player "tamari" wearing a team tag. This links them for good — any level currently
-   crediting "Cherry" (or "Cherry Team") as verifier is re-credited to "tamari", and
-   "Cherry" is kept as a permanent alias on tamari's profile so anything reintroduced
-   under that name still resolves and links correctly. Runs once, then flips a settings flag. */
-async function mergeCherryIntoTamari(){
-  if(APP.settings.cherryTamariMerged) return;
-  const isCherry = v => /^cherry(\s*team)?$/i.test((v||'').trim());
-  const saves = [];
-  let anyMatch = false;
-
-  const tamari = APP.players.find(p => p.name.toLowerCase()==='tamari');
-  if(tamari){
-    const before = (tamari.aliases||[]).length;
-    tamari.aliases = Array.from(new Set([...(tamari.aliases||[]), 'Cherry', 'Cherry Team']));
-    if(tamari.aliases.length !== before) saves.push(savePlayers());
-  }
-
-  const fix = (arr, saveFn) => {
-    let changed = false;
-    arr.forEach(d => { if(isCherry(d.verifier)){ d.verifier = 'tamari'; changed = true; anyMatch = true; } });
-    if(changed) saves.push(saveFn());
-  };
-  fix(APP.demons, saveDemons);
-  fix(APP.challenges, saveChallenges);
-  fix(APP.platformers, savePlatformers);
-  fix(APP.upcoming, saveUpcoming);
-
-  APP.settings.cherryTamariMerged = true;
-  saves.push(saveSettings());
-  await Promise.all(saves);
-  if(anyMatch) logChange('Cherry team verifier credit merged into tamari\'s account.', true);
 }
 
 /* Seeds a starter changelog (visible to everyone on Home) so the feed isn't empty
@@ -2739,6 +2775,24 @@ function renderHomeTab(){
         </div>`).join('')}</div>
     </div>` : '';
 
+  const regUsers = APP.registeredUsers.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+  const regUsersHtml = regUsers.length ? regUsers.slice(0,8).map(u => {
+    const prof = getProfile(u.username) || {};
+    return `
+      <div class="user-chip-row" onclick="openCreatorProfile('${escapeHtml(u.username).replace(/'/g,"\\'")}')">
+        <div class="user-chip-avatar">${escapeHtml(prof.avatarEmoji||'🙂')}</div>
+        <div class="user-chip-info">
+          <div class="user-chip-name">${escapeHtml(u.username)}${u.role==='admin'?' <span class="role-tag admin">admin</span>':''}${u.banned?' <span class="status-pill rejected">banned</span>':''}</div>
+          <div class="user-chip-meta">${prof.country?flagEmoji(prof.country)+' ':''}Joined ${u.createdAt?new Date(u.createdAt).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}):'—'}</div>
+        </div>
+      </div>`;
+  }).join('') : `<div class="empty-state">No one has registered an account yet.</div>`;
+  const regUsersHtml2 = `
+    <div class="panel">
+      <div class="panel-head"><h3>👥 Registered Users <span class="hint" style="font-weight:400;">(${regUsers.length})</span></h3>${isAdmin() ? `<button class="btn small ghost" onclick="switchTab('admin')">Manage</button>` : ''}</div>
+      <div class="user-chip-list">${regUsersHtml}</div>
+    </div>`;
+
   const recentRecords = getRecentRecords(6);
   const recentRecordsHtml = recentRecords.length ? recentRecords.map(s => {
     const demon = demons.find(d=>d.id===s.demonId);
@@ -2808,6 +2862,7 @@ function renderHomeTab(){
         <div class="panel-head"><h3>Recent Activity</h3></div>
         <div>${recentChangesHtml}</div>
       </div>
+      ${regUsersHtml2}
     </div>
     ${changelogSectionHtml}
   `;
@@ -3368,7 +3423,7 @@ function openDemonModal(id, prefill){
         <div class="field"><label>Level Name</label><input id="dm-name" value="${src?escapeHtml(src.name):''}"></div>
         <div class="form-grid">
           <div class="field"><label>Creator</label><input id="dm-creator" value="${src?escapeHtml(src.creator||''):''}"></div>
-          <div class="field"><label>Verifier</label><input id="dm-verifier" value="${src?escapeHtml(src.verifier||''):''}"></div>
+          <div class="field"><label>Verifier</label>${verifierSelectHtml('dm-verifier', src?src.verifier:'')}</div>
         </div>
         <div class="field"><label>Creator's Country</label><select id="dm-country">${countryOptions(src?src.country:'OTHER')}</select></div>
         <div class="form-grid">
@@ -3869,7 +3924,7 @@ function openGenericModal(kind, id){
         <div class="field"><label>Level Name</label><input id="gl-name" value="${editing?escapeHtml(editing.name):''}"></div>
         <div class="form-grid">
           <div class="field"><label>Creator</label><input id="gl-creator" value="${editing?escapeHtml(editing.creator||''):''}"></div>
-          <div class="field"><label>Verifier</label><input id="gl-verifier" value="${editing?escapeHtml(editing.verifier||''):''}"></div>
+          <div class="field"><label>Verifier</label>${verifierSelectHtml('gl-verifier', editing?editing.verifier:'')}</div>
         </div>
         <div class="field"><label>Creator's Country</label><select id="gl-country">${countryOptions(editing?editing.country:'OTHER')}</select></div>
         <div class="form-grid">
@@ -4074,7 +4129,7 @@ function openUpcomingModal(id){
         <div class="field"><label>Level Name</label><input id="up-name" value="${editing?escapeHtml(editing.name):''}"></div>
         <div class="form-grid">
           <div class="field"><label>Creator</label><input id="up-creator" value="${editing?escapeHtml(editing.creator||''):''}"></div>
-          <div class="field"><label>Verifier</label><input id="up-verifier" value="${editing?escapeHtml(editing.verifier||''):''}"></div>
+          <div class="field"><label>Verifier</label>${verifierSelectHtml('up-verifier', editing?editing.verifier:'')}</div>
         </div>
         <div class="field"><label>Creator's Country</label><select id="up-country">${countryOptions(editing?editing.country:'OTHER')}</select></div>
         <div class="field"><label>Video URL (progress / preview)</label><input id="up-video" value="${editing?escapeHtml(editing.video||''):''}" placeholder="https://youtube.com/..."></div>
@@ -4813,10 +4868,9 @@ function downloadProfileCard(id){
 }
 /* ---------- QOL: name aliases ----------
    Players can be credited on levels under a nickname, team name, or old handle
-   that doesn't match their registered player name (e.g. a level lists its verifier
-   as "Cherry" but that's actually the player "tamari" wearing a team tag). Instead of
-   splitting that credit across two disconnected identities, any name matching a
-   player's `aliases` list resolves back to that player everywhere credit is shown,
+   that doesn't match their registered player name. Instead of splitting that
+   credit across two disconnected identities, any name matching a player's
+   `aliases` list resolves back to that player everywhere credit is shown,
    linked, or counted in stats. Manage aliases from the player's edit form. */
 function resolvePlayerByName(name){
   if(!name) return null;
@@ -5021,7 +5075,7 @@ function openPlayerModal(id){
           <div class="field"><label>Region / Country</label><select id="pl-country">${countryOptions(editing?editing.country:'US')}</select></div>
           <div class="field"><label>Points</label><input id="pl-points" type="number" min="0" value="${editing?editing.points:0}"></div>
         </div>
-        <div class="field"><label>Aliases <span style="color:var(--text-dim);font-weight:400;">(comma-separated — other names/team tags this player is credited under; merges their creator/verifier credit and stats onto this profile)</span></label><input id="pl-aliases" placeholder="e.g. Cherry, Cherry Team" value="${editing?escapeHtml((editing.aliases||[]).join(', ')):''}"></div>
+        <div class="field"><label>Aliases <span style="color:var(--text-dim);font-weight:400;">(comma-separated — other names/team tags this player is credited under; merges their creator/verifier credit and stats onto this profile)</span></label><input id="pl-aliases" placeholder="e.g. OldHandle, Team Tag" value="${editing?escapeHtml((editing.aliases||[]).join(', ')):''}"></div>
         <div class="field"><label>🔒 Admin Notes <span style="color:var(--text-dim);font-weight:400;">(mods only)</span></label><textarea id="pl-adminnote" placeholder="Internal notes about this player...">${editing?escapeHtml(editing.adminNote||''):''}</textarea></div>
       </div>
       <div class="modal-foot">
