@@ -4948,6 +4948,23 @@ function renderProfileTab(){
     [APP.demons, APP.challenges, APP.platformers].forEach(arr => arr.forEach(d => { if(d.verifier && displayVerifierName(d.verifier).toLowerCase()===player.name.toLowerCase()) verifiedCount++; }));
   }
 
+  // Challenge List / Platformer List completions — tracked separately from the main demon list stats above.
+  const otherCompletions = player ? ['challenge','platformer'].map(kind => {
+    const arr = getListArrayByKind(kind);
+    const subs = APP.submissions.filter(s => s.status==='approved' && s.type!=='progress' && (s.listKind||'demon')===kind && s.player.toLowerCase()===player.name.toLowerCase());
+    const items = subs.map(s => {
+      const demon = arr.find(d=>d.id===s.demonId);
+      const rankIdx = demon ? arr.findIndex(d=>d.id===demon.id) : -1;
+      return { s, demon, rankIdx };
+    }).filter(x => x.demon).sort((a,b)=>a.rankIdx-b.rankIdx);
+    return { kind, title: getListTitleByKind(kind), items };
+  }).filter(x => x.items.length) : [];
+  const otherCompletionsCount = otherCompletions.reduce((sum,g)=>sum+g.items.length,0);
+  const otherCompletionsHtml = otherCompletions.map(group => `
+    <div class="field"><label>${escapeHtml(group.title)} Completions (${group.items.length})</label></div>
+    <div class="panel">${group.items.map(({s,demon,rankIdx}) => `<div class="completion-item" style="cursor:pointer;" onclick="openLevelFromProfile('${group.kind}','${demon.id}')"><span>#${rankIdx+1} ${escapeHtml(demon.name)}</span><span style="color:var(--text-dim);">${s.percent}% · ${demon.points||0}pt</span></div>`).join('')}</div>`
+  ).join('');
+
   const favIds = Array.from(getFavorites());
   const favDemons = favIds.map(id => APP.demons.find(d=>d.id===id)).filter(Boolean);
   const mySubs = APP.submissions.filter(s => s.player.toLowerCase() === u.username.toLowerCase()).sort((a,b)=>b.submittedAt-a.submittedAt);
@@ -4968,7 +4985,7 @@ function renderProfileTab(){
 
   const tabs = [
     ['overview','Overview'],
-    ['completions', `Completions${beatenWithRank.length?` (${beatenWithRank.length})`:''}`],
+    ['completions', `Completions${(beatenWithRank.length+otherCompletionsCount)?` (${beatenWithRank.length+otherCompletionsCount})`:''}`],
     ['favorites', `Favorites${favDemons.length?` (${favDemons.length})`:''}`],
     ['submissions', `My Submissions${mySubs.length?` (${mySubs.length})`:''}`]
   ];
@@ -4994,6 +5011,7 @@ function renderProfileTab(){
             ${above ? `<div class="hint" style="margin-top:10px;">🎯 <b style="color:var(--text);">${Math.max(0, above.points - player.points + 1)}pt</b> to pass <b style="color:var(--text);">${escapeHtml(above.name)}</b> (#${rank-1})</div>` : player ? `<div class="hint" style="margin-top:10px;">👑 Currently #1 on the leaderboard</div>` : ''}
             ${hardest ? `<div class="hint" style="margin-top:6px;">🏆 Hardest completion: <b style="color:var(--text);">#${hardest.rankIdx+1} ${escapeHtml(hardest.demon.name)}</b></div>` : ''}
             ${verifiedCount ? `<div class="hint">✅ ${verifiedCount} level${verifiedCount===1?'':'s'} verified</div>` : ''}
+            ${otherCompletions.map(group => `<div class="hint">🧩 ${group.items.length} ${escapeHtml(group.title)} completion${group.items.length===1?'':'s'}</div>`).join('')}
             ` : ''}
             <div class="hint" style="margin-top:${player?'6px':'0'};">⭐ ${favDemons.length} level${favDemons.length===1?'':'s'} favorited</div>
             ${joinedLabel ? `<div class="hint">📅 Member since ${joinedLabel}</div>` : ''}
@@ -5015,7 +5033,14 @@ function renderProfileTab(){
         <div class="demon-rows" style="max-height:none;">
           ${progressEntries.map(x=>{const rankIdx=APP.demons.findIndex(d=>d.id===x.demon.id);return `<div class="completion-item" style="cursor:pointer;" onclick="switchTab('list');selectDemon('${x.demon.id}');"><span>#${rankIdx+1} ${escapeHtml(x.demon.name)}</span><span style="color:var(--text-dim);">Best: ${x.percent}%</span></div>`;}).join('')}
         </div>
-      </div>` : ''}`;
+      </div>` : ''}
+      ${otherCompletions.map(group => `
+      <div class="panel" style="margin-top:12px;">
+        <div class="panel-head"><h3>${escapeHtml(group.title)} Completions</h3></div>
+        <div class="demon-rows" style="max-height:none;">
+          ${group.items.map(({s,demon,rankIdx})=>`<div class="completion-item" style="cursor:pointer;" onclick="openLevelFromProfile('${group.kind}','${demon.id}')"><span>#${rankIdx+1} ${escapeHtml(demon.name)}</span><span style="color:var(--text-dim);">${s.percent}% · ${demon.points||0}pt</span></div>`).join('')}
+        </div>
+      </div>`).join('')}`;
   } else if(PROFILE_SUBTAB === 'favorites'){
     body = favDemons.length ? `<div class="profile-grid">${favDemons.map(d=>{
       const rankIdx = APP.demons.findIndex(x=>x.id===d.id);
