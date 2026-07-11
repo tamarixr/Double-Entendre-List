@@ -227,6 +227,8 @@ main{max-width:1640px;padding:20px 24px 60px;}
   background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
   transition:border-color .2s ease, box-shadow .2s ease;
 }
+.panel:hover{box-shadow:0 6px 22px rgba(0,0,0,0.18);}
+body.light-theme .panel:hover{box-shadow:0 6px 18px rgba(0,0,0,0.06);}
 .panel-head{
   display:flex;align-items:center;justify-content:space-between;
   padding:10px 14px;background:var(--bg-raised);border-bottom:1px solid var(--line);
@@ -455,6 +457,46 @@ body.sidebar-collapsed .footer-note{margin-left:0;}
 .progress-bar-inner{background:var(--spike);height:100%;border-radius:20px;transition:width .2s;}
 .completion-item{display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--line-soft);font-size:12.5px;}
 .completion-item:last-child{border-bottom:none;}
+/* ---------- QOL: home changelog feed ---------- */
+.changelog-feed{padding:6px 4px 10px;}
+.changelog-day-group{margin-bottom:4px;}
+.changelog-day-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);font-weight:700;padding:10px 10px 4px;}
+.changelog-entry{display:flex;gap:9px;padding:6px 10px;border-radius:var(--radius-sm);transition:background .15s ease;}
+.changelog-entry:hover{background:var(--bg-raised);}
+.changelog-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--cyan);margin-top:6px;box-shadow:0 0 0 3px var(--bg-raised-2);}
+.changelog-dot.mod{background:var(--spike);}
+.changelog-entry-body{min-width:0;}
+.changelog-entry-text{font-size:12.5px;line-height:1.4;}
+.changelog-entry-meta{font-size:10.5px;color:var(--text-dim);margin-top:1px;}
+/* ---------- QOL: settings modal tabs ---------- */
+.settings-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px;}
+.settings-tab-btn{font-size:12px;font-weight:600;padding:6px 13px;border-radius:10px;border:1px solid var(--line);background:var(--bg-void);color:var(--text-muted);cursor:pointer;}
+.settings-tab-btn.active{background:var(--spike-dim);border-color:var(--spike);color:var(--text);}
+.settings-section-label{display:flex;align-items:center;gap:6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-dim);font-weight:700;margin:18px 0 8px;padding-top:14px;border-top:1px solid var(--line-soft);}
+.settings-section-label:first-child{margin-top:0;padding-top:0;border-top:none;}
+.accent-swatch-row{display:flex;gap:7px;margin-top:8px;flex-wrap:wrap;}
+.accent-swatch{
+  width:26px;height:26px;border-radius:50%;border:2px solid var(--line);cursor:pointer;
+  transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;position:relative;flex:none;
+}
+.accent-swatch:hover{transform:scale(1.12);}
+.accent-swatch.active{border-color:var(--text);box-shadow:0 0 0 2px var(--bg-panel),0 0 0 4px var(--text-dim);}
+.accent-swatch.active::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.5);}
+.settings-modal-head-icon{font-size:18px;margin-right:2px;}
+.settings-modal .modal{max-width:520px;}
+.settings-preview-card{
+  background:linear-gradient(135deg,var(--bg-raised),var(--bg-raised-2));border:1px solid var(--line);
+  border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;
+}
+.settings-preview-card .swatch-big{width:34px;height:34px;border-radius:10px;flex:none;box-shadow:0 4px 14px var(--spike-shadow);}
+.settings-preview-card .txt{min-width:0;}
+.settings-preview-card .txt .n{font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.settings-preview-card .txt .t{font-size:11px;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* ---------- QOL: profile badges + completion ring ---------- */
+.profile-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.profile-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--bg-raised-2);border:1px solid var(--line);color:var(--text-muted);display:inline-flex;align-items:center;gap:4px;}
+.profile-ring{flex:none;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;}
+.profile-ring .ring-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;background:var(--bg-void);width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
 
 /* ---------- QOL: status filter pills ---------- */
 .status-filter-row{display:flex;gap:4px;padding:10px 12px 0;}
@@ -522,8 +564,24 @@ body.light-theme .tag-pill.new{color:var(--spike);}
 .tag-filter-row-live .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-dim);font-weight:700;}
 
 /* ---------- Profile page ---------- */
-.profile-hero{display:flex;align-items:center;gap:18px;padding:22px;background:linear-gradient(135deg,var(--bg-panel),var(--bg-raised));border:1px solid var(--line);border-radius:var(--radius-lg);margin-bottom:16px;flex-wrap:wrap;}
+.profile-hero{
+  display:flex;align-items:center;gap:18px;padding:24px;
+  background:linear-gradient(135deg,var(--bg-panel) 55%,var(--bg-raised) 100%);
+  border:1px solid var(--line);border-radius:var(--radius-lg);margin-bottom:16px;flex-wrap:wrap;
+  position:relative;overflow:hidden;
+}
+.profile-hero::before{
+  content:'';position:absolute;top:-60%;right:-10%;width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,var(--spike-shadow) 0%,transparent 70%);pointer-events:none;
+}
+.profile-hero > *{position:relative;}
+.profile-avatar-wrap{position:relative;flex:none;padding:3px;border-radius:25px;background:linear-gradient(135deg,var(--spike),var(--gold),var(--cyan));box-shadow:0 6px 20px var(--spike-shadow);}
 .profile-avatar{width:76px;height:76px;border-radius:22px;background:var(--bg-raised-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:38px;flex:none;}
+.profile-rank-pill{
+  position:absolute;bottom:-6px;right:-6px;background:var(--bg-panel);border:1px solid var(--line);
+  border-radius:10px;padding:2px 6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;
+  color:var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.35);
+}
 .profile-hero-info{flex:1;min-width:200px;}
 .profile-hero-name{font-size:24px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .profile-hero-bio{color:var(--text-muted);font-size:13px;margin-top:4px;max-width:520px;line-height:1.4;}
@@ -531,9 +589,10 @@ body.light-theme .tag-pill.new{color:var(--spike);}
 .profile-hero-actions{display:flex;gap:8px;flex-wrap:wrap;flex:none;}
 .profile-socials{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
 .profile-social-link{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:10px;background:var(--bg-raised-2);border:1px solid var(--line);color:var(--cyan);}
-.profile-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;}
-.profile-tab-btn{font-size:12px;font-weight:600;padding:6px 13px;border-radius:10px;border:1px solid var(--line);background:var(--bg-void);color:var(--text-muted);}
-.profile-tab-btn.active{background:var(--spike-dim);border-color:var(--spike);color:var(--text);}
+.profile-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;border-bottom:1px solid var(--line-soft);padding-bottom:12px;}
+.profile-tab-btn{font-size:12px;font-weight:600;padding:6px 13px;border-radius:10px;border:1px solid var(--line);background:var(--bg-void);color:var(--text-muted);cursor:pointer;transition:all .15s ease;}
+.profile-tab-btn:hover{color:var(--text);border-color:var(--text-dim);}
+.profile-tab-btn.active{background:var(--spike-dim);border-color:var(--spike);color:var(--text);box-shadow:0 2px 10px var(--spike-shadow);}
 .profile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
 .profile-mini-card{background:var(--bg-panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px;cursor:pointer;transition:transform .15s ease,border-color .15s ease;}
 .profile-mini-card:hover{transform:translateY(-2px);border-color:var(--text-dim);}
@@ -961,6 +1020,36 @@ async function loadAll(){
     APP.settings = Object.assign(APP.settings, savedSettings);
   }
   applySystemTheme();
+  await seedChangelogIfEmpty();
+}
+
+/* Seeds a starter changelog (visible to everyone on Home) so the feed isn't empty
+   the first time this runs against a fresh data store. Only runs once — as soon as
+   real entries exist via logChange(), this is skipped forever. */
+async function seedChangelogIfEmpty(){
+  if(APP.changelog && APP.changelog.length) return;
+  const now = new Date();
+  const mk = (day, h, m, text) => ({
+    id: uid(), text, mod: false, actor: 'system',
+    ts: new Date(now.getFullYear(), now.getMonth(), day, h, m, 0, 0).getTime()
+  });
+  const today = now.getDate();
+  APP.changelog = [
+    mk(9, 9, 10, 'Launched the Double Entendre Demon List — the ranked list, player leaderboard, and submissions are live.'),
+    mk(9, 9, 25, 'Submit Play and Submit Level forms opened up so players can send in completions and new levels.'),
+    mk(9, 13, 40, 'Hall of Fame added to spotlight legacy and retired demons.'),
+    mk(9, 18, 15, 'Time Machine launched — browse snapshots of the list as it looked on past dates.'),
+    mk(10, 10, 0, 'Live Chat tab added for the community.'),
+    mk(10, 12, 20, 'Demon Roulette added — spin for a random challenge from the list.'),
+    mk(10, 15, 30, 'Challenge List and Platformer List split out into their own dedicated tabs.'),
+    mk(10, 19, 45, 'Stats tab added with completion trends and player breakdowns.'),
+    mk(today, 8, 30, 'Home tab redesigned with a cleaner layout and an at-a-glance changelog feed.'),
+    mk(today, 8, 45, 'Changelog tab polished with day-grouped entries and clearer styling.'),
+    mk(today, 9, 0, 'Profile tab overhauled: refreshed hero card with a rank badge, icon stats, and smoother tab switching.'),
+    mk(today, 9, 15, 'Site Settings reorganized into sections with a live accent color preview.'),
+    mk(today, 9, 30, 'General visual polish pass across buttons, panels, and forms sitewide.')
+  ];
+  await saveChangelogStore();
 }
 function saveDemons(){ takeSnapshot(); return storageSet('demons', APP.demons); }
 function saveChallenges(){ return storageSet('challenges', APP.challenges); }
@@ -1187,20 +1276,26 @@ function renderChangelogTab(){
   const el = document.getElementById('panel-changelog');
   if(!el) return;
   const showMod = isMod();
-  const entries = APP.changelog.slice().reverse().filter(c => showMod || !c.mod);
-  const rows = entries.slice(0, 150).map(c => `
-    <div class="sub-item">
-      <div class="sub-item-top">
-        <span style="font-size:12.5px;">${escapeHtml(c.text)}${c.mod ? ' <span class="status-pill pending" style="margin-left:4px;">MOD</span>' : ''}</span>
-        <span style="font-size:11px;color:var(--text-dim);white-space:nowrap;">${new Date(c.ts).toLocaleDateString()}</span>
-      </div>
-    </div>`).join('');
+  const entries = APP.changelog.slice().reverse().filter(c => showMod || !c.mod).slice(0, 300);
+  const groups = groupChangelogByDate(entries);
+  const feed = groups.length ? groups.map(g => `
+    <div class="changelog-day-group">
+      <div class="changelog-day-label">${escapeHtml(g.label)}</div>
+      ${g.items.map(c => `
+        <div class="changelog-entry">
+          <span class="changelog-dot ${c.mod?'mod':''}"></span>
+          <div class="changelog-entry-body">
+            <div class="changelog-entry-text">${escapeHtml(c.text)}${c.mod ? ' <span class="status-pill pending" style="margin-left:4px;">MOD</span>' : ''}</div>
+            <div class="changelog-entry-meta">${new Date(c.ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}${c.mod && c.actor ? ` · ${escapeHtml(c.actor)}` : ''}</div>
+          </div>
+        </div>`).join('')}
+    </div>`).join('') : `<div class="empty-state"><div class="big">Nothing yet</div>Changes will show up here as the list evolves.</div>`;
   el.innerHTML = `
     <div class="page-head">
       <h1 class="page-title">Changelog</h1>
-      <p class="page-desc">Recent placements, edits, and approvals across the list.${showMod ? ' Moderator-only entries are included and marked MOD.' : ''}</p>
+      <p class="page-desc">Every placement, edit, and feature update across the site, newest first.${showMod ? ' Moderator-only entries are included and marked MOD.' : ''}</p>
     </div>
-    <div class="panel"><div class="sub-list demon-rows" style="max-height:none;">${rows || `<div class="empty-state"><div class="big">Nothing yet</div>Changes will show up here as the list evolves.</div>`}</div></div>
+    <div class="panel"><div class="changelog-feed" style="max-height:none;">${feed}</div></div>
   `;
 }
 
@@ -2133,42 +2228,71 @@ async function handleRegisterSubmit(){
 /* ============================= GLOBAL SETTINGS MODAL ============================= */
 function openAdminSettingsModal() {
   if(!isAdmin()) return;
-  const colorOptions = Object.keys(ACCENT_PALETTES).map(c => 
-    `<option value="${c}" ${APP.settings.accentColor === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`
+  const swatchRow = Object.keys(ACCENT_PALETTES).map(c => 
+    `<div class="accent-swatch ${APP.settings.accentColor === c ? 'active' : ''}" data-accent="${c}" title="${c.charAt(0).toUpperCase()+c.slice(1)}" style="background:${ACCENT_PALETTES[c].main};" onclick="pickSettingsAccent('${c}')"></div>`
   ).join('');
 
   openModal(`
-  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+  <div class="modal-backdrop settings-modal" onclick="if(event.target===this) closeModal()">
     <div class="modal">
-      <div class="modal-head"><h3>Site Settings</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-head"><h3><span class="settings-modal-head-icon">⚙️</span>Site Settings</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
       <div class="modal-body">
-        <div class="field"><label>Site Name</label><input id="st-name" value="${escapeHtml(APP.settings.siteName)}"></div>
-        <div class="field"><label>Tagline</label><textarea id="st-tagline">${escapeHtml(APP.settings.siteTagline)}</textarea></div>
+
+        <div class="settings-preview-card" id="settingsPreviewCard">
+          <div class="swatch-big" id="settingsPreviewSwatch" style="background:${(ACCENT_PALETTES[APP.settings.accentColor]||ACCENT_PALETTES.pink).main};"></div>
+          <div class="txt">
+            <div class="n" id="settingsPreviewName">${escapeHtml(APP.settings.siteName)}</div>
+            <div class="t" id="settingsPreviewTagline">${escapeHtml(APP.settings.siteTagline||'')}</div>
+          </div>
+        </div>
+
+        <div class="settings-section-label">🏷️ General</div>
+        <div class="field"><label>Site Name</label><input id="st-name" value="${escapeHtml(APP.settings.siteName)}" oninput="document.getElementById('settingsPreviewName').textContent=this.value"></div>
+        <div class="field"><label>Tagline</label><textarea id="st-tagline" oninput="document.getElementById('settingsPreviewTagline').textContent=this.value">${escapeHtml(APP.settings.siteTagline)}</textarea></div>
         <div class="field">
           <label>Accent Color</label>
-          <select id="st-color">${colorOptions}</select>
+          <select id="st-color" onchange="pickSettingsAccent(this.value)">
+            ${Object.keys(ACCENT_PALETTES).map(c => `<option value="${c}" ${APP.settings.accentColor === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
+          </select>
+          <div class="accent-swatch-row">${swatchRow}</div>
         </div>
-        <div class="field">
-          <label>Main List Size</label>
-          <input id="st-mainsize" type="number" min="1" value="${APP.settings.mainListSize||50}">
-          <div class="hint">Demons ranked below this position fall into the Extended List instead of the main list, similar to other demon lists.</div>
+
+        <div class="settings-section-label">📋 List Configuration</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Main List Size</label>
+            <input id="st-mainsize" type="number" min="1" value="${APP.settings.mainListSize||50}">
+            <div class="hint">Below this position, demons fall into the Extended List.</div>
+          </div>
+          <div class="field">
+            <label>Extended List Size</label>
+            <input id="st-extsize" type="number" min="1" value="${APP.settings.extendedListSize||100}">
+            <div class="hint">Below this position, demons fall into the Legacy List.</div>
+          </div>
         </div>
-        <div class="field">
-          <label>Extended List Size</label>
-          <input id="st-extsize" type="number" min="1" value="${APP.settings.extendedListSize||100}">
-          <div class="hint">Demons ranked below this position fall into the Legacy List.</div>
-        </div>
+
+        <div class="settings-section-label">💬 Community</div>
         <div class="field">
           <label>Discord Invite URL <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label>
           <input id="st-discord" value="${escapeHtml(APP.settings.discordUrl||'')}" placeholder="https://discord.gg/...">
+          <div class="hint">Shows a Discord button in the sidebar when set.</div>
         </div>
       </div>
       <div class="modal-foot">
         <button class="btn ghost" onclick="closeModal()">Cancel</button>
-        <button class="btn primary" onclick="handleSaveSettings()">Save</button>
+        <button class="btn primary" onclick="handleSaveSettings()">Save Changes</button>
       </div>
     </div>
   </div>`);
+}
+
+function pickSettingsAccent(color){
+  const select = document.getElementById('st-color');
+  if(select) select.value = color;
+  document.querySelectorAll('.accent-swatch').forEach(el => el.classList.toggle('active', el.dataset.accent === color));
+  const theme = ACCENT_PALETTES[color] || ACCENT_PALETTES.pink;
+  const swatch = document.getElementById('settingsPreviewSwatch');
+  if(swatch) swatch.style.background = theme.main;
 }
 
 async function handleSaveSettings(){
@@ -2325,6 +2449,31 @@ function updateNavBadges(){
 }
 
 /* ============================= HOME TAB ============================= */
+function getMonthlyCutoffTs(){
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), 9, 0, 0, 0, 0).getTime();
+}
+function getChangelogSince(cutoffTs){
+  return APP.changelog.filter(c => c.ts >= cutoffTs && (isMod() || !c.mod)).slice().reverse();
+}
+function formatChangelogDateLabel(d){
+  const now = new Date();
+  if(d.toDateString() === now.toDateString()) return 'Today';
+  const yest = new Date(now); yest.setDate(now.getDate()-1);
+  if(d.toDateString() === yest.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'});
+}
+function groupChangelogByDate(entries){
+  const groups = [];
+  let lastKey = null;
+  entries.forEach(c => {
+    const d = new Date(c.ts);
+    const key = d.toDateString();
+    if(key !== lastKey){ groups.push({ key, label: formatChangelogDateLabel(d), items: [] }); lastKey = key; }
+    groups[groups.length-1].items.push(c);
+  });
+  return groups;
+}
 function renderHomeTab(){
   const el = document.getElementById('panel-home');
   if(!el) return;
@@ -2363,10 +2512,36 @@ function renderHomeTab(){
     return `<div class="completion-item"><span>${flagEmoji(s.country)} ${escapeHtml(s.player)}</span><span style="color:var(--text-dim);">${demon?escapeHtml(demon.name):'Unknown'} · ${s.percent}%</span></div>`;
   }).join('') : `<div class="completion-item" style="color:var(--text-dim);">No records yet.</div>`;
 
-  const recentChanges = APP.changelog.slice().reverse().filter(c => isMod() || !c.mod).slice(0,6);
+  const recentChanges = APP.changelog.slice().reverse().filter(c => isMod() || !c.mod).slice(0,5);
   const recentChangesHtml = recentChanges.length ? recentChanges.map(c => `
     <div class="completion-item"><span style="font-size:12.5px;">${escapeHtml(c.text)}</span><span style="color:var(--text-dim);white-space:nowrap;">${new Date(c.ts).toLocaleDateString()}</span></div>
   `).join('') : `<div class="completion-item" style="color:var(--text-dim);">No recent activity.</div>`;
+
+  const changelogCutoff = getMonthlyCutoffTs();
+  const changelogEntries = getChangelogSince(changelogCutoff);
+  const changelogGroups = groupChangelogByDate(changelogEntries);
+  const cutoffLabel = new Date(changelogCutoff).toLocaleDateString(undefined, {month:'long', day:'numeric'});
+  const changelogSectionHtml = `
+    <div class="panel" style="margin-top:12px;">
+      <div class="panel-head">
+        <h3>🕘 Changelog <span class="hint" style="font-weight:400;">since ${escapeHtml(cutoffLabel)} (${changelogEntries.length})</span></h3>
+        <button class="btn small ghost" onclick="switchTab('changelog')">Full History</button>
+      </div>
+      <div class="changelog-feed">
+        ${changelogGroups.length ? changelogGroups.map(g => `
+          <div class="changelog-day-group">
+            <div class="changelog-day-label">${escapeHtml(g.label)}</div>
+            ${g.items.map(c => `
+              <div class="changelog-entry">
+                <span class="changelog-dot ${c.mod?'mod':''}"></span>
+                <div class="changelog-entry-body">
+                  <div class="changelog-entry-text">${escapeHtml(c.text)}</div>
+                  <div class="changelog-entry-meta">${new Date(c.ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}${c.mod && c.actor ? ` · ${escapeHtml(c.actor)}` : ''}</div>
+                </div>
+              </div>`).join('')}
+          </div>`).join('') : `<div class="empty-state"><div class="big">No changes yet this period</div>Updates to the list will show up here starting ${escapeHtml(cutoffLabel)}.</div>`}
+      </div>
+    </div>`;
 
   const quickLinks = [
     ['list','📜','Demon List'],
@@ -2412,6 +2587,7 @@ function renderHomeTab(){
         <div>${recentChangesHtml}</div>
       </div>
     </div>
+    ${changelogSectionHtml}
   `;
 }
 
@@ -4434,10 +4610,10 @@ function renderProfileTab(){
 
   const heroStats = player ? `
     <div class="stat-row" style="margin:14px 0 0;">
-      <div class="stat rankstat"><div class="val">#${rank}</div><div class="lbl">Leaderboard Rank</div></div>
-      <div class="stat"><div class="val">${player.points}</div><div class="lbl">Points</div></div>
-      <div class="stat"><div class="val">${beatenWithRank.length}</div><div class="lbl">Demons Beaten</div></div>
-      <div class="stat"><div class="val">${pct}%</div><div class="lbl">List Completion</div></div>
+      <div class="stat rankstat"><div class="val">🏆 #${rank}</div><div class="lbl">Leaderboard Rank</div></div>
+      <div class="stat"><div class="val">✦ ${player.points}</div><div class="lbl">Points</div></div>
+      <div class="stat"><div class="val">👹 ${beatenWithRank.length}</div><div class="lbl">Demons Beaten</div></div>
+      <div class="stat"><div class="val">📊 ${pct}%</div><div class="lbl">List Completion</div></div>
     </div>` : `<div class="profile-empty-linked" style="margin-top:14px;">No linked player record yet — get a submission approved under the name <b style="color:var(--text);">${escapeHtml(u.username)}</b> to unlock your stats, rank, and completion tracking here.</div>`;
 
   const socialsHtml = (prof.socials && (prof.socials.video || prof.socials.discord)) ? `
@@ -4514,7 +4690,10 @@ function renderProfileTab(){
       <p class="page-desc">Your account, stats, favorites, and submission history in one place.</p>
     </div>
     <div class="profile-hero">
-      <div class="profile-avatar">${escapeHtml(prof.avatarEmoji||'🙂')}</div>
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar">${escapeHtml(prof.avatarEmoji||'🙂')}</div>
+        ${player && rank ? `<div class="profile-rank-pill">#${rank}</div>` : ''}
+      </div>
       <div class="profile-hero-info">
         <div class="profile-hero-name">${escapeHtml(u.username)} <span class="role-tag ${u.role==='admin'?'admin':''}">${u.role==='admin'?'admin':'member'}</span></div>
         ${prof.bio ? `<div class="profile-hero-bio">${escapeHtml(prof.bio)}</div>` : `<div class="profile-hero-bio" style="color:var(--text-dim);">No bio yet — add one from Edit Profile.</div>`}
