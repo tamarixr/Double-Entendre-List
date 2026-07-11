@@ -1278,18 +1278,7 @@ function renderChangelogTab(){
   const showMod = isMod();
   const entries = APP.changelog.slice().reverse().filter(c => showMod || !c.mod).slice(0, 300);
   const groups = groupChangelogByDate(entries);
-  const feed = groups.length ? groups.map(g => `
-    <div class="changelog-day-group">
-      <div class="changelog-day-label">${escapeHtml(g.label)}</div>
-      ${g.items.map(c => `
-        <div class="changelog-entry">
-          <span class="changelog-dot ${c.mod?'mod':''}"></span>
-          <div class="changelog-entry-body">
-            <div class="changelog-entry-text">${escapeHtml(c.text)}${c.mod ? ' <span class="status-pill pending" style="margin-left:4px;">MOD</span>' : ''}</div>
-            <div class="changelog-entry-meta">${new Date(c.ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}${c.mod && c.actor ? ` · ${escapeHtml(c.actor)}` : ''}</div>
-          </div>
-        </div>`).join('')}
-    </div>`).join('') : `<div class="empty-state"><div class="big">Nothing yet</div>Changes will show up here as the list evolves.</div>`;
+  const feed = groups.length ? renderChangelogDigest(groups) : `<div class="empty-state"><div class="big">Nothing yet</div>Changes will show up here as the list evolves.</div>`;
   el.innerHTML = `
     <div class="page-head">
       <h1 class="page-title">Changelog</h1>
@@ -2456,12 +2445,12 @@ function getMonthlyCutoffTs(){
 function getChangelogSince(cutoffTs){
   return APP.changelog.filter(c => c.ts >= cutoffTs && (isMod() || !c.mod)).slice().reverse();
 }
+function ordinalDay(n){
+  const s = ['th','st','nd','rd'], v = n % 100;
+  return n + (s[(v-20)%10] || s[v] || s[0]);
+}
 function formatChangelogDateLabel(d){
-  const now = new Date();
-  if(d.toDateString() === now.toDateString()) return 'Today';
-  const yest = new Date(now); yest.setDate(now.getDate()-1);
-  if(d.toDateString() === yest.toDateString()) return 'Yesterday';
-  return d.toLocaleDateString(undefined, {weekday:'long', month:'short', day:'numeric'});
+  return `${ordinalDay(d.getDate())} of ${d.toLocaleDateString(undefined,{month:'long'})}`;
 }
 function groupChangelogByDate(entries){
   const groups = [];
@@ -2473,6 +2462,20 @@ function groupChangelogByDate(entries){
     groups[groups.length-1].items.push(c);
   });
   return groups;
+}
+/* Renders each day as a single digest line, e.g. "9th of July: Launched the site, added Roulette, opened Submit Play."
+   instead of one bullet per change — reads like a running devlog rather than a raw audit trail. */
+function renderChangelogDigest(groups){
+  if(!groups.length) return '';
+  return groups.map(g => {
+    const parts = g.items.map(c => escapeHtml(c.text).replace(/\.+\s*$/,'') + (c.mod ? ' <span class="status-pill pending" style="margin-left:2px;">MOD</span>' : ''));
+    let summary = parts.join(', ');
+    if(summary) summary = summary.charAt(0).toUpperCase() + summary.slice(1) + '.';
+    return `<div class="changelog-day-group">
+      <div class="changelog-day-label">${escapeHtml(g.label)}</div>
+      <div class="changelog-entry"><span class="changelog-dot"></span><div class="changelog-entry-body"><div class="changelog-entry-text">${summary}</div></div></div>
+    </div>`;
+  }).join('');
 }
 function renderHomeTab(){
   const el = document.getElementById('panel-home');
@@ -2528,18 +2531,7 @@ function renderHomeTab(){
         <button class="btn small ghost" onclick="switchTab('changelog')">Full History</button>
       </div>
       <div class="changelog-feed">
-        ${changelogGroups.length ? changelogGroups.map(g => `
-          <div class="changelog-day-group">
-            <div class="changelog-day-label">${escapeHtml(g.label)}</div>
-            ${g.items.map(c => `
-              <div class="changelog-entry">
-                <span class="changelog-dot ${c.mod?'mod':''}"></span>
-                <div class="changelog-entry-body">
-                  <div class="changelog-entry-text">${escapeHtml(c.text)}</div>
-                  <div class="changelog-entry-meta">${new Date(c.ts).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}${c.mod && c.actor ? ` · ${escapeHtml(c.actor)}` : ''}</div>
-                </div>
-              </div>`).join('')}
-          </div>`).join('') : `<div class="empty-state"><div class="big">No changes yet this period</div>Updates to the list will show up here starting ${escapeHtml(cutoffLabel)}.</div>`}
+        ${changelogGroups.length ? renderChangelogDigest(changelogGroups) : `<div class="empty-state"><div class="big">No changes yet this period</div>Updates to the list will show up here starting ${escapeHtml(cutoffLabel)}.</div>`}
       </div>
     </div>`;
 
@@ -3066,8 +3058,8 @@ function renderDemonDetail(d, index){
       ${APP.currentUser ? `<div style="display:flex;gap:3px;margin-top:4px;">${Array.from({length:10},(_,n)=>n+1).map(n=>`<button class="btn ghost small" style="padding:2px 6px;font-size:10.5px;${myRating===n?'border-color:var(--gold);color:var(--gold);':''}" onclick="rateEnjoyment('${d.id}',${n})">${n}</button>`).join('')}</div>` : `<div class="hint" style="margin-top:2px;">Log in to rate this level's enjoyment.</div>`}
     </div>`;
 
-  const records = APP.submissions.filter(s=>s.demonId===d.id && s.status==='approved' && s.type!=='progress').slice().sort((a,b)=>(b.percent-a.percent) || (a.submittedAt-b.submittedAt));
-  const progressAttempts = APP.submissions.filter(s=>s.demonId===d.id && s.status==='approved' && s.type==='progress').slice().sort((a,b)=>b.percent-a.percent);
+  const records = APP.submissions.filter(s=>s.demonId===d.id && (s.listKind||'demon')==='demon' && s.status==='approved' && s.type!=='progress').slice().sort((a,b)=>(b.percent-a.percent) || (a.submittedAt-b.submittedAt));
+  const progressAttempts = APP.submissions.filter(s=>s.demonId===d.id && (s.listKind||'demon')==='demon' && s.status==='approved' && s.type==='progress').slice().sort((a,b)=>b.percent-a.percent);
   const progressHtml = progressAttempts.length ? `
     <div class="panel-head" style="margin-top:16px;"><h3>Progress (${progressAttempts.length})</h3></div>
     <div class="demon-rows" style="max-height:160px;">
@@ -3077,7 +3069,7 @@ function renderDemonDetail(d, index){
   const recordsHtml = records.length ? `
     <div class="panel-head" style="margin-top:16px;"><h3>Records (${records.length})</h3></div>
     <div class="demon-rows" style="max-height:260px;">
-      ${records.map(s => `<div class="demon-row" style="cursor:default;height:auto;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)}${s.attempts?` · ${s.attempts} attempts`:''}</div>${(s.enjoymentRating||s.decoRating||s.gameplayRating) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${ratingTag('Enjoy',s.enjoymentRating)}${ratingTag('Deco',s.decoRating)}${ratingTag('Gameplay',s.gameplayRating)}</div>` : ''}</div><div class="pts">${s.percent}%</div></div>`).join('')}
+      ${records.map(s => `<div class="demon-row" style="cursor:default;height:auto;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)}${s.attempts?` · ${s.attempts} attempts`:''}${s.video ? ` · <a href="${escapeHtml(s.video)}" target="_blank" style="color:var(--cyan);">Watch ↗</a>` : ''}</div>${(s.enjoymentRating||s.decoRating||s.gameplayRating) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${ratingTag('Enjoy',s.enjoymentRating)}${ratingTag('Deco',s.decoRating)}${ratingTag('Gameplay',s.gameplayRating)}</div>` : ''}</div><div class="pts">${s.percent}%</div></div>`).join('')}
     </div>` : '';
 
   const changelogEntries = (d.levelChangelog||[]).slice().reverse();
@@ -3395,6 +3387,14 @@ const LIST_KINDS = {
     tagline: 'The hardest platformer-mode levels, ranked by difficulty.'
   }
 };
+function getListArrayByKind(kind){
+  if(kind==='challenge') return APP.challenges;
+  if(kind==='platformer') return APP.platformers;
+  return APP.demons;
+}
+function getListTitleByKind(kind){
+  return (LIST_KINDS[kind] && LIST_KINDS[kind].title) || 'Demon List';
+}
 function glData(kind){ return APP[LIST_KINDS[kind].dataKey]; }
 function glFilter(kind){ return APP[LIST_KINDS[kind].filterKey]; }
 function glSelId(kind){ return APP[LIST_KINDS[kind].selKey]; }
@@ -3593,6 +3593,14 @@ function renderGenericDetail(kind, d, index){
   if(songLabel) metaParts.push(`<span><b>Song:</b> ${escapeHtml(songLabel)}</span>`);
   if(publishLabel) metaParts.push(`<span><b>Published:</b> ${escapeHtml(publishLabel)}</span>`);
 
+  const ratingTag = (label,val) => val ? `<span class="tag-pill" style="font-size:10px;padding:1px 5px;" title="${label} rating">${label} ${val}/10</span>` : '';
+  const records = APP.submissions.filter(s=>s.demonId===d.id && s.listKind===kind && s.status==='approved' && s.type!=='progress').slice().sort((a,b)=>(b.percent-a.percent) || (a.submittedAt-b.submittedAt));
+  const recordsHtml = records.length ? `
+    <div class="panel-head" style="margin-top:16px;"><h3>Records (${records.length})</h3></div>
+    <div class="demon-rows" style="max-height:260px;">
+      ${records.map(s => `<div class="demon-row" style="cursor:default;height:auto;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)}${s.attempts?` · ${s.attempts} attempts`:''}${s.video ? ` · <a href="${escapeHtml(s.video)}" target="_blank" style="color:var(--cyan);">Watch ↗</a>` : ''}</div>${(s.enjoymentRating||s.decoRating||s.gameplayRating) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${ratingTag('Enjoy',s.enjoymentRating)}${ratingTag('Deco',s.decoRating)}${ratingTag('Gameplay',s.gameplayRating)}</div>` : ''}</div><div class="pts">${s.percent}%</div></div>`).join('')}
+    </div>` : `<div class="hint" style="padding:8px 0;">No records yet — be the first to submit a play for this level.</div>`;
+
   return `
     ${banner ? `<div class="detail-banner"><img src="${escapeHtml(banner)}" alt="${escapeHtml(d.name)} thumbnail" onerror="this.parentElement.style.display='none'"></div>` : ''}
     <div class="detail-top">
@@ -3612,9 +3620,11 @@ function renderGenericDetail(kind, d, index){
     <div class="stat-row">
       <div class="stat rankstat"><div class="val">#${index+1}</div><div class="lbl">Placement</div></div>
       <div class="stat"><div class="val">${d.points||0}</div><div class="lbl">Points</div></div>
+      <div class="stat"><div class="val">${records.length}</div><div class="lbl">Records</div></div>
     </div>
     <div class="video-wrap">${embed ? `<iframe src="${embed}" allowfullscreen></iframe>` : `<div class="noVideo">${d.video ? `<a href="${escapeHtml(d.video)}" target="_blank" style="color:var(--cyan);">Open video link ↗</a>` : 'No video yet'}</div>`}</div>
     ${d.description ? `<div class="detail-desc">${escapeHtml(d.description)}</div>` : ''}
+    ${recordsHtml}
   `;
 }
 function openGenericModal(kind, id){
@@ -4392,6 +4402,11 @@ function renderStatsTab(){
 }
 
 /* ============================= PLAYER PROFILE ============================= */
+function openLevelFromProfile(kind, id){
+  closeModal();
+  if(kind==='demon'){ selectDemon(id); switchTab('list'); }
+  else { glSetSelId(kind, id); switchTab(LIST_KINDS[kind].tab); }
+}
 function openPlayerProfile(id){
   const p = APP.players.find(x=>x.id===id);
   if(!p) return;
@@ -4432,6 +4447,28 @@ function openPlayerProfile(id){
     const rankIdx = APP.demons.findIndex(d=>d.id===x.demon.id);
     return `<div class="completion-item" style="cursor:pointer;" onclick="closeModal();selectDemon('${x.demon.id}');switchTab('list');"><span>#${rankIdx+1} ${escapeHtml(x.demon.name)}</span><span style="color:var(--text-dim);">Best: ${x.percent}%</span></div>`;
   }).join('') : '';
+
+  // Challenge List / Platformer List completions — tracked separately from the main list stats above.
+  const otherCompletions = ['challenge','platformer'].map(kind => {
+    const arr = getListArrayByKind(kind);
+    const subs = APP.submissions.filter(s => s.status==='approved' && s.type!=='progress' && (s.listKind||'demon')===kind && s.player.toLowerCase()===p.name.toLowerCase());
+    const items = subs.map(s => {
+      const demon = arr.find(d=>d.id===s.demonId);
+      const rankIdx = demon ? arr.findIndex(d=>d.id===demon.id) : -1;
+      return { s, demon, rankIdx };
+    }).filter(x => x.demon).sort((a,b)=>a.rankIdx-b.rankIdx);
+    return { kind, title: getListTitleByKind(kind), items };
+  }).filter(x => x.items.length);
+  const otherCompletionsHtml = otherCompletions.map(group => `
+    <div class="field"><label>${escapeHtml(group.title)} Completions (${group.items.length})</label></div>
+    <div class="panel">${group.items.map(({s,demon,rankIdx}) => `<div class="completion-item" style="cursor:pointer;" onclick="openLevelFromProfile('${group.kind}','${demon.id}')"><span>#${rankIdx+1} ${escapeHtml(demon.name)}</span><span style="color:var(--text-dim);">${s.percent}% · ${demon.points||0}pt</span></div>`).join('')}</div>`
+  ).join('');
+
+  // Verified demons — across all three lists.
+  const verifiedItems = [];
+  [{kind:'demon', title:'Demon List', arr: APP.demons}, {kind:'challenge', title:'Challenge List', arr: APP.challenges}, {kind:'platformer', title:'Platformer Demon List', arr: APP.platformers}]
+    .forEach(({kind,title,arr}) => arr.forEach((d,i) => { if(d.verifier && d.verifier.toLowerCase()===p.name.toLowerCase()) verifiedItems.push({ d, rankIdx:i, kind, title }); }));
+  const verifiedHtml = verifiedItems.length ? verifiedItems.map(({d,rankIdx,kind,title}) => `<div class="completion-item" style="cursor:pointer;" onclick="openLevelFromProfile('${kind}','${d.id}')"><span>#${rankIdx+1} ${escapeHtml(d.name)}</span><span style="color:var(--text-dim);">${escapeHtml(title)}</span></div>`).join('') : '';
 
   const account = APP.registeredUsers.find(u => u.username.toLowerCase() === p.name.toLowerCase());
   const joinedLabel = account && account.createdAt ? new Date(account.createdAt).toLocaleDateString(undefined,{year:'numeric',month:'long'}) : null;
@@ -4485,6 +4522,8 @@ function openPlayerProfile(id){
         <div class="field"><label>Approved Completions</label></div>
         <div class="panel">${beatenHtml}</div>
         ${progressEntries.length ? `<div class="field"><label>Progress on Other Demons</label></div><div class="panel">${progressHtml}</div>` : ''}
+        ${otherCompletionsHtml}
+        ${verifiedItems.length ? `<div class="field"><label>Verified Demons (${verifiedItems.length})</label></div><div class="panel">${verifiedHtml}</div>` : ''}
         ${isMod() && p.adminNote ? `<div class="field"><label>🔒 Admin Notes</label></div><div class="panel" style="padding:8px 10px;font-size:12.5px;color:var(--text-muted);">${escapeHtml(p.adminNote)}</div>` : ''}
       </div>
       <div class="modal-foot">
@@ -4587,7 +4626,7 @@ function renderProfileTab(){
   const account = APP.registeredUsers.find(a => a.username.toLowerCase() === u.username.toLowerCase());
   const joinedLabel = account && account.createdAt ? new Date(account.createdAt).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'}) : null;
 
-  let rank = null, beatenWithRank = [], pct = 0, progressEntries = [];
+  let rank = null, beatenWithRank = [], pct = 0, progressEntries = [], hardest = null, verifiedCount = 0;
   if(player){
     const ranked = APP.players.slice().sort((a,b)=>b.points-a.points);
     rank = ranked.findIndex(x=>x.id===player.id) + 1;
@@ -4598,10 +4637,12 @@ function renderProfileTab(){
       return { s, demon, rankIdx };
     }).filter(x=>x.demon).sort((a,b)=>a.rankIdx-b.rankIdx);
     pct = APP.demons.length ? Math.round((beatenWithRank.length/APP.demons.length)*100) : 0;
+    hardest = beatenWithRank[0] || null;
     const progressBests = player.progressBests || {};
     progressEntries = Object.entries(progressBests)
       .map(([demonId, percent]) => ({ demon: APP.demons.find(d=>d.id===demonId), percent }))
       .filter(x => x.demon && !beatenWithRank.some(b=>b.demon.id===x.demon.id));
+    [APP.demons, APP.challenges, APP.platformers].forEach(arr => arr.forEach(d => { if(d.verifier && d.verifier.toLowerCase()===player.name.toLowerCase()) verifiedCount++; }));
   }
 
   const favIds = Array.from(getFavorites());
@@ -4648,6 +4689,8 @@ function renderProfileTab(){
             <div class="field"><label>List Completion — ${pct}%</label></div>
             <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%;"></div></div>
             ${above ? `<div class="hint" style="margin-top:10px;">🎯 <b style="color:var(--text);">${Math.max(0, above.points - player.points + 1)}pt</b> to pass <b style="color:var(--text);">${escapeHtml(above.name)}</b> (#${rank-1})</div>` : player ? `<div class="hint" style="margin-top:10px;">👑 Currently #1 on the leaderboard</div>` : ''}
+            ${hardest ? `<div class="hint" style="margin-top:6px;">🏆 Hardest completion: <b style="color:var(--text);">#${hardest.rankIdx+1} ${escapeHtml(hardest.demon.name)}</b></div>` : ''}
+            ${verifiedCount ? `<div class="hint">✅ ${verifiedCount} level${verifiedCount===1?'':'s'} verified</div>` : ''}
             ` : ''}
             <div class="hint" style="margin-top:${player?'6px':'0'};">⭐ ${favDemons.length} level${favDemons.length===1?'':'s'} favorited</div>
             ${joinedLabel ? `<div class="hint">📅 Member since ${joinedLabel}</div>` : ''}
@@ -4802,7 +4845,7 @@ function renderSubmitTab(preserveFocus){
   const q = search.trim().toLowerCase();
   if(q){
     queue = queue.filter(s => {
-      const demon = APP.demons.find(d=>d.id===s.demonId);
+      const demon = getListArrayByKind(s.listKind||'demon').find(d=>d.id===s.demonId);
       return s.player.toLowerCase().includes(q) || (demon && demon.name.toLowerCase().includes(q));
     });
   }
@@ -4826,7 +4869,8 @@ function renderSubmitTab(preserveFocus){
       <button class="btn small danger" onclick="bulkReviewSelected('rejected')">Reject selected</button>` : ''}
     </div>` : '';
   const queueHtml = queue.length ? queue.map(s => {
-    const demon = APP.demons.find(d=>d.id===s.demonId);
+    const kind = s.listKind || 'demon';
+    const demon = getListArrayByKind(kind).find(d=>d.id===s.demonId);
     const embed = getEmbedUrl(s.video);
     return `
     <div class="sub-item">
@@ -4835,7 +4879,7 @@ function renderSubmitTab(preserveFocus){
           ${isMod() && s.status==='pending' ? `<input type="checkbox" ${BULK_SELECTED.has(s.id)?'checked':''} onclick="toggleBulkSelect('${s.id}', event)">` : ''}
           <div>
             <span class="who">${escapeHtml(s.player)}</span>
-            <span class="what"> — ${demon?escapeHtml(demon.name):'(deleted demon)'} · ${s.percent}%${s.type==='progress'?' <span class="status-pill pending">progress</span>':''}</span>
+            <span class="what"> — ${demon?escapeHtml(demon.name):'(deleted level)'} · ${s.percent}%${s.type==='progress'?' <span class="status-pill pending">progress</span>':''}${kind!=='demon' ? ` <span class="tag-pill" style="font-size:10px;padding:1px 5px;">${escapeHtml(getListTitleByKind(kind))}</span>` : ''}</span>
           </div>
         </div>
         <span class="status-pill ${s.status}">${s.status}</span>
@@ -4870,7 +4914,16 @@ function renderSubmitTab(preserveFocus){
           ${APP.demons.length ? `
           <div class="field"><label>Your Player Name</label><input id="sb-player" list="knownPlayers" value="${APP.currentUser?escapeHtml(APP.currentUser.username):''}"></div>
           <datalist id="knownPlayers">${APP.players.map(p=>`<option value="${escapeHtml(p.name)}">`).join('')}</datalist>
-          <div class="field"><label>Demon</label><select id="sb-demon" onchange="updateSubRequirementHint()">${demonOptions}</select></div>
+          <div class="form-grid">
+            <div class="field"><label>List Category</label>
+              <select id="sb-listkind" onchange="onSubListKindChange()">
+                <option value="demon">Demon List</option>
+                <option value="challenge">Challenge List</option>
+                <option value="platformer">Platformer Demon List</option>
+              </select>
+            </div>
+            <div class="field"><label>Level</label><select id="sb-demon" onchange="updateSubRequirementHint()">${demonOptions}</select></div>
+          </div>
           <div class="form-grid">
             <div class="field"><label>Percent</label><input id="sb-percent" type="number" min="1" max="100" value="100"></div>
             <div class="field"><label>Region</label><select id="sb-country">${countryOptions('US')}</select></div>
@@ -4921,13 +4974,27 @@ function renderSubmitTab(preserveFocus){
   }
   updateSubRequirementHint();
 }
+function buildSubDemonOptions(kind){
+  const arr = getListArrayByKind(kind);
+  return arr.map(d => `<option value="${d.id}">${escapeHtml(d.name)} (${d.points}pt)</option>`).join('');
+}
+function onSubListKindChange(){
+  const kindSel = document.getElementById('sb-listkind');
+  const sel = document.getElementById('sb-demon');
+  if(!kindSel || !sel) return;
+  sel.innerHTML = buildSubDemonOptions(kindSel.value);
+  updateSubRequirementHint();
+}
 function updateSubRequirementHint(){
   const sel = document.getElementById('sb-demon');
   const hint = document.getElementById('subReqHint');
   if(!sel || !hint) return;
-  const demon = APP.demons.find(d=>d.id===sel.value);
+  const kindSel = document.getElementById('sb-listkind');
+  const kind = kindSel ? kindSel.value : 'demon';
+  const arr = getListArrayByKind(kind);
+  const demon = arr.find(d=>d.id===sel.value);
   const req = demon && demon.requirement ? demon.requirement : 100;
-  let text = req < 100 ? `This demon accepts records of ${req}% or higher.` : `This demon requires a 100% completion.`;
+  let text = req < 100 ? `This level accepts records of ${req}% or higher.` : `This level requires a 100% completion.`;
   if(demon && demon.requirement2){
     text += ` Records from ${demon.requirement2}% up to ${req-1}% are accepted for ${demon.points2||0} reduced points instead of the full ${demon.points}.`;
   }
@@ -4935,6 +5002,8 @@ function updateSubRequirementHint(){
 }
 async function submitPlay(){
   const player = document.getElementById('sb-player').value.trim();
+  const listKindEl = document.getElementById('sb-listkind');
+  const listKind = listKindEl ? listKindEl.value : 'demon';
   const demonId = document.getElementById('sb-demon').value;
   const percent = parseInt(document.getElementById('sb-percent').value);
   const video = document.getElementById('sb-video').value.trim();
@@ -4952,11 +5021,11 @@ async function submitPlay(){
     msgEl.innerHTML = `<div class="msg error">Fill in your name, a percent (1-100), and a video URL.</div>`;
     return;
   }
-  const demon = APP.demons.find(d=>d.id===demonId);
+  const demon = getListArrayByKind(listKind).find(d=>d.id===demonId);
   const req = demon && demon.requirement ? demon.requirement : 100;
   const floor = (demon && demon.requirement2) ? demon.requirement2 : req;
   const type = percent < floor ? 'progress' : 'completion';
-  APP.submissions.push({ id: uid(), player, demonId, percent, video, country, note, attempts, rawFootage, enjoymentRating, decoRating, gameplayRating, status:'pending', type, submittedAt: Date.now(), modNote:'' });
+  APP.submissions.push({ id: uid(), player, demonId, listKind, percent, video, country, note, attempts, rawFootage, enjoymentRating, decoRating, gameplayRating, status:'pending', type, submittedAt: Date.now(), modNote:'' });
   await saveSubmissions();
   msgEl.innerHTML = type==='progress'
     ? `<div class="msg ok">Submitted as a progress record (below the ${floor}% requirement, so it won't award points, but it'll be tracked on your profile once approved). A moderator will review it soon.</div>`
@@ -4975,7 +5044,8 @@ async function reviewSubmission(id, status, silent){
   const s = APP.submissions.find(x=>x.id===id);
   if(!s) return;
   s.status = status;
-  const demon = APP.demons.find(d=>d.id===s.demonId);
+  const kind = s.listKind || 'demon';
+  const demon = getListArrayByKind(kind).find(d=>d.id===s.demonId);
   if(status==='approved'){
     let player = APP.players.find(p=>p.name.toLowerCase()===s.player.toLowerCase());
     if(!player){
@@ -5000,7 +5070,8 @@ async function reviewSubmission(id, status, silent){
       if(!silent) await saveDemons();
     }
   }
-  logChange(`${s.player}'s ${s.type==='progress'?'progress ':''}submission on "${demon?demon.name:'a deleted demon'}" (${s.percent}%) was ${status}`, true);
+  const kindLabel = kind === 'demon' ? '' : ` (${getListTitleByKind(kind)})`;
+  logChange(`${s.player}'s ${s.type==='progress'?'progress ':''}submission on "${demon?demon.name:'a deleted level'}"${kindLabel} (${s.percent}%) was ${status}`, true);
   if(!silent){
     await saveSubmissions();
     renderAll();
