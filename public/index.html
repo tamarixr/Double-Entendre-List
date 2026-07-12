@@ -907,9 +907,10 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 
 @keyframes auroraDrift{
   0%,100%{ transform:translate3d(0,0,0) scale(1); }
-  33%{ transform:translate3d(2%, -3%, 0) scale(1.06); }
-  66%{ transform:translate3d(-3%, 2%, 0) scale(1.03); }
+  50%{ transform:translate3d(1.5%, -2%, 0) scale(1.03); }
 }
+@keyframes underlineGrow{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+@keyframes accordionOpen{ from{ opacity:0; max-height:0; } to{ opacity:1; max-height:400px; } }
 @keyframes shimmerSweep{
   0%{ background-position:200% 0; }
   100%{ background-position:-200% 0; }
@@ -943,10 +944,10 @@ body::before{
     radial-gradient(640px 420px at 8% 0%, rgba(255,59,107,0.10), transparent 60%),
     radial-gradient(560px 380px at 96% 12%, rgba(79,216,255,0.08), transparent 60%),
     radial-gradient(700px 460px at 40% 100%, rgba(255,184,69,0.06), transparent 60%);
-  animation:auroraDrift 22s ease-in-out infinite;
-  opacity:.9;
+  animation:auroraDrift 34s ease-in-out infinite;
+  opacity:.7;
 }
-body.light-theme::before{ opacity:.5; }
+body.light-theme::before{ opacity:.4; }
 main, .footer-note{ position:relative; z-index:1; }
 
 /* crisper scrollbar with gradient thumb */
@@ -976,7 +977,7 @@ nav.side-tabs button.active::before{
 nav.side-tabs button.active{
   background:linear-gradient(90deg, var(--spike-dim) 0%, var(--bg-raised-2) 70%);
 }
-.role-tag.admin{ animation:glowPulse 2.6s ease-in-out infinite; }
+.role-tag.admin{ animation:glowPulse 1.4s ease-in-out 1; }
 
 /* ---------- buttons: shine sweep + springier feel ---------- */
 .btn{ position:relative; overflow:hidden; isolation:isolate; }
@@ -1013,16 +1014,17 @@ nav.side-tabs button.active{
 .demon-rows .demon-row:nth-child(7){ animation-delay:.07s; }
 .demon-rows .demon-row:nth-child(8){ animation-delay:.08s; }
 
-/* rank badges: gold shine for the very top spots */
-.rank-badge{ transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease; }
+/* rank badges: gold shine for the very top spots — subtle, triggers on hover only (cleaner than a constant loop) */
+.rank-badge{ transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease, background-position .6s ease; }
 .demon-row:hover .rank-badge{ transform:scale(1.08); }
 .rank-badge.top{
   background:linear-gradient(120deg, var(--spike-dim), rgba(255,184,69,0.18), var(--spike-dim));
   background-size:220% 100%;
   border-color:var(--spike);
   box-shadow:0 0 0 1px var(--spike-dim), 0 2px 8px var(--spike-shadow);
-  animation:shimmerSweep 5s linear infinite;
+  background-position:0% 0;
 }
+.demon-row:hover .rank-badge.top{ background-position:100% 0; }
 .demon-row .pts{ font-weight:700; }
 
 /* ---------- stat cards: glass, gradient value, hover glow ---------- */
@@ -1063,11 +1065,12 @@ nav.side-tabs button.active{
 .toast.ok{ box-shadow:var(--shadow-lg), 0 0 0 1px rgba(74,222,128,0.25); }
 .toast.error{ box-shadow:var(--shadow-lg), 0 0 0 1px rgba(255,84,112,0.25); }
 
-/* ---------- profile hero: spinning gradient avatar ring ---------- */
+/* ---------- profile hero: gradient avatar ring, gentle motion only on hover ---------- */
 .profile-avatar-wrap{
   background:conic-gradient(from 0deg, var(--spike), var(--gold), var(--cyan), var(--spike));
-  animation:ringSpin 6s linear infinite;
+  transition:transform .5s cubic-bezier(.22,1,.36,1);
 }
+.profile-avatar-wrap:hover{ transform:rotate(50deg); }
 .profile-hero-name{ letter-spacing:-0.01em; }
 .profile-mini-card{ position:relative; }
 .profile-mini-card:hover{ box-shadow:var(--shadow-md); }
@@ -1104,6 +1107,29 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   .page-head{ padding:16px 16px; }
   .page-title{ font-size:22px; }
 }
+
+/* =========================================================================
+   CLEAN MOTION PASS — tab transitions, grid stagger, accordion reveal
+   ========================================================================= */
+.tab-panel.active{ animation:popIn .22s cubic-bezier(.22,1,.36,1) both; }
+
+nav.side-tabs button.active::before{ animation:underlineGrow .2s ease-out both; transform-origin:top; }
+
+.filters-advanced{ animation:accordionOpen .22s ease-out both; overflow:hidden; }
+
+.profile-grid > *, .upcoming-grid > *, .quick-link-grid > * { animation:popIn .28s ease both; }
+.profile-grid > *:nth-child(n+9), .upcoming-grid > *:nth-child(n+9){ animation:none; }
+
+/* ---------- staff customization: hidden built-in tabs ---------- */
+.tab-hidden{ display:none !important; }
+
+/* ---------- settings modal: section tabs + appearance controls ---------- */
+.settings-section{ animation:popIn .18s ease both; }
+.settings-section input[type="color"]{ background:none; border:1px solid var(--line); border-radius:8px; width:100%; }
+.settings-section input[type="range"]{ width:100%; accent-color:var(--spike); }
+#st-customcss{ font-family:'JetBrains Mono',monospace; }
+.user-row input{ font-size:12px; background:var(--bg-void); border:1px solid var(--line); color:var(--text); border-radius:6px; }
+.user-row input:focus{ outline:none; border-color:var(--spike); }
 </style>
 </head>
 <body>
@@ -1255,7 +1281,12 @@ const APP = {
     guidelinesContent: "1. Records must show clean, unedited gameplay from start to finish.\n2. Cheats, hacks, or macros of any kind are not allowed.\n3. Mods reserve the right to reject low-quality or suspicious footage.\n4. Be respectful to other members in Chat and Submissions.\n5. Repeated rule violations may result in a ban.",
     discordUrl: "",
     featuredDemonId: null,
-    customTabs: [] // staff-created tabs: { id, label, icon, preset: 'list'|'text', items:[], text:'' }
+    customTabs: [], // staff-created tabs: { id, label, icon, preset: 'list'|'text', items:[], text:'' }
+    customAccentHex: "", // set + accentColor:'custom' to use any hex instead of a preset palette
+    customTheme: {}, // { bgVoid, bgPanel, bgRaised, text, radius, font } — leave {} to use the base theme
+    customCSS: "", // raw CSS staff can inject to restyle literally anything
+    hiddenTabs: [], // built-in tab ids hidden from navigation
+    tabOverrides: {} // { tabId: { label, icon } } — rename/re-icon built-in tabs
   },
   listFilter: { search: '', tags: [], sort: 'rank', section: 'main', favoritesOnly: false, creator: '', verifier: '', minReq: '', maxReq: '', dateFrom: '', dateTo: '' }, // section: main | extended | legacy | all
   challengeFilter: { search: '', tags: [], sort: 'rank', section: 'main' },
@@ -1406,24 +1437,131 @@ function saveChat(){ return storageSet('chat_messages', APP.chatMessages); }
 function saveChangelogStore(){ return storageSet('changelog', APP.changelog); }
 function saveSnapshots(){ return storageSet('snapshots', APP.snapshots); }
 
-function applySystemTheme(){
-  if(APP.settings.themeMode === 'light') {
-    document.body.classList.add('light-theme');
-  } else {
-    document.body.classList.remove('light-theme');
-  }
+/* ============================= THEME ENGINE (staff-customizable) ============================= */
+function hexToRgb(hex){
+  hex = (hex||'').replace('#','');
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const num = parseInt(hex,16) || 0;
+  return { r:(num>>16)&255, g:(num>>8)&255, b:num&255 };
+}
+function shadeHex(hex, percent){
+  const {r,g,b} = hexToRgb(hex);
+  const t = percent<0?0:255, p = Math.abs(percent);
+  const nr = Math.round((t-r)*p)+r, ng = Math.round((t-g)*p)+g, nb = Math.round((t-b)*p)+b;
+  return '#'+[nr,ng,nb].map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('');
+}
+function paletteFromHex(hex){
+  const {r,g,b} = hexToRgb(hex);
+  return { main:hex, dim:`rgba(${r},${g},${b},0.16)`, hover:shadeHex(hex,0.18), shadow:`rgba(${r},${g},${b},0.32)` };
+}
+const FONT_OPTIONS = {
+  inter: { label:'Inter (Default)', family:"'Inter',sans-serif", google:null },
+  poppins: { label:'Poppins', family:"'Poppins',sans-serif", google:'Poppins:wght@400;500;600;700' },
+  sora: { label:'Sora', family:"'Sora',sans-serif", google:'Sora:wght@400;500;600;700' },
+  spacegrotesk: { label:'Space Grotesk', family:"'Space Grotesk',sans-serif", google:'Space+Grotesk:wght@400;500;600;700' },
+  outfit: { label:'Outfit', family:"'Outfit',sans-serif", google:'Outfit:wght@400;500;600;700' },
+  manrope: { label:'Manrope', family:"'Manrope',sans-serif", google:'Manrope:wght@400;500;600;700' }
+};
+function applyCustomFont(key){
+  const opt = FONT_OPTIONS[key] || FONT_OPTIONS.inter;
+  let link = document.getElementById('staffFontLink');
+  if(opt.google){
+    if(!link){ link = document.createElement('link'); link.id = 'staffFontLink'; link.rel = 'stylesheet'; document.head.appendChild(link); }
+    const href = 'https://fonts.googleapis.com/css2?family='+opt.google+'&display=swap';
+    if(link.href !== href) link.href = href;
+  } else if(link){ link.remove(); }
+  document.documentElement.style.setProperty('--font-main', opt.family);
+}
+/* Built-in tabs eligible for staff hide/rename (profile + admin are permission-gated, left alone) */
+const BUILTIN_TABS = [
+  { id:'home', label:'Home', icon:'🏠' }, { id:'list', label:'Demon List', icon:'📜' },
+  { id:'challengelist', label:'Challenge List', icon:'🧩' }, { id:'platformerlist', label:'Platformer List', icon:'🕹️' },
+  { id:'upcoming', label:'Upcoming', icon:'🕓' }, { id:'timemachine', label:'Time Machine', icon:'🕰️' },
+  { id:'roulette', label:'Roulette', icon:'🎲' }, { id:'submit', label:'Submit Play', icon:'🎬' },
+  { id:'submitlevel', label:'Submit Level', icon:'📩' }, { id:'leaderboard', label:'Leaderboard', icon:'🏆' },
+  { id:'halloffame', label:'Hall of Fame', icon:'🏛️' }, { id:'stats', label:'Stats', icon:'📊' },
+  { id:'chat', label:'Chat', icon:'💬' }, { id:'changelog', label:'Dev Log', icon:'🕘' },
+  { id:'faq', label:'FAQ', icon:'❓' }, { id:'guidelines', label:'Guidelines', icon:'📋' }
+];
+function applyTabCustomization(){
+  const hidden = new Set(APP.settings.hiddenTabs || []);
+  const overrides = APP.settings.tabOverrides || {};
+  BUILTIN_TABS.forEach(def => {
+    const ov = overrides[def.id] || {};
+    const label = ov.label || def.label;
+    const icon = ov.icon || def.icon;
+    document.querySelectorAll(`button[data-tab="${def.id}"]`).forEach(btn => {
+      btn.classList.toggle('tab-hidden', hidden.has(def.id));
+      const isBottom = !!btn.closest('.bottom-nav');
+      if(isBottom){
+        const lbl = btn.querySelector('.bn-label'); if(lbl) lbl.textContent = label;
+        const ic = btn.querySelector('.bn-icon'); if(ic) ic.textContent = icon;
+      } else {
+        const si = btn.querySelector('.si'); if(si) si.textContent = icon;
+        Array.from(btn.childNodes).forEach(n => { if(n.nodeType===3 && n.textContent.trim()) n.textContent = label; });
+      }
+    });
+  });
+}
+function applyThemeFromSettings(s){
+  if(s.themeMode === 'light') document.body.classList.add('light-theme');
+  else document.body.classList.remove('light-theme');
 
-  const theme = ACCENT_PALETTES[APP.settings.accentColor] || ACCENT_PALETTES.pink;
+  const theme = (s.accentColor === 'custom' && s.customAccentHex)
+    ? paletteFromHex(s.customAccentHex)
+    : (ACCENT_PALETTES[s.accentColor] || ACCENT_PALETTES.pink);
   const root = document.documentElement.style;
   root.setProperty('--spike', theme.main);
   root.setProperty('--spike-dim', theme.dim);
   root.setProperty('--spike-hover', theme.hover);
   root.setProperty('--spike-shadow', theme.shadow);
-  
-  document.querySelectorAll('.site-name-text').forEach(el => el.textContent = APP.settings.siteName);
-  document.querySelectorAll('.site-tagline-text').forEach(el => el.textContent = APP.settings.siteTagline);
+
+  const ct = s.customTheme || {};
+  const varMap = { bgVoid:'--bg-void', bgPanel:'--bg-panel', bgRaised:'--bg-raised', text:'--text' };
+  Object.keys(varMap).forEach(k => { if(ct[k]) root.setProperty(varMap[k], ct[k]); else root.removeProperty(varMap[k]); });
+  if(ct.radius){
+    const r = parseInt(ct.radius) || 14;
+    root.setProperty('--radius', r+'px');
+    root.setProperty('--radius-lg', (r+8)+'px');
+    root.setProperty('--radius-sm', Math.max(4,r-6)+'px');
+  } else {
+    root.removeProperty('--radius'); root.removeProperty('--radius-lg'); root.removeProperty('--radius-sm');
+  }
+  applyCustomFont(ct.font || 'inter');
+
+  let styleTag = document.getElementById('staffCustomCSS');
+  if(!styleTag){ styleTag = document.createElement('style'); styleTag.id = 'staffCustomCSS'; document.head.appendChild(styleTag); }
+  styleTag.textContent = s.customCSS || '';
+
+  document.querySelectorAll('.site-name-text').forEach(el => el.textContent = s.siteName);
+  document.querySelectorAll('.site-tagline-text').forEach(el => el.textContent = s.siteTagline);
   renderDiscordLink();
+  applyTabCustomization();
 }
+function applySystemTheme(){ applyThemeFromSettings(APP.settings); }
+/* Live-preview whatever is currently typed into the Site Settings form, without saving it. */
+function previewSettingsAppearance(){
+  const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const modeEl = document.getElementById('st-accent-mode');
+  const overrideEl = document.getElementById('st-override-appearance');
+  const radiusVal = document.getElementById('st-radius');
+  const radiusLbl = document.getElementById('st-radius-label');
+  if(radiusVal && radiusLbl) radiusLbl.textContent = radiusVal.value + 'px';
+  const preview = {
+    themeMode: APP.settings.themeMode,
+    siteName: val('st-name') || APP.settings.siteName,
+    siteTagline: val('st-tagline'),
+    accentColor: (modeEl && modeEl.value === 'custom') ? 'custom' : val('st-color'),
+    customAccentHex: val('st-customaccent'),
+    customTheme: (overrideEl && overrideEl.checked) ? {
+      bgVoid: val('st-bgvoid'), bgPanel: val('st-bgpanel'), bgRaised: val('st-bgraised'),
+      text: val('st-textcolor'), radius: val('st-radius'), font: val('st-font')
+    } : {},
+    customCSS: val('st-customcss')
+  };
+  applyThemeFromSettings(preview);
+}
+function cancelSettingsModal(){ applySystemTheme(); closeModal(); }
 function renderDiscordLink(){
   const slot = document.getElementById('discordLinkSlot');
   if(!slot) return;
@@ -2209,21 +2347,75 @@ async function deleteCustomTab(tabId){
   renderCustomTabPanels();
   showToast('Tab deleted');
 }
+function renderBuiltinTabRows(){
+  const hidden = new Set(APP.settings.hiddenTabs || []);
+  const overrides = APP.settings.tabOverrides || {};
+  return BUILTIN_TABS.map(def => {
+    const ov = overrides[def.id] || {};
+    return `<div class="user-row" data-builtin-row="${def.id}">
+      <span style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">
+        <input id="bt-icon-${def.id}" value="${escapeHtml(ov.icon||def.icon)}" maxlength="4" style="width:38px;text-align:center;padding:4px;">
+        <input id="bt-label-${def.id}" value="${escapeHtml(ov.label||def.label)}" style="flex:1;min-width:0;padding:4px 8px;">
+      </span>
+      <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);white-space:nowrap;cursor:pointer;">
+        <input type="checkbox" id="bt-visible-${def.id}" ${hidden.has(def.id)?'':'checked'} style="width:auto;"> visible
+      </label>
+    </div>`;
+  }).join('');
+}
+async function saveBuiltinTabChanges(){
+  const hiddenTabs = [];
+  const tabOverrides = {};
+  BUILTIN_TABS.forEach(def => {
+    const visEl = document.getElementById('bt-visible-'+def.id);
+    const iconEl = document.getElementById('bt-icon-'+def.id);
+    const labelEl = document.getElementById('bt-label-'+def.id);
+    if(visEl && !visEl.checked) hiddenTabs.push(def.id);
+    const icon = iconEl ? iconEl.value.trim() : '';
+    const label = labelEl ? labelEl.value.trim() : '';
+    if((icon && icon!==def.icon) || (label && label!==def.label)){
+      tabOverrides[def.id] = { icon: icon||def.icon, label: label||def.label };
+    }
+  });
+  APP.settings.hiddenTabs = hiddenTabs;
+  APP.settings.tabOverrides = tabOverrides;
+  await saveSettings();
+  applyTabCustomization();
+  logChange('Navigation tabs were reconfigured', true);
+  showToast('Navigation updated');
+}
+async function moveCustomTab(tabId, dir){
+  const tabs = customTabs();
+  const i = tabs.findIndex(t=>t.id===tabId);
+  const j = i + dir;
+  if(i<0 || j<0 || j>=tabs.length) return;
+  [tabs[i], tabs[j]] = [tabs[j], tabs[i]];
+  await saveSettings();
+  renderCustomTabsNav();
+  openManageTabsModal();
+}
 function openManageTabsModal(){
   if(!isAdmin()) return;
   const tabs = customTabs();
-  const rows = tabs.length ? tabs.map(t => `
+  const rows = tabs.length ? tabs.map((t,i) => `
     <div class="user-row"><span>${escapeHtml(t.icon||'📁')} ${escapeHtml(t.label)} <span class="hint">(${t.preset} · ${t.category||'community'})</span></span>
-      <span style="display:flex;gap:6px;">
+      <span style="display:flex;gap:4px;">
+        <button class="btn small ghost" title="Move up" ${i===0?'disabled':''} onclick="moveCustomTab('${t.id}',-1)">↑</button>
+        <button class="btn small ghost" title="Move down" ${i===tabs.length-1?'disabled':''} onclick="moveCustomTab('${t.id}',1)">↓</button>
         <button class="btn small ghost" onclick="switchTab('custom-${t.id}');closeModal();">View</button>
         <button class="btn small danger" onclick="deleteCustomTab('${t.id}')">Delete</button>
       </span>
     </div>`).join('') : `<div class="completion-item" style="color:var(--text-dim);">No custom tabs yet.</div>`;
   openModal(`
   <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
-    <div class="modal">
-      <div class="modal-head"><h3>Manage Tabs</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal" style="max-width:560px;">
+      <div class="modal-head"><h3>Manage Tabs & Navigation</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
       <div class="modal-body">
+        <div class="settings-section-label" style="margin-top:0;">🧭 Built-in Tabs <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);">— rename, re-icon, show/hide</span></div>
+        <div class="sub-list" style="max-height:240px;overflow:auto;margin-bottom:10px;">${renderBuiltinTabRows()}</div>
+        <button class="btn small primary" type="button" onclick="saveBuiltinTabChanges()">Save Navigation Changes</button>
+
+        <div class="settings-section-label">📁 Custom Tabs <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);">— reorder, view, delete</span></div>
         <div class="sub-list" style="max-height:220px;overflow:auto;margin-bottom:12px;">${rows}</div>
         <div class="panel-head"><h3>Add New Tab</h3></div>
         <div class="field"><label>Label</label><input id="nt-label" placeholder="e.g. Resources"></div>
@@ -2701,82 +2893,169 @@ function openAdminSettingsModal() {
   const swatchRow = Object.keys(ACCENT_PALETTES).map(c => 
     `<div class="accent-swatch ${APP.settings.accentColor === c ? 'active' : ''}" data-accent="${c}" title="${c.charAt(0).toUpperCase()+c.slice(1)}" style="background:${ACCENT_PALETTES[c].main};" onclick="pickSettingsAccent('${c}')"></div>`
   ).join('');
+  const isCustomAccent = APP.settings.accentColor === 'custom' && APP.settings.customAccentHex;
+  const cs = getComputedStyle(document.documentElement);
+  const ct = APP.settings.customTheme || {};
+  const defVal = (k, cssVar, fallback) => ct[k] || cs.getPropertyValue(cssVar).trim() || fallback;
+  const curRadius = parseInt(ct.radius || cs.getPropertyValue('--radius').trim()) || 14;
+  const hasOverride = Object.keys(ct).length > 0;
+  const fontOptionsHtml = Object.keys(FONT_OPTIONS).map(k => `<option value="${k}" ${((ct.font||'inter')===k)?'selected':''}>${FONT_OPTIONS[k].label}</option>`).join('');
 
   openModal(`
-  <div class="modal-backdrop settings-modal" onclick="if(event.target===this) closeModal()">
+  <div class="modal-backdrop settings-modal" onclick="if(event.target===this) cancelSettingsModal()">
     <div class="modal">
-      <div class="modal-head"><h3><span class="settings-modal-head-icon">⚙️</span>Site Settings</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-head"><h3><span class="settings-modal-head-icon">⚙️</span>Site Settings</h3><button class="modal-close" onclick="cancelSettingsModal()">&times;</button></div>
       <div class="modal-body">
 
         <div class="settings-preview-card" id="settingsPreviewCard">
-          <div class="swatch-big" id="settingsPreviewSwatch" style="background:${(ACCENT_PALETTES[APP.settings.accentColor]||ACCENT_PALETTES.pink).main};"></div>
+          <div class="swatch-big" id="settingsPreviewSwatch" style="background:${isCustomAccent ? APP.settings.customAccentHex : (ACCENT_PALETTES[APP.settings.accentColor]||ACCENT_PALETTES.pink).main};"></div>
           <div class="txt">
             <div class="n" id="settingsPreviewName">${escapeHtml(APP.settings.siteName)}</div>
             <div class="t" id="settingsPreviewTagline">${escapeHtml(APP.settings.siteTagline||'')}</div>
           </div>
         </div>
 
-        <div class="settings-section-label">🏷️ General</div>
-        <div class="field"><label>Site Name</label><input id="st-name" value="${escapeHtml(APP.settings.siteName)}" oninput="document.getElementById('settingsPreviewName').textContent=this.value"></div>
-        <div class="field"><label>Tagline</label><textarea id="st-tagline" oninput="document.getElementById('settingsPreviewTagline').textContent=this.value">${escapeHtml(APP.settings.siteTagline)}</textarea></div>
-        <div class="field">
-          <label>Accent Color</label>
-          <select id="st-color" onchange="pickSettingsAccent(this.value)">
-            ${Object.keys(ACCENT_PALETTES).map(c => `<option value="${c}" ${APP.settings.accentColor === c ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
-          </select>
-          <div class="accent-swatch-row">${swatchRow}</div>
+        <div class="settings-tabs" id="settingsSectionTabs">
+          <button class="settings-tab-btn active" data-sec="general" onclick="showSettingsSection('general')">🏷️ General</button>
+          <button class="settings-tab-btn" data-sec="appearance" onclick="showSettingsSection('appearance')">🎨 Appearance</button>
+          <button class="settings-tab-btn" data-sec="lists" onclick="showSettingsSection('lists')">📋 Lists</button>
+          <button class="settings-tab-btn" data-sec="community" onclick="showSettingsSection('community')">💬 Community</button>
         </div>
 
-        <div class="settings-section-label">📋 List Configuration</div>
-        <div class="form-grid">
+        <div class="settings-section" data-sec-panel="general">
+          <div class="field"><label>Site Name</label><input id="st-name" value="${escapeHtml(APP.settings.siteName)}" oninput="document.getElementById('settingsPreviewName').textContent=this.value"></div>
+          <div class="field"><label>Tagline</label><textarea id="st-tagline" oninput="document.getElementById('settingsPreviewTagline').textContent=this.value">${escapeHtml(APP.settings.siteTagline)}</textarea></div>
+        </div>
+
+        <div class="settings-section" data-sec-panel="appearance" style="display:none;">
+          <input type="hidden" id="st-accent-mode" value="${isCustomAccent ? 'custom':'preset'}">
           <div class="field">
-            <label>Main List Size</label>
-            <input id="st-mainsize" type="number" min="1" value="${APP.settings.mainListSize||50}">
-            <div class="hint">Below this position, demons fall into the Extended List.</div>
+            <label>Accent Color</label>
+            <select id="st-color" onchange="pickSettingsAccent(this.value)">
+              ${Object.keys(ACCENT_PALETTES).map(c => `<option value="${c}" ${(!isCustomAccent && APP.settings.accentColor === c) ? 'selected' : ''}>${c.charAt(0).toUpperCase() + c.slice(1)}</option>`).join('')}
+            </select>
+            <div class="accent-swatch-row">${swatchRow}</div>
           </div>
           <div class="field">
-            <label>Extended List Size</label>
-            <input id="st-extsize" type="number" min="1" value="${APP.settings.extendedListSize||100}">
-            <div class="hint">Below this position, demons fall into the Legacy List.</div>
+            <label>Or pick any custom accent</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="color" id="st-customaccent" value="${APP.settings.customAccentHex || '#ff3b6b'}" oninput="useCustomAccent(this.value)" style="width:42px;height:32px;padding:2px;border-radius:8px;cursor:pointer;border:1px solid var(--line);background:none;">
+              <span class="hint">Overrides the preset above the moment you touch it.</span>
+            </div>
+          </div>
+
+          <label class="field" style="flex-direction:row;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="st-override-appearance" ${hasOverride?'checked':''} onchange="previewSettingsAppearance()" style="width:auto;">
+            <span style="font-size:12px;color:var(--text-muted);font-weight:600;">Override background, text, radius & font</span>
+          </label>
+          <div class="form-grid">
+            <div class="field"><label>Background</label><input type="color" id="st-bgvoid" value="${defVal('bgVoid','--bg-void','#08090c')}" oninput="previewSettingsAppearance()" style="height:36px;padding:2px;cursor:pointer;"></div>
+            <div class="field"><label>Panel Color</label><input type="color" id="st-bgpanel" value="${defVal('bgPanel','--bg-panel','#11131a')}" oninput="previewSettingsAppearance()" style="height:36px;padding:2px;cursor:pointer;"></div>
+            <div class="field"><label>Raised / Card Color</label><input type="color" id="st-bgraised" value="${defVal('bgRaised','--bg-raised','#171a24')}" oninput="previewSettingsAppearance()" style="height:36px;padding:2px;cursor:pointer;"></div>
+            <div class="field"><label>Text Color</label><input type="color" id="st-textcolor" value="${defVal('text','--text','#e4e6eb')}" oninput="previewSettingsAppearance()" style="height:36px;padding:2px;cursor:pointer;"></div>
+          </div>
+          <div class="field">
+            <label>Corner Roundness — <span id="st-radius-label">${curRadius}px</span></label>
+            <input type="range" id="st-radius" min="0" max="28" value="${curRadius}" oninput="previewSettingsAppearance()">
+          </div>
+          <div class="field">
+            <label>Font</label>
+            <select id="st-font" onchange="previewSettingsAppearance()">${fontOptionsHtml}</select>
+          </div>
+          <div class="settings-section-label" style="margin-top:14px;">🧬 Custom CSS <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);">(advanced — edits any part of the site)</span></div>
+          <div class="field">
+            <textarea id="st-customcss" class="mono" placeholder="/* e.g. */&#10;.demon-row:hover{ background:#222 !important; }" style="min-height:140px;font-size:12px;" oninput="previewSettingsAppearance()">${escapeHtml(APP.settings.customCSS||'')}</textarea>
+            <div class="hint">Live-previewed as you type. Nothing is saved until you click Save Changes.</div>
+          </div>
+          <button class="btn small ghost" type="button" onclick="resetAppearanceDefaults()">Reset appearance to default</button>
+        </div>
+
+        <div class="settings-section" data-sec-panel="lists" style="display:none;">
+          <div class="form-grid">
+            <div class="field">
+              <label>Main List Size</label>
+              <input id="st-mainsize" type="number" min="1" value="${APP.settings.mainListSize||50}">
+              <div class="hint">Below this position, demons fall into the Extended List.</div>
+            </div>
+            <div class="field">
+              <label>Extended List Size</label>
+              <input id="st-extsize" type="number" min="1" value="${APP.settings.extendedListSize||100}">
+              <div class="hint">Below this position, demons fall into the Legacy List.</div>
+            </div>
           </div>
         </div>
 
-        <div class="settings-section-label">💬 Community</div>
-        <div class="field">
-          <label>Discord Invite URL <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label>
-          <input id="st-discord" value="${escapeHtml(APP.settings.discordUrl||'')}" placeholder="https://discord.gg/...">
-          <div class="hint">Shows a Discord button in the sidebar when set.</div>
+        <div class="settings-section" data-sec-panel="community" style="display:none;">
+          <div class="field">
+            <label>Discord Invite URL <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label>
+            <input id="st-discord" value="${escapeHtml(APP.settings.discordUrl||'')}" placeholder="https://discord.gg/...">
+            <div class="hint">Shows a Discord button in the sidebar when set.</div>
+          </div>
+          <button class="btn small ghost" type="button" onclick="closeModal();openManageTabsModal();">🗂️ Manage Tabs & Navigation</button>
         </div>
+
       </div>
       <div class="modal-foot">
-        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn ghost" onclick="cancelSettingsModal()">Cancel</button>
         <button class="btn primary" onclick="handleSaveSettings()">Save Changes</button>
       </div>
     </div>
   </div>`);
 }
 
+function showSettingsSection(sec){
+  document.querySelectorAll('#settingsSectionTabs .settings-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.sec===sec));
+  document.querySelectorAll('[data-sec-panel]').forEach(p => p.style.display = (p.dataset.secPanel===sec) ? '' : 'none');
+}
+
+function resetAppearanceDefaults(){
+  const ov = document.getElementById('st-override-appearance'); if(ov) ov.checked = false;
+  const modeInput = document.getElementById('st-accent-mode'); if(modeInput) modeInput.value = 'preset';
+  pickSettingsAccent('pink');
+  previewSettingsAppearance();
+}
+
 function pickSettingsAccent(color){
+  const modeInput = document.getElementById('st-accent-mode'); if(modeInput) modeInput.value = 'preset';
   const select = document.getElementById('st-color');
   if(select) select.value = color;
   document.querySelectorAll('.accent-swatch').forEach(el => el.classList.toggle('active', el.dataset.accent === color));
-  const theme = ACCENT_PALETTES[color] || ACCENT_PALETTES.pink;
-  const swatch = document.getElementById('settingsPreviewSwatch');
-  if(swatch) swatch.style.background = theme.main;
+  previewSettingsAppearance();
+}
+function useCustomAccent(hex){
+  const modeInput = document.getElementById('st-accent-mode'); if(modeInput) modeInput.value = 'custom';
+  document.querySelectorAll('.accent-swatch').forEach(el => el.classList.remove('active'));
+  previewSettingsAppearance();
 }
 
 async function handleSaveSettings(){
   const name = document.getElementById('st-name').value.trim();
   const tagline = document.getElementById('st-tagline').value.trim();
-  const accent = document.getElementById('st-color').value;
   const mainListSize = parseInt(document.getElementById('st-mainsize').value) || 50;
   const extendedListSize = parseInt(document.getElementById('st-extsize').value) || 100;
   const discordUrl = document.getElementById('st-discord').value.trim();
+  const accentMode = document.getElementById('st-accent-mode').value;
+  const override = document.getElementById('st-override-appearance').checked;
 
   if(!name) return;
   APP.settings.siteName = name;
   APP.settings.siteTagline = tagline;
-  APP.settings.accentColor = accent;
+  if(accentMode === 'custom'){
+    APP.settings.accentColor = 'custom';
+    APP.settings.customAccentHex = document.getElementById('st-customaccent').value;
+  } else {
+    APP.settings.accentColor = document.getElementById('st-color').value;
+    APP.settings.customAccentHex = '';
+  }
+  APP.settings.customTheme = override ? {
+    bgVoid: document.getElementById('st-bgvoid').value,
+    bgPanel: document.getElementById('st-bgpanel').value,
+    bgRaised: document.getElementById('st-bgraised').value,
+    text: document.getElementById('st-textcolor').value,
+    radius: document.getElementById('st-radius').value,
+    font: document.getElementById('st-font').value
+  } : {};
+  APP.settings.customCSS = document.getElementById('st-customcss').value;
   APP.settings.mainListSize = Math.max(1, mainListSize);
   APP.settings.extendedListSize = Math.max(APP.settings.mainListSize, extendedListSize);
   APP.settings.discordUrl = discordUrl;
