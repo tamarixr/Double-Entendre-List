@@ -498,6 +498,36 @@ body.sidebar-collapsed .footer-note{margin-left:0;}
 .accent-swatch:hover{transform:scale(1.12);}
 .accent-swatch.active{border-color:var(--text);box-shadow:0 0 0 2px var(--bg-panel),0 0 0 4px var(--text-dim);}
 .accent-swatch.active::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.5);}
+
+/* ---------- theme preset picker ---------- */
+.theme-preset-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.theme-preset-swatch{
+  width:76px;cursor:pointer;border:2px solid transparent;border-radius:var(--radius-sm);
+  padding:4px;transition:transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  text-align:center;
+}
+.theme-preset-swatch:hover{transform:translateY(-2px);}
+.theme-preset-swatch.active{border-color:var(--spike);box-shadow:var(--shadow-md);}
+.tps-colors{width:100%;height:36px;border-radius:6px;border:1px solid var(--line);}
+.tps-label{font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.2;font-weight:600;}
+.theme-preset-swatch.active .tps-label{color:var(--spike);}
+
+/* ---------- victors: edit affordances ---------- */
+.victor-row{position:relative;}
+.victor-actions{display:flex;gap:4px;flex:none;opacity:0;transition:opacity .12s ease;}
+.demon-row.victor-row:hover .victor-actions{opacity:1;}
+.victor-actions button{padding:3px 7px;font-size:11px;}
+
+/* ---------- general polish: smoother interactive feel ---------- */
+.btn, .icon-btn, .tag-chip, .accent-swatch, .theme-preset-swatch, .demon-row, .stat-card{
+  transition:transform .14s ease, box-shadow .14s ease, background .14s ease, border-color .14s ease, opacity .14s ease;
+}
+.btn:active{transform:scale(.97);}
+.btn.primary:hover{box-shadow:0 0 0 3px var(--spike-shadow);}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+.demon-row:hover{background:var(--bg-raised-2);}
+.panel{box-shadow:var(--shadow-sm);}
+.modal{box-shadow:var(--shadow-xl);}
 .settings-modal-head-icon{font-size:18px;margin-right:2px;}
 .settings-modal .modal{max-width:520px;}
 .settings-preview-card{
@@ -1462,6 +1492,38 @@ const FONT_OPTIONS = {
   outfit: { label:'Outfit', family:"'Outfit',sans-serif", google:'Outfit:wght@400;500;600;700' },
   manrope: { label:'Manrope', family:"'Manrope',sans-serif", google:'Manrope:wght@400;500;600;700' }
 };
+/* ============================= THEME PRESETS ============================= */
+/* One-click full-theme bundles: accent + background/panel/text colors + radius + font.
+   Selecting one just fills the existing Appearance fields, so it saves and persists
+   through the normal settings flow (storageSet -> Redis -> site_settings). */
+const THEME_PRESETS = {
+  classicSpike: { label:'Classic Spike', swatch:['#08090c','#ff3b6b'], mode:'dark', accent:'pink', bgVoid:'#08090c', bgPanel:'#11131a', bgRaised:'#171a24', text:'#e4e6eb', radius:14, font:'inter' },
+  midnightOcean: { label:'Midnight Ocean', swatch:['#060c14','#3b82f6'], mode:'dark', accent:'blue', bgVoid:'#060c14', bgPanel:'#0c1622', bgRaised:'#12202f', text:'#dbeafe', radius:14, font:'sora' },
+  neonArcade: { label:'Neon Arcade', swatch:['#0a0518','#a855f7'], mode:'dark', accent:'purple', bgVoid:'#0a0518', bgPanel:'#140a26', bgRaised:'#1c1136', text:'#efe4ff', radius:18, font:'spacegrotesk' },
+  emeraldForest: { label:'Emerald Forest', swatch:['#070f0b','#22c55e'], mode:'dark', accent:'green', bgVoid:'#070f0b', bgPanel:'#0c1712', bgRaised:'#12211a', text:'#e2f7ea', radius:12, font:'manrope' },
+  sunsetBlaze: { label:'Sunset Blaze', swatch:['#140905','#f97316'], mode:'dark', accent:'orange', bgVoid:'#140905', bgPanel:'#1d0f08', bgRaised:'#28160d', text:'#ffe9d9', radius:16, font:'outfit' },
+  cyberCyan: { label:'Cyber Cyan', swatch:['#050b0d','#06b6d4'], mode:'dark', accent:'cyan', bgVoid:'#050b0d', bgPanel:'#081418', bgRaised:'#0d1e24', text:'#dffaff', radius:10, font:'spacegrotesk' },
+  blackout: { label:'Pure Blackout', swatch:['#000000','#ff4a4a'], mode:'dark', accent:'red', bgVoid:'#000000', bgPanel:'#0a0a0a', bgRaised:'#141414', text:'#f2f2f2', radius:8, font:'inter' },
+  daylight: { label:'Daylight', swatch:['#f3f4f6','#ff3b6b'], mode:'light', accent:'pink', bgVoid:'#f3f4f6', bgPanel:'#ffffff', bgRaised:'#f9fafb', text:'#111827', radius:14, font:'poppins' },
+  softLavender: { label:'Soft Lavender', swatch:['#f5f2fb','#a855f7'], mode:'light', accent:'purple', bgVoid:'#f5f2fb', bgPanel:'#ffffff', bgRaised:'#f1eafb', text:'#241b33', radius:16, font:'manrope' }
+};
+function applyThemePreset(key){
+  const p = THEME_PRESETS[key];
+  if(!p) return;
+  APP.settings.themeMode = p.mode;
+  document.body.classList.toggle('light-theme', p.mode==='light');
+  const modeInput = document.getElementById('st-accent-mode'); if(modeInput) modeInput.value = 'preset';
+  const colorSel = document.getElementById('st-color'); if(colorSel) colorSel.value = p.accent;
+  document.querySelectorAll('.accent-swatch').forEach(el => el.classList.toggle('active', el.dataset.accent === p.accent));
+  const ov = document.getElementById('st-override-appearance'); if(ov) ov.checked = true;
+  const set = (id,val) => { const el = document.getElementById(id); if(el) el.value = val; };
+  set('st-bgvoid', p.bgVoid); set('st-bgpanel', p.bgPanel); set('st-bgraised', p.bgRaised); set('st-textcolor', p.text);
+  set('st-radius', p.radius);
+  const rl = document.getElementById('st-radius-label'); if(rl) rl.textContent = p.radius + 'px';
+  set('st-font', p.font);
+  document.querySelectorAll('.theme-preset-swatch').forEach(el => el.classList.toggle('active', el.dataset.preset === key));
+  previewSettingsAppearance();
+}
 function applyCustomFont(key){
   const opt = FONT_OPTIONS[key] || FONT_OPTIONS.inter;
   let link = document.getElementById('staffFontLink');
@@ -2164,6 +2226,7 @@ function renderAdminTab(){
       <button class="btn small ghost" onclick="openEditStaticPage('faqContent','FAQ')">Edit FAQ</button>
       <button class="btn small ghost" onclick="openEditStaticPage('guidelinesContent','Guidelines')">Edit Guidelines</button>
       <button class="btn small ghost" onclick="openManageTabsModal()">🗂️ Manage Tabs${customTabs().length?` (${customTabs().length})`:''}</button>
+      <button class="btn small ghost" onclick="openDataEditorModal()">🛠️ Advanced Data Editor</button>
     </div>
     <div class="list-layout">
       <div class="panel">
@@ -2177,6 +2240,81 @@ function renderAdminTab(){
       </div>
     </div>
   `;
+}
+
+/* ============================= ADVANCED DATA EDITOR (edit any part of the site directly) ============================= */
+const DATA_EDITOR_FIELDS = {
+  demons: { label: 'Demons (Main List)', appKey: 'demons', save: saveDemons },
+  challenges: { label: 'Challenges', appKey: 'challenges', save: saveChallenges },
+  platformers: { label: 'Platformer Demons', appKey: 'platformers', save: savePlatformers },
+  players: { label: 'Players', appKey: 'players', save: savePlayers },
+  submissions: { label: 'Play Submissions / Victors', appKey: 'submissions', save: saveSubmissions },
+  level_submissions: { label: 'Level Submissions', appKey: 'levelSubmissions', save: saveLevelSubmissions },
+  upcoming: { label: 'Upcoming Levels', appKey: 'upcoming', save: saveUpcoming },
+  registered_users: { label: 'Registered Users', appKey: 'registeredUsers', save: saveUsers },
+  profiles: { label: 'Profiles', appKey: 'profiles', save: saveProfiles },
+  site_settings: { label: 'Site Settings', appKey: 'settings', save: saveSettings },
+  chat_messages: { label: 'Chat Messages', appKey: 'chatMessages', save: saveChat },
+  changelog: { label: 'Changelog / Mod Log', appKey: 'changelog', save: saveChangelogStore },
+  snapshots: { label: 'Time Machine Snapshots', appKey: 'snapshots', save: saveSnapshots }
+};
+function openDataEditorModal(preselect){
+  if(!isAdmin()) return;
+  const key = preselect || 'demons';
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal" style="max-width:720px;">
+      <div class="modal-head"><h3>🛠️ Advanced Data Editor</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="field">
+          <label>Data set</label>
+          <select id="de-key" onchange="loadDataEditorField(this.value)">
+            ${Object.keys(DATA_EDITOR_FIELDS).map(k => `<option value="${k}" ${k===key?'selected':''}>${escapeHtml(DATA_EDITOR_FIELDS[k].label)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label>Raw JSON <span style="color:var(--text-dim);font-weight:400;">(edit directly — this powers every part of the site)</span></label>
+          <textarea id="de-json" class="mono" style="min-height:340px;font-size:12px;" spellcheck="false"></textarea>
+        </div>
+        <div class="hint" id="de-hint" style="color:var(--text-dim);">Be careful: invalid JSON or a broken structure can break the site for everyone. Consider copying the current value somewhere safe before making big edits.</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveDataEditorField()">Save to Site</button>
+      </div>
+    </div>
+  </div>`);
+  loadDataEditorField(key);
+}
+function loadDataEditorField(key){
+  const def = DATA_EDITOR_FIELDS[key];
+  const ta = document.getElementById('de-json');
+  if(!def || !ta) return;
+  ta.value = JSON.stringify(APP[def.appKey], null, 2);
+}
+async function saveDataEditorField(){
+  const key = document.getElementById('de-key').value;
+  const def = DATA_EDITOR_FIELDS[key];
+  const hint = document.getElementById('de-hint');
+  if(!def) return;
+  let parsed;
+  try{
+    parsed = JSON.parse(document.getElementById('de-json').value);
+  }catch(e){
+    if(hint){ hint.style.color = 'var(--red)'; hint.textContent = 'Invalid JSON: ' + e.message; }
+    return;
+  }
+  APP[def.appKey] = parsed;
+  try{
+    await def.save();
+  }catch(e){
+    if(hint){ hint.style.color = 'var(--red)'; hint.textContent = 'Save failed: ' + e.message; }
+    return;
+  }
+  logChange(`Admin directly edited raw "${def.label}" data`, true);
+  closeModal();
+  renderAll();
+  showToast(`${def.label} saved`);
 }
 
 /* ============================= CUSTOM STAFF TABS ============================= */
@@ -2929,6 +3067,16 @@ function openAdminSettingsModal() {
 
         <div class="settings-section" data-sec-panel="appearance" style="display:none;">
           <input type="hidden" id="st-accent-mode" value="${isCustomAccent ? 'custom':'preset'}">
+          <div class="field">
+            <label>🎨 Theme Presets <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-dim);">(one click, edits everything below)</span></label>
+            <div class="theme-preset-row">
+              ${Object.keys(THEME_PRESETS).map(k => { const p = THEME_PRESETS[k]; return `
+              <div class="theme-preset-swatch" data-preset="${k}" title="${escapeHtml(p.label)}" onclick="applyThemePreset('${k}')">
+                <div class="tps-colors" style="background:linear-gradient(135deg, ${p.swatch[0]} 50%, ${p.swatch[1]} 50%);"></div>
+                <div class="tps-label">${escapeHtml(p.label)}</div>
+              </div>`; }).join('')}
+            </div>
+          </div>
           <div class="field">
             <label>Accent Color</label>
             <select id="st-color" onchange="pickSettingsAccent(this.value)">
@@ -3851,11 +3999,10 @@ function renderDemonDetail(d, index){
       ${progressAttempts.map(s => `<div class="demon-row" style="cursor:default;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)} · below requirement</div></div><div class="pts">${s.percent}%</div></div>`).join('')}
     </div>` : '';
   const ratingTag = (label,val) => val ? `<span class="tag-pill" style="font-size:10px;padding:1px 5px;" title="${label} rating">${label} ${val}/10</span>` : '';
-  const recordsHtml = records.length ? `
-    <div class="panel-head" style="margin-top:16px;"><h3>Victors (${records.length})</h3></div>
-    <div class="demon-rows" style="max-height:none;">
-      ${records.map(s => `<div class="demon-row" style="cursor:default;height:auto;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)}${s.attempts?` · ${s.attempts} attempts`:''}${s.video ? ` · <a href="${escapeHtml(s.video)}" target="_blank" style="color:var(--cyan);">Watch ↗</a>` : ''}</div>${(s.enjoymentRating||s.decoRating||s.gameplayRating) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${ratingTag('Enjoy',s.enjoymentRating)}${ratingTag('Deco',s.decoRating)}${ratingTag('Gameplay',s.gameplayRating)}</div>` : ''}</div><div class="pts">${s.percent}%</div></div>`).join('')}
-    </div>` : '';
+  const victorRow = s => `<div class="demon-row victor-row" style="cursor:default;height:auto;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)}${s.attempts?` · ${s.attempts} attempts`:''}${s.video ? ` · <a href="${escapeHtml(s.video)}" target="_blank" style="color:var(--cyan);">Watch ↗</a>` : ''}</div>${(s.enjoymentRating||s.decoRating||s.gameplayRating) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${ratingTag('Enjoy',s.enjoymentRating)}${ratingTag('Deco',s.decoRating)}${ratingTag('Gameplay',s.gameplayRating)}</div>` : ''}</div><div class="pts">${s.percent}%</div>${isMod() ? `<div class="victor-actions"><button class="btn small ghost" onclick="event.stopPropagation();openVictorModal('demon','${d.id}','${s.id}')" title="Edit victor">✏️</button><button class="btn small danger" onclick="event.stopPropagation();deleteVictor('${s.id}')" title="Remove victor">✕</button></div>` : ''}</div>`;
+  const recordsHtml = `
+    <div class="panel-head" style="margin-top:16px;"><h3>Victors (${records.length})</h3>${isMod() ? `<button class="btn small ghost" onclick="openVictorModal('demon','${d.id}')">+ Add Victor</button>` : ''}</div>
+    ${records.length ? `<div class="demon-rows" style="max-height:none;">${records.map(victorRow).join('')}</div>` : `<div class="hint" style="padding:8px 0;">No victors yet — be the first to submit a play for this level.</div>`}`;
 
   const changelogEntries = (d.levelChangelog||[]).slice().reverse();
   const changelogHtml = `
@@ -4380,11 +4527,10 @@ function renderGenericDetail(kind, d, index){
 
   const ratingTag = (label,val) => val ? `<span class="tag-pill" style="font-size:10px;padding:1px 5px;" title="${label} rating">${label} ${val}/10</span>` : '';
   const records = APP.submissions.filter(s=>s.demonId===d.id && s.listKind===kind && s.status==='approved' && s.type!=='progress').slice().sort((a,b)=>(b.percent-a.percent) || (a.submittedAt-b.submittedAt));
-  const recordsHtml = records.length ? `
-    <div class="panel-head" style="margin-top:16px;"><h3>Victors (${records.length})</h3></div>
-    <div class="demon-rows" style="max-height:none;">
-      ${records.map(s => `<div class="demon-row" style="cursor:default;height:auto;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)}${s.attempts?` · ${s.attempts} attempts`:''}${s.video ? ` · <a href="${escapeHtml(s.video)}" target="_blank" style="color:var(--cyan);">Watch ↗</a>` : ''}</div>${(s.enjoymentRating||s.decoRating||s.gameplayRating) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${ratingTag('Enjoy',s.enjoymentRating)}${ratingTag('Deco',s.decoRating)}${ratingTag('Gameplay',s.gameplayRating)}</div>` : ''}</div><div class="pts">${s.percent}%</div></div>`).join('')}
-    </div>` : `<div class="hint" style="padding:8px 0;">No victors yet — be the first to submit a play for this level.</div>`;
+  const victorRow = s => `<div class="demon-row victor-row" style="cursor:default;height:auto;"><div class="info"><div class="name">${escapeHtml(s.player)}</div><div class="creator">${flagEmoji(s.country)}${s.attempts?` · ${s.attempts} attempts`:''}${s.video ? ` · <a href="${escapeHtml(s.video)}" target="_blank" style="color:var(--cyan);">Watch ↗</a>` : ''}</div>${(s.enjoymentRating||s.decoRating||s.gameplayRating) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px;">${ratingTag('Enjoy',s.enjoymentRating)}${ratingTag('Deco',s.decoRating)}${ratingTag('Gameplay',s.gameplayRating)}</div>` : ''}</div><div class="pts">${s.percent}%</div>${isMod() ? `<div class="victor-actions"><button class="btn small ghost" onclick="event.stopPropagation();openVictorModal('${kind}','${d.id}','${s.id}')" title="Edit victor">✏️</button><button class="btn small danger" onclick="event.stopPropagation();deleteVictor('${s.id}')" title="Remove victor">✕</button></div>` : ''}</div>`;
+  const recordsHtml = `
+    <div class="panel-head" style="margin-top:16px;"><h3>Victors (${records.length})</h3>${isMod() ? `<button class="btn small ghost" onclick="openVictorModal('${kind}','${d.id}')">+ Add Victor</button>` : ''}</div>
+    ${records.length ? `<div class="demon-rows" style="max-height:none;">${records.map(victorRow).join('')}</div>` : `<div class="hint" style="padding:8px 0;">No victors yet — be the first to submit a play for this level.</div>`}`;
 
   return `
     ${banner ? `<div class="detail-banner"><img src="${escapeHtml(banner)}" alt="${escapeHtml(d.name)} thumbnail" onerror="this.parentElement.style.display='none'"></div>` : ''}
@@ -5891,11 +6037,9 @@ async function reviewSubmission(id, status, silent){
       const prev = player.progressBests[s.demonId] || 0;
       if(s.percent > prev) player.progressBests[s.demonId] = s.percent;
     } else if(demon){
-      let awarded = demon.points;
-      if(demon.requirement2 && s.percent < (demon.requirement||100) && s.percent >= demon.requirement2){
-        awarded = demon.points2 || 0;
-      }
+      const awarded = computeAwardedPoints(demon, s.percent);
       player.points += awarded;
+      s.awardedPoints = awarded;
     }
     if(!silent) await savePlayers();
     if(demon && s.enjoymentRating){
@@ -5911,6 +6055,117 @@ async function reviewSubmission(id, status, silent){
     renderAll();
     showToast(status==='approved' ? 'Submission approved' : 'Submission rejected', status==='approved'?'ok':'error');
   }
+}
+
+/* ============================= VICTORS: DIRECT MOD/ADMIN EDITING ============================= */
+function computeAwardedPoints(demon, percent){
+  if(!demon) return 0;
+  let awarded = demon.points || 0;
+  if(demon.requirement2 && percent < (demon.requirement||100) && percent >= demon.requirement2){
+    awarded = demon.points2 || 0;
+  }
+  return awarded;
+}
+function openVictorModal(kind, demonId, id){
+  if(!isMod()) return;
+  const s = id ? APP.submissions.find(x=>x.id===id) : null;
+  const demon = getListArrayByKind(kind).find(d=>d.id===demonId);
+  openModal(`
+  <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+    <div class="modal">
+      <div class="modal-head"><h3>${s ? 'Edit Victor' : 'Add Victor'}${demon ? ' — '+escapeHtml(demon.name) : ''}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="field"><label>Player</label><input id="vc-player" value="${s?escapeHtml(s.player):''}" placeholder="Player name"></div>
+          <div class="field"><label>Country</label><select id="vc-country">${countryOptions(s?s.country:'OTHER')}</select></div>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label>Percent</label><input id="vc-percent" type="number" min="1" max="100" value="${s?s.percent:(demon?demon.requirement||100:100)}"></div>
+          <div class="field"><label>Attempts <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label><input id="vc-attempts" type="number" min="0" value="${s&&s.attempts?s.attempts:''}"></div>
+        </div>
+        <div class="field"><label>Video URL <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label><input id="vc-video" value="${s?escapeHtml(s.video||''):''}" placeholder="https://youtube.com/..."></div>
+        <div class="form-grid">
+          <div class="field"><label>Enjoyment (1-10)</label><input id="vc-enjoy" type="number" min="1" max="10" value="${s&&s.enjoymentRating?s.enjoymentRating:''}"></div>
+          <div class="field"><label>Deco (1-10)</label><input id="vc-deco" type="number" min="1" max="10" value="${s&&s.decoRating?s.decoRating:''}"></div>
+          <div class="field"><label>Gameplay (1-10)</label><input id="vc-gameplay" type="number" min="1" max="10" value="${s&&s.gameplayRating?s.gameplayRating:''}"></div>
+        </div>
+        <div class="hint">Adding or editing a victor here directly updates the player's leaderboard points based on this level's point value.</div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveVictorForm('${kind}','${demonId}'${s?`,'${s.id}'`:''})">${s?'Save Changes':'Add Victor'}</button>
+      </div>
+    </div>
+  </div>`);
+}
+async function saveVictorForm(kind, demonId, id){
+  const playerName = document.getElementById('vc-player').value.trim();
+  if(!playerName) return;
+  const country = document.getElementById('vc-country').value;
+  const percent = Math.max(1, Math.min(100, parseInt(document.getElementById('vc-percent').value) || 100));
+  const attempts = parseInt(document.getElementById('vc-attempts').value) || 0;
+  const video = document.getElementById('vc-video').value.trim();
+  const enjoymentRating = parseInt(document.getElementById('vc-enjoy').value) || 0;
+  const decoRating = parseInt(document.getElementById('vc-deco').value) || 0;
+  const gameplayRating = parseInt(document.getElementById('vc-gameplay').value) || 0;
+
+  const demon = getListArrayByKind(kind).find(d=>d.id===demonId);
+  const newAwarded = computeAwardedPoints(demon, percent);
+
+  let s = id ? APP.submissions.find(x=>x.id===id) : null;
+  if(s && s.type!=='progress' && s.awardedPoints){
+    const oldPlayer = APP.players.find(p=>p.name.toLowerCase()===s.player.toLowerCase());
+    if(oldPlayer) oldPlayer.points = Math.max(0, (oldPlayer.points||0) - s.awardedPoints);
+  }
+  if(!s){
+    s = { id: uid(), listKind: kind, demonId, type: 'record', status: 'approved', submittedAt: Date.now() };
+    APP.submissions.push(s);
+  }
+  s.player = playerName; s.country = country; s.percent = percent;
+  if(attempts) s.attempts = attempts; else delete s.attempts;
+  if(video) s.video = video; else delete s.video;
+  if(enjoymentRating) s.enjoymentRating = enjoymentRating; else delete s.enjoymentRating;
+  if(decoRating) s.decoRating = decoRating; else delete s.decoRating;
+  if(gameplayRating) s.gameplayRating = gameplayRating; else delete s.gameplayRating;
+  s.status = 'approved';
+  s.awardedPoints = newAwarded;
+
+  let player = APP.players.find(p=>p.name.toLowerCase()===playerName.toLowerCase());
+  if(!player){
+    player = { id: uid(), name: playerName, country: country||'OTHER', points: 0, addedAt: Date.now() };
+    APP.players.push(player);
+  }
+  player.points = (player.points||0) + newAwarded;
+
+  if(demon && enjoymentRating){
+    if(!demon.enjoymentRatings) demon.enjoymentRatings = {};
+    demon.enjoymentRatings[playerName.toLowerCase()] = enjoymentRating;
+    await saveDemons();
+  }
+
+  await savePlayers();
+  await saveSubmissions();
+  logChange(`${playerName}'s victor entry on "${demon?demon.name:'a level'}" was ${id?'edited':'added'} by a moderator`, true);
+  closeModal();
+  renderAll();
+  showToast('Victor saved');
+}
+async function deleteVictor(id){
+  if(!isMod()) return;
+  const s = APP.submissions.find(x=>x.id===id);
+  if(!s) return;
+  if(!confirm(`Remove ${s.player}'s victor entry? This will also remove any points it awarded.`)) return;
+  if(s.type!=='progress' && s.awardedPoints){
+    const player = APP.players.find(p=>p.name.toLowerCase()===s.player.toLowerCase());
+    if(player) player.points = Math.max(0, (player.points||0) - s.awardedPoints);
+    await savePlayers();
+  }
+  APP.submissions = APP.submissions.filter(x=>x.id!==id);
+  await saveSubmissions();
+  logChange(`${s.player}'s victor entry was removed by a moderator`, true);
+  closeModal();
+  renderAll();
+  showToast('Victor removed', 'ok');
 }
 
 /* ============================= SUBMIT LEVEL TAB (community level submissions for any list) ============================= */
