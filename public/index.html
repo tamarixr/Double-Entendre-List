@@ -898,6 +898,212 @@ body,.sidebar,.panel,.bg-raised,.stat-card,.demon-row,.upcoming-card,.modal{
 .modal{box-shadow:0 24px 70px rgba(0,0,0,0.5), 0 0 0 1px var(--line);}
 
 ::-moz-selection{background:var(--spike);color:#fff;}
+
+/* =========================================================================
+   HYPER POLISH PASS v2 — atmosphere, depth, motion, and refined detail
+   Everything below is additive: it layers on top of the existing design
+   system, never touches markup/JS, and respects prefers-reduced-motion.
+   ========================================================================= */
+
+@keyframes auroraDrift{
+  0%,100%{ transform:translate3d(0,0,0) scale(1); }
+  33%{ transform:translate3d(2%, -3%, 0) scale(1.06); }
+  66%{ transform:translate3d(-3%, 2%, 0) scale(1.03); }
+}
+@keyframes shimmerSweep{
+  0%{ background-position:200% 0; }
+  100%{ background-position:-200% 0; }
+}
+@keyframes spinGrad{ to{ transform:rotate(360deg); } }
+@keyframes floatY{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-4px); } }
+@keyframes popIn{
+  0%{ opacity:0; transform:scale(.94) translateY(6px); }
+  100%{ opacity:1; transform:scale(1) translateY(0); }
+}
+@keyframes rowIn{
+  0%{ opacity:0; transform:translateX(-6px); }
+  100%{ opacity:1; transform:translateX(0); }
+}
+@keyframes ringSpin{ to{ transform:rotate(360deg); } }
+@keyframes toastSlide{
+  0%{ opacity:0; transform:translateY(10px) scale(.96); }
+  60%{ opacity:1; }
+  100%{ opacity:1; transform:translateY(0) scale(1); }
+}
+@keyframes glowPulse{
+  0%,100%{ box-shadow:0 0 0 0 var(--spike-shadow); }
+  50%{ box-shadow:0 0 0 5px transparent; }
+}
+
+/* ---------- atmosphere: quiet animated backdrop ---------- */
+body{ position:relative; isolation:isolate; }
+body::before{
+  content:'';position:fixed;inset:-10%;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(640px 420px at 8% 0%, rgba(255,59,107,0.10), transparent 60%),
+    radial-gradient(560px 380px at 96% 12%, rgba(79,216,255,0.08), transparent 60%),
+    radial-gradient(700px 460px at 40% 100%, rgba(255,184,69,0.06), transparent 60%);
+  animation:auroraDrift 22s ease-in-out infinite;
+  opacity:.9;
+}
+body.light-theme::before{ opacity:.5; }
+main, .footer-note{ position:relative; z-index:1; }
+
+/* crisper scrollbar with gradient thumb */
+::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg, var(--text-dim), var(--line));
+  border-radius:20px;
+}
+::-webkit-scrollbar-thumb:hover{ background:linear-gradient(180deg, var(--spike), var(--spike-hover)); }
+
+/* ---------- typography rhythm ---------- */
+.page-title{
+  letter-spacing:-0.02em;
+  background-size:200% auto;
+}
+.page-head{ animation:popIn .35s cubic-bezier(.22,1,.36,1) both; }
+
+/* ---------- sidebar: living, breathing nav ---------- */
+.sidebar .logo .mark{
+  border-radius:4px;
+  background:linear-gradient(135deg, var(--spike), var(--gold));
+  box-shadow:0 0 10px var(--spike-shadow);
+}
+nav.side-tabs button{ position:relative; overflow:hidden; }
+nav.side-tabs button.active::before{
+  box-shadow:0 0 8px var(--spike-shadow);
+}
+nav.side-tabs button.active{
+  background:linear-gradient(90deg, var(--spike-dim) 0%, var(--bg-raised-2) 70%);
+}
+.role-tag.admin{ animation:glowPulse 2.6s ease-in-out infinite; }
+
+/* ---------- buttons: shine sweep + springier feel ---------- */
+.btn{ position:relative; overflow:hidden; isolation:isolate; }
+.btn::after{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.16) 45%, transparent 60%);
+  background-size:220% 100%;background-position:150% 0;
+  opacity:0;transition:opacity .2s ease;
+}
+.btn:hover::after{ opacity:1; background-position:-50% 0; transition:background-position .7s ease, opacity .2s ease; }
+.btn:active{ filter:brightness(.96); }
+.btn.primary{ box-shadow:0 2px 10px var(--spike-shadow); }
+
+/* ---------- panels: glass depth + gentle lift ---------- */
+.panel{
+  background:linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel) 100%);
+  box-shadow:0 1px 0 rgba(255,255,255,0.02) inset;
+}
+.panel-head{
+  background:linear-gradient(180deg, var(--bg-raised) 0%, var(--bg-panel) 130%);
+}
+
+/* ---------- rows: staggered entrance + richer hover ---------- */
+.demon-row{ position:relative; }
+.demon-row:hover{ box-shadow:inset 3px 0 0 var(--spike-dim); }
+.demon-row.selected{ box-shadow:0 1px 6px rgba(0,0,0,0.18); }
+.demon-rows .demon-row:nth-child(-n+30){ animation:rowIn .28s ease both; }
+.demon-rows .demon-row:nth-child(1){ animation-delay:.01s; }
+.demon-rows .demon-row:nth-child(2){ animation-delay:.02s; }
+.demon-rows .demon-row:nth-child(3){ animation-delay:.03s; }
+.demon-rows .demon-row:nth-child(4){ animation-delay:.04s; }
+.demon-rows .demon-row:nth-child(5){ animation-delay:.05s; }
+.demon-rows .demon-row:nth-child(6){ animation-delay:.06s; }
+.demon-rows .demon-row:nth-child(7){ animation-delay:.07s; }
+.demon-rows .demon-row:nth-child(8){ animation-delay:.08s; }
+
+/* rank badges: gold shine for the very top spots */
+.rank-badge{ transition:transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease; }
+.demon-row:hover .rank-badge{ transform:scale(1.08); }
+.rank-badge.top{
+  background:linear-gradient(120deg, var(--spike-dim), rgba(255,184,69,0.18), var(--spike-dim));
+  background-size:220% 100%;
+  border-color:var(--spike);
+  box-shadow:0 0 0 1px var(--spike-dim), 0 2px 8px var(--spike-shadow);
+  animation:shimmerSweep 5s linear infinite;
+}
+.demon-row .pts{ font-weight:700; }
+
+/* ---------- stat cards: glass, gradient value, hover glow ---------- */
+.stat-cards .stat-card{ animation:popIn .3s ease both; }
+.stat-card{ border-radius:var(--radius-lg); }
+.stat-card:hover{ transform:translateY(-3px) scale(1.01); }
+
+/* ---------- tag chips / pills: crisper active state ---------- */
+.tag-chip.active{ box-shadow:0 2px 8px var(--spike-shadow); }
+.status-filter-btn.active{ box-shadow:0 2px 8px var(--spike-shadow); }
+.profile-tab-btn.active, .settings-tab-btn.active{ box-shadow:0 3px 12px var(--spike-shadow); }
+
+/* ---------- empty states: friendlier motion ---------- */
+.empty-state{ animation:popIn .3s ease both; }
+.empty-state .big{ animation:floatY 3.2s ease-in-out infinite; display:inline-block; }
+
+/* ---------- detail panel: richer banner + headline ---------- */
+.detail-banner{ box-shadow:0 10px 30px rgba(0,0,0,0.25); }
+.detail-title{ letter-spacing:-0.01em; }
+.stat{ transition:transform .15s ease, border-color .15s ease; }
+.stat:hover{ transform:translateY(-2px); border-color:var(--text-dim); }
+.video-wrap{ box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+
+/* ---------- modal: refined blur entrance ---------- */
+.modal-backdrop{ animation:popIn .18s ease both; }
+.modal{
+  animation:popIn .22s cubic-bezier(.22,1,.36,1) both;
+  border-radius:var(--radius-lg);
+}
+.modal-head{ background:linear-gradient(180deg, var(--bg-raised) 0%, var(--bg-panel) 160%); }
+
+/* ---------- toasts: livelier slide + accent glow ---------- */
+.toast{
+  animation:toastSlide .28s cubic-bezier(.22,1,.36,1) both;
+  box-shadow:var(--shadow-lg), 0 0 0 1px var(--line);
+  backdrop-filter:blur(6px);
+}
+.toast.ok{ box-shadow:var(--shadow-lg), 0 0 0 1px rgba(74,222,128,0.25); }
+.toast.error{ box-shadow:var(--shadow-lg), 0 0 0 1px rgba(255,84,112,0.25); }
+
+/* ---------- profile hero: spinning gradient avatar ring ---------- */
+.profile-avatar-wrap{
+  background:conic-gradient(from 0deg, var(--spike), var(--gold), var(--cyan), var(--spike));
+  animation:ringSpin 6s linear infinite;
+}
+.profile-hero-name{ letter-spacing:-0.01em; }
+.profile-mini-card{ position:relative; }
+.profile-mini-card:hover{ box-shadow:var(--shadow-md); }
+
+/* ---------- home hero / quick links: shine on hover ---------- */
+.quick-link-card{ position:relative; overflow:hidden; isolation:isolate; }
+.quick-link-card::after{
+  content:'';position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.10) 45%, transparent 60%);
+  background-size:220% 100%;background-position:150% 0;opacity:0;
+}
+.quick-link-card:hover::after{ opacity:1; background-position:-50% 0; transition:background-position .7s ease, opacity .2s ease; }
+.featured-banner{ position:relative; overflow:hidden; }
+.home-hero .page-title{ letter-spacing:-0.02em; }
+
+/* ---------- roulette / progress bars: smoother fill ---------- */
+.progress-bar-inner{ background:linear-gradient(90deg, var(--spike), var(--spike-hover)); transition:width .35s cubic-bezier(.22,1,.36,1); }
+.rating-bar-fill{ background:linear-gradient(90deg, var(--cyan), #7ee8ff); }
+
+/* ---------- accessibility: crisp keyboard focus everywhere ---------- */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible,
+.tag-chip:focus-visible, .status-filter-btn:focus-visible, .profile-tab-btn:focus-visible{
+  outline:2px solid var(--spike); outline-offset:2px; border-radius:6px;
+}
+
+/* ---------- respect reduced motion ---------- */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+  body::before{ animation:none; }
+}
+
+/* ---------- small screens: extra breathing room ---------- */
+@media(max-width:520px){
+  .page-head{ padding:16px 16px; }
+  .page-title{ font-size:22px; }
+}
 </style>
 </head>
 <body>
