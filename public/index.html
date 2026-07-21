@@ -135,6 +135,17 @@ nav.side-tabs button.active::before{
 .account-area-wrapper{ display:flex;flex-direction:column;align-items:stretch;gap:8px; }
 .account-chip{ display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--text-muted); }
 .account-chip .name{ color:var(--text);font-weight:600; }
+/* ---------- QOL: universal identity chip used across submit forms ---------- */
+.submit-as-chip{ display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg-raised-2);border:1px solid var(--line);border-radius:var(--radius);padding:9px 12px; }
+.submit-as-chip .who{ display:flex;align-items:center;gap:8px;font-size:13px; }
+.submit-as-chip .who .avatar{ font-size:16px; }
+.submit-as-chip .who b{ color:var(--text);font-weight:700; }
+.submit-as-chip .tag{ font-size:11px;color:var(--text-dim); }
+.creator-toggle-row{ display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);margin:2px 0 8px; }
+.creator-toggle-row label{ display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none; }
+.signin-required{ padding:22px 16px;text-align:center; }
+.signin-required .big{ font-size:15px;font-weight:700;margin-bottom:6px;color:var(--text); }
+.signin-required p{ color:var(--text-muted);font-size:13px;max-width:360px;margin:0 auto 14px; }
 .sidebar-quickrow{ display:flex;gap:6px;flex-wrap:wrap; }
 .role-tag{
   font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;
@@ -6243,9 +6254,19 @@ function renderSubmitTab(preserveFocus){
       <div class="panel">
         <div class="panel-head"><h3>New Submission</h3></div>
         <div style="padding:14px;">
-          ${APP.demons.length ? `
-          <div class="field"><label>Your Player Name</label><input id="sb-player" list="knownPlayers" value="${APP.currentUser?escapeHtml(APP.currentUser.username):''}"></div>
-          <datalist id="knownPlayers">${APP.players.map(p=>`<option value="${escapeHtml(p.name)}">`).join('')}</datalist>
+          ${!APP.currentUser ? `
+          <div class="signin-required">
+            <div class="big">Sign in to submit a play</div>
+            <p>Submissions are tied to your account so they land on your profile automatically — no need to type your name in.</p>
+            <button class="btn primary" onclick="openLoginModal()">Sign In / Register</button>
+          </div>
+          ` : APP.demons.length ? `
+          <div class="field"><label>Submitting As</label>
+            <div class="submit-as-chip">
+              <span class="who"><span class="avatar">${escapeHtml((getProfile(APP.currentUser.username)||{}).avatarEmoji||'🙂')}</span> <b>${escapeHtml(APP.currentUser.username)}</b></span>
+              <span class="tag">linked to your profile</span>
+            </div>
+          </div>
           <div class="form-grid">
             <div class="field"><label>List Category</label>
               <select id="sb-listkind" onchange="onSubListKindChange()">
@@ -6333,7 +6354,8 @@ function updateSubRequirementHint(){
   hint.textContent = text;
 }
 async function submitPlay(){
-  const player = document.getElementById('sb-player').value.trim();
+  if(!APP.currentUser){ showToast('Sign in to submit a play', 'error'); return; }
+  const player = APP.currentUser.username;
   const listKindEl = document.getElementById('sb-listkind');
   const listKind = listKindEl ? listKindEl.value : 'demon';
   const demonId = document.getElementById('sb-demon').value;
@@ -6349,8 +6371,8 @@ async function submitPlay(){
   const decoRating = clampRating(parseInt(document.getElementById('sb-deco').value));
   const gameplayRating = clampRating(parseInt(document.getElementById('sb-gameplay').value));
   const msgEl = document.getElementById('submitMsg');
-  if(!player || !video || isNaN(percent) || percent<1 || percent>100){
-    msgEl.innerHTML = `<div class="msg error">Fill in your name, a percent (1-100), and a video URL.</div>`;
+  if(!video || isNaN(percent) || percent<1 || percent>100){
+    msgEl.innerHTML = `<div class="msg error">Fill in a percent (1-100) and a video URL.</div>`;
     return;
   }
   const demon = getListArrayByKind(listKind).find(d=>d.id===demonId);
@@ -6571,9 +6593,25 @@ function renderSubmitLevelTab(preserveFocus){
       <div class="panel">
         <div class="panel-head"><h3>New Level Submission</h3></div>
         <div style="padding:14px;">
+          ${!APP.currentUser ? `
+          <div class="signin-required">
+            <div class="big">Sign in to submit a level</div>
+            <p>Submissions are tied to your account so credit and follow-up land on your profile automatically.</p>
+            <button class="btn primary" onclick="openLoginModal()">Sign In / Register</button>
+          </div>
+          ` : `
+          <div class="field"><label>Submitting As</label>
+            <div class="submit-as-chip">
+              <span class="who"><span class="avatar">${escapeHtml((getProfile(APP.currentUser.username)||{}).avatarEmoji||'🙂')}</span> <b>${escapeHtml(APP.currentUser.username)}</b></span>
+              <span class="tag">linked to your profile</span>
+            </div>
+          </div>
           <div class="field"><label>Level Name</label><input id="ls-name" placeholder="e.g. Tartarus"></div>
+          <div class="creator-toggle-row">
+            <label><input type="checkbox" id="ls-ownlevel" checked onchange="onLsOwnLevelChange()"> This is my own level</label>
+          </div>
           <div class="form-grid">
-            <div class="field"><label>Creator</label><input id="ls-creator" placeholder="Level creator"></div>
+            <div class="field" id="ls-creator-field" style="display:none;"><label>Creator</label><input id="ls-creator" placeholder="Level creator"></div>
             <div class="field"><label>Target List</label>
               <select id="ls-target">
                 <option value="main">Demon List</option>
@@ -6582,12 +6620,12 @@ function renderSubmitLevelTab(preserveFocus){
               </select>
             </div>
           </div>
-          <div class="field"><label>Your Name</label><input id="ls-submitter" value="${APP.currentUser?escapeHtml(APP.currentUser.username):''}" placeholder="Who's submitting this?"></div>
           <div class="field"><label>Video URL <span style="color:var(--text-dim);font-weight:400;">(gameplay or showcase)</span></label><input id="ls-video" placeholder="https://youtube.com/..."></div>
           <div class="field"><label>Level ID <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label><input id="ls-levelid" placeholder="e.g. 98765432"></div>
           <div class="field"><label>Why should it be added? <span style="color:var(--text-dim);font-weight:400;">(optional)</span></label><textarea id="ls-notes" placeholder="Difficulty, standout features, anything moderators should know"></textarea></div>
           <button class="btn primary" style="width:100%;" onclick="submitLevelForm()">Send for Review</button>
           <div id="submitLevelMsg"></div>
+          `}
         </div>
       </div>
       ${isMod() ? `
@@ -6615,17 +6653,29 @@ function renderSubmitLevelTab(preserveFocus){
     if(s){ s.focus(); s.selectionStart = s.selectionEnd = s.value.length; }
   }
 }
+function onLsOwnLevelChange(){
+  const own = document.getElementById('ls-ownlevel');
+  const field = document.getElementById('ls-creator-field');
+  if(!own || !field) return;
+  field.style.display = own.checked ? 'none' : '';
+}
 async function submitLevelForm(){
+  if(!APP.currentUser){ showToast('Sign in to submit a level', 'error'); return; }
   const levelName = document.getElementById('ls-name').value.trim();
-  const creator = document.getElementById('ls-creator').value.trim();
+  const ownLevel = document.getElementById('ls-ownlevel').checked;
+  const creator = ownLevel ? APP.currentUser.username : document.getElementById('ls-creator').value.trim();
   const target = document.getElementById('ls-target').value;
-  const submitter = document.getElementById('ls-submitter').value.trim();
+  const submitter = APP.currentUser.username;
   const video = document.getElementById('ls-video').value.trim();
   const levelId = document.getElementById('ls-levelid').value.trim();
   const notes = document.getElementById('ls-notes').value.trim();
   const msgEl = document.getElementById('submitLevelMsg');
-  if(!levelName || !submitter){
-    msgEl.innerHTML = `<div class="msg error">Fill in at least the level name and your name.</div>`;
+  if(!levelName){
+    msgEl.innerHTML = `<div class="msg error">Fill in at least the level name.</div>`;
+    return;
+  }
+  if(!ownLevel && !creator){
+    msgEl.innerHTML = `<div class="msg error">Fill in the level creator, or check "This is my own level".</div>`;
     return;
   }
   APP.levelSubmissions.push({
@@ -6634,7 +6684,8 @@ async function submitLevelForm(){
   });
   await saveLevelSubmissions();
   document.getElementById('ls-name').value = '';
-  document.getElementById('ls-creator').value = '';
+  const creatorEl = document.getElementById('ls-creator');
+  if(creatorEl) creatorEl.value = '';
   document.getElementById('ls-video').value = '';
   document.getElementById('ls-levelid').value = '';
   document.getElementById('ls-notes').value = '';
